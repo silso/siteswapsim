@@ -1,85 +1,80 @@
 #Alexander Roelofs
-#2017/11/10
-
-#Includes functions for class siteswap
+#2017/11/9
 
 import string
 from fractions import gcd
 import re
-import math
 
 ##SITESWAP TRANSLATOR
 def siteswapTranslator(site):
-    """takes in siteswap in string form, returns siteswap in array form,
-    along with the siteswaps multiplexity, syncronicity, and validity"""
-
-    #vars
     siteStr = str(site.replace(' ', '')) #remove spaces
     siteArr = []
     multiplex = False
     sync = False
     valid = True
 
+
     ##SYNTAX CHECKER
-    #Stolen from gunswap.co
+    ##Stolen from gunswap.co
     TOSS = '(\d|[a-w])'
-    MULTIPLEX = '\[(\d|[a-w])+\]'
-    SYNCMULTIPLEX = '\[((\d|[a-w])x?)+\]'
-    SYNC = '\((('+TOSS+'x?)|'+SYNCMULTIPLEX+'),(('+TOSS+'x?)|'+SYNCMULTIPLEX+')\)'
-    if site[-1] == '*': #'*' only allowed with sync patterns
-        BEAT = re.compile('('+SYNC+')+$')
+    MULTIPLEX = '\[((\d|[a-w])x?)+\]'
+    SYNC = '\((('+TOSS+'x?)|'+MULTIPLEX+'),(('+TOSS+'x?)|'+MULTIPLEX+')\)'
+    BEAT = re.compile('(^('+TOSS+'|'+MULTIPLEX+')+$)|(^('+SYNC+')+$)')
+
+    if site[-1] == '*':
         valid = bool(BEAT.match(site[:-1]))
     else:
-        BEAT = re.compile('(('+TOSS+'|'+MULTIPLEX+')+$)|(('+SYNC+')+$)')
         valid = bool(BEAT.match(site))
     if not valid:
         return siteArr, multiplex, sync, valid
 
+
+    #this thing numbers the lowercase letters, but puts them into a dictionary with letters before numbers
+    letters = {y:x for x,y in dict(enumerate(string.ascii_lowercase[:22])).items()}
+
     if siteStr[0] == '(':
         sync = True
-    
-    ##STAR GET-RID-OF'R
-    if siteStr[-1] == '*':
-        newStr = siteStr[:-1]
-        j = 0
-        #loop copies the leftsides and puts them on the right
-        while j < len(siteStr) - 1:
-            j += 1 #skip '('
-            newStr += '('
-            leftSide = ''
-            while not siteStr[j] == ',':
-                leftSide += siteStr[j]
-                j += 1
-            j += 1 #skip ','
-            while not siteStr[j] == ')':
-                newStr += siteStr[j]
-                j += 1
-            newStr += ','
-            newStr += leftSide
-            newStr += ')'
-            j += 1 #skip ')'
-        siteStr = newStr
 
     ##TRANSLATOR
-    #this numbers lcase letters, putting them into dict with letters before nums
-    letters = {y:x for x,y in dict(enumerate(string.ascii_lowercase[:23])).items()}
     i = 0 #index in str array
     while i < len(siteStr):
-        char = siteStr[i]
+        
+        if siteStr[-1] == '*':
+            newStr = siteStr[:-1]
+            j = 0
+            while j < len(siteStr) - 1:
+                j += 1 #skip '('
+                newStr += '('
+                leftSide = ''
+                while not siteStr[j] == ',':
+                    leftSide += siteStr[j]
+                    j += 1
+                j += 1 #skip ','
+                while not siteStr[j] == ')':
+                    newStr += siteStr[j]
+                    j += 1
+                newStr += ','
+                newStr += leftSide
+                newStr += ')'
+                j += 1 #skip ')'
+        print(newStr)
+        siteStr = newStr
 
-        ##SYNC
-        if char == '(' or char == ',' or char == ')': #skips formatting stuff
+        
+        char = siteStr[i]
+        if char == '(' or char == ',' or char == ')': #skips sync stuff
             i += 1
             continue
-        if sync and siteStr[i + 1] == 'x': #check for crossing throws
+
+        #check for crossing throws
+        if sync and siteStr[i + 1] == 'x': #when crossing, num is made odd
             if siteStr[i - 1] == '(':
-                add = 1 #when its the first num
+                add = 1
             else:
                 add = -1
         else:
             add = 0
-
-        ##VANILLA
+        
         if char.isdigit():
             siteArr += [int(char) + add]
         elif siteStr[i] in letters:
@@ -119,30 +114,11 @@ def siteswapTranslator(site):
         
     return siteArr, multiplex, sync, valid
 
-def repeatRemover(site):
-    """takes in siteswap array, returns reduced siteswap array"""
-
-    newSite = site
-    for i in range(1, math.floor(len(site) / 2) + 1):
-        sequence = site[0:i]
-        
-        k = i #index after sequence being checked
-        while k < len(site) - i + 1: #loops until sequence cant fit
-            if sequence == site[k:k + i]:
-                k += i
-                continue
-            break
-        else:
-            newSite = site[0:i]
-            break
-        
-    return newSite
-
-def siteswapTest(site):
-    """takes in siteswap array, returns the throw-based validity of the pattern"""
-    
+#tests whether throws are valid
+def siteswapTest(site, multiplex):
     siteLen = len(site)
     valid = True
+    #array that records how many throws land in the index
     corrCatches = [0] * siteLen #how many should land in each index
     actualCatches = [0] * siteLen #how many actually land in each index
     for i in range(0, siteLen): #this loop builds corrCatches array
@@ -165,47 +141,32 @@ def siteswapTest(site):
 
 #finds loops
 def loopFinder(site):
-    """takes in siteswap array, returns an array of the loops that balls follow"""
-    
     siteLen = len(site)
-    loops = [[]] #array of loops
-    loopNum = 0 #index where next loop goes in loops
-    timesToTest = [0] * siteLen #how many throws on this beat must be tested
-    timesTested = [0] * siteLen #how many throws on this beat have already been tested
-
+    #array of loops
+    loops = [[]]
+    #where to put the next loop
+    loopNum = 0
+    #array to indicate whether type of throw was listed yet
+    tested = [0] * siteLen
     for i in range(0, siteLen):
-        if isinstance(site[i], list): 
-            timesToTest[i] = len(site[i]) #multiplex throw
-        else:
-            timesToTest[i] = 1 #vanilla throw
-            
-    i = 0
-    while i < siteLen:
-        if not timesToTest[i] == timesTested[i] and site[i]:
+        if not tested[i] and site[i]:
             curTest = i
-            while True:
-                if timesTested[curTest] == timesToTest[curTest]:
+            looping = True
+            while looping:
+                if tested[curTest]:
                     loopNum += 1
                     loops.append([])
-                    #i -= 1 #this makes sure we stay at the same spot
                     break
                 else:
                     #add num to the loop
-                    if isinstance(site[i], list):
-                        loops[loopNum].append(site[curTest][timesTested[curTest]])
-                        timesTested[curTest] += 1
-                        curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen
-                    else:
-                        loops[loopNum].append(site[curTest])
-                        timesTested[curTest] += 1
-                        curTest = (curTest + site[curTest]) % siteLen
-        i += 1
+                    loops[loopNum].append(site[curTest])
+                    tested[curTest] = 1
+                    curTest = (curTest + site[curTest]) % siteLen
                 
     return loops[:len(loops) - 1]
 
+#find how long the pattern takes to repeat
 def loopTime(loops):
-    """return how long the pattern takes to repeat"""
-    
     loopTimes = []
     for loop in loops:
         singleLoopTime = 0
@@ -217,5 +178,4 @@ def loopTime(loops):
     lcm = loopTimes[0]
     for i in loopTimes:
         lcm = lcm * i / gcd(lcm, i)
-        
     return int(lcm)

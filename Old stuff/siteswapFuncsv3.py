@@ -38,9 +38,11 @@ def siteswapTranslator(site):
     ##TRANSLATOR
     i = 0 #index in str array
     while i < len(siteStr):
+        ##STAR GET-RID-OF'R
         if siteStr[-1] == '*':
             newStr = siteStr[:-1]
             j = 0
+            #loop copies the leftsides and puts them on the right
             while j < len(siteStr) - 1:
                 j += 1 #skip '('
                 newStr += '('
@@ -56,8 +58,7 @@ def siteswapTranslator(site):
                 newStr += leftSide
                 newStr += ')'
                 j += 1 #skip ')'
-        print(newStr)
-        siteStr = newStr
+            siteStr = newStr
 
         
         char = siteStr[i]
@@ -141,26 +142,49 @@ def siteswapTest(site, multiplex):
 #finds loops
 def loopFinder(site):
     siteLen = len(site)
-    #array of loops
-    loops = [[]]
-    #where to put the next loop
-    loopNum = 0
-    #array to indicate whether type of throw was listed yet
-    tested = [0] * siteLen
-    for i in range(0, siteLen):
-        if not tested[i] and site[i]:
-            curTest = i
-            looping = True
-            while looping:
-                if tested[curTest]:
-                    loopNum += 1
-                    loops.append([])
-                    break
-                else:
-                    #add num to the loop
-                    loops[loopNum].append(site[curTest])
-                    tested[curTest] = 1
-                    curTest = (curTest + site[curTest]) % siteLen
+    loops = [[]] #array of loops
+    loopNum = 0 #index where next loop goes in loops
+    for i in range(0, siteLen): #build array of 0's that matches site
+        if isinstance(site[i], list): 
+            tested[i] = [0] * len(site[i]) #multiplex throw
+        else:
+            tested[i] = 0 #vanilla throw
+
+    print(timesToTest)
+    print(site)
+    i = 0
+    while i < siteLen:
+        print("i = ", i)
+        if isinstance(site[i], list):
+##            for j in range(0,len(site[i])):
+                if not tested[i][j] and site[i][j]:
+                    curTest = (i,j)
+                    while True:
+                        if tested[curTest[0]][curTest[1]]:
+                            print("innere")
+                            loopNum += 1
+                            loops.append([])
+                            #i -= 1 #this makes sure we stay at the same spot
+                            break
+                        else:
+                            #add num to the loop
+                            if isinstance(site[i], list):
+                                loops[loopNum].append(site[curTest[0]][curTest[1]])
+                                tested[curTest[0]][curTest[1]] = 1
+                                curTest[0] = (curTest[0] + site[curTest[0]][curTest[1]]) % siteLen
+                                if isinstance(site[curTest[0]], list):
+                                    for k in range(0,len(site[curTest[0]])):
+                                        if not tested[0][k]:
+                                            curTest[j] = k
+                                else:
+                                    curTest[j] = 0
+                            else:
+                                loops[loopNum].append(site[curTest])
+                                timesTested[curTest] += 1
+                                curTest = (curTest + site[curTest]) % siteLen
+                        print(timesTested)
+                        print(loops)
+        i += 1
                 
     return loops[:len(loops) - 1]
 

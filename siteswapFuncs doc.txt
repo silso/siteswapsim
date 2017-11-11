@@ -1,0 +1,28 @@
+##SITESWAP TRANSLATOR
+	##SYNTAX CHECKER
+		Uses regex to validate the formatting of the siteswap.
+		Strings are used to make the regular expression easier to understand,
+			though it is in fact just one pattern that the siteswap has to match.
+		Regex pattern in one line:(^((\d|[a-w])|\[(\d|[a-w])+\])+$)|(^(\((((\d|[a-w])x?)|\[((\d|[a-w])x?)+\]),(((\d|[a-w])x?)|\[((\d|[a-w])x?)+\])\))+$)
+
+	##STAR-GET-RID-OF'R
+		In siteswap, * repeats the whole sync siteswap but with the hands swapped:
+			eg. (6x,4)* = (6x,4)(4,6x)
+		New string is set equal to old string, minus the *.
+		Add '(', ',' and ')' manually.
+		When on left side of old string (located where the x is in (x,6)), save to temp string.
+		When on right side of old string (located where the x is in (6,x)), copy directly to left side of new string.
+		When done with right side of old string, add on temp string.
+		Repeat previous 3 steps until through all of old string.
+	
+	##TRANSLATOR
+		##SYNC
+			Since siteswap is already validated for formatting,
+				we can pull out the numbers with the assumption that the parentheses and commas are correct.
+			
+
+		##MULTIPLEX
+			There is a nested while loop for the multiplex since there are extra conditions we are looking for.
+			'multiplexStart' lets the while loop know where the start of the multiplex is, so it can check if it's
+				on the left or right side of the sync beat.
+			'add' 

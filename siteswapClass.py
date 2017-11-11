@@ -1,7 +1,7 @@
 import random
 import string
 import math
-from siteswapFuncsv2 import *
+from siteswapFuncs import *
 
 class siteswap:
     def __init__(self, site):
@@ -16,10 +16,14 @@ class siteswap:
         self.__sync = False
 
         #convert siteswap string to an array, also tests formatting
-        self.__site, self.__multiplex, self.__sync, self.__valid = siteswapTranslator(site)
-        
+        self.__site, self.__multiplex, self.__sync, self.__valid = \
+        siteswapTranslator(site)
+
+        #if pattern is redundant, reduce the pattern
+        self.__site = repeatRemover(self.__site)
+
         if self.__valid:
-            self.__valid = siteswapTest(self.__site, self.__multiplex) #will be false when throws are bad
+            self.__valid = siteswapTest(self.__site) #will be false when throws are bad
 
         if self.__valid:
             #if not self.__multiplex and not self.__sync:
@@ -101,8 +105,10 @@ class siteswap:
         return self.__sync
 
 while True:
-    swap = siteswap(input('siteswap?: '))
-    
+    swapString = input('siteswap?: ')
+    if swapString == '':
+        continue
+    swap = siteswap(swapString)
     if swap.isValid():
         print('Valid siteswap: ', end='')
         if swap.isMultiplex():
