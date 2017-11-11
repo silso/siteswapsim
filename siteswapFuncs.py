@@ -166,41 +166,84 @@ def siteswapTest(site):
 #finds loops
 def loopFinder(site):
     """takes in siteswap array, returns an array of the loops that balls follow"""
-    
-    siteLen = len(site)
-    loops = [[]] #array of loops
-    loopNum = 0 #index where next loop goes in loops
-    timesToTest = [0] * siteLen #how many throws on this beat must be tested
-    timesTested = [0] * siteLen #how many throws on this beat have already been tested
 
-    for i in range(0, siteLen):
-        if isinstance(site[i], list): 
-            timesToTest[i] = len(site[i]) #multiplex throw
-        else:
-            timesToTest[i] = 1 #vanilla throw
-            
-    i = 0
-    while i < siteLen:
-        if not timesToTest[i] == timesTested[i] and site[i]:
-            curTest = i
-            while True:
-                if timesTested[curTest] == timesToTest[curTest]:
-                    loopNum += 1
-                    loops.append([])
-                    #i -= 1 #this makes sure we stay at the same spot
-                    break
-                else:
-                    #add num to the loop
-                    if isinstance(site[i], list):
-                        loops[loopNum].append(site[curTest][timesTested[curTest]])
-                        timesTested[curTest] += 1
-                        curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen
-                    else:
-                        loops[loopNum].append(site[curTest])
-                        timesTested[curTest] += 1
-                        curTest = (curTest + site[curTest]) % siteLen
-        i += 1
+    if True: #make this section good
+        #when you shift a multiplex pattern over, it should have the same loops
+        siteLen = len(site)
+        loops = [[]] #array of loops
+        loopNum = 0 #index where next loop goes in loops
+        timesToTest = [0] * siteLen #how many throws on this beat must be tested
+        timesTested = [0] * siteLen #how many throws on this beat have already been tested
+
+        for i in range(0, siteLen):
+            if isinstance(site[i], list): 
+                timesToTest[i] = len(site[i]) #multiplex throw
+            else:
+                timesToTest[i] = 1 #vanilla throw
                 
+        i = 0
+        while i < siteLen:
+            if not timesToTest[i] == timesTested[i] and site[i]:
+                firstTime = True
+                startLoc = -1
+                curTest = i
+                while True:
+                    if timesTested[curTest] == timesToTest[curTest] or curTest == startLoc and not firstTime:
+                        loopNum += 1
+                        loops.append([])
+                        i -= 1 #this makes sure we stay at the same spot
+                        break
+                    else:
+                        #add num to the loop
+                        if isinstance(site[curTest], list):
+                            if firstTime:
+                                startLoc = curTest
+                                firstTime = False
+                            loops[loopNum].append(site[curTest][timesTested[curTest]])
+                            timesTested[curTest] += 1
+                            curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen
+                        else:
+                            loops[loopNum].append(site[curTest])
+                            timesTested[curTest] += 1
+                            curTest = (curTest + site[curTest]) % siteLen
+            i += 1
+
+    else: #bad but working method
+        siteLen = len(site)
+        loops = [[]] #array of loops
+        loopNum = 0 #index where next loop goes in loops
+        timesToTest = [0] * siteLen #how many throws on this beat must be tested
+        timesTested = [0] * siteLen #how many throws on this beat have already been tested
+
+        for i in range(0, siteLen):
+            if isinstance(site[i], list): 
+                timesToTest[i] = len(site[i]) #multiplex throw
+            else:
+                timesToTest[i] = 1 #vanilla throw
+                
+        i = 0
+        while i < siteLen:
+            if not timesToTest[i] == timesTested[i] and site[i]:
+                curTest = i
+                while True:
+                    if timesTested[curTest] == timesToTest[curTest]:
+                        loopNum += 1
+                        loops.append([])
+                        #i -= 1 #this makes sure we stay at the same spot
+                        break
+                    else:
+                        #add num to the loop
+                        if isinstance(site[i], list):
+                            loops[loopNum].append(site[curTest][timesTested[curTest]])
+                            timesTested[curTest] += 1
+                            curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen
+                        else:
+                            loops[loopNum].append(site[curTest])
+                            timesTested[curTest] += 1
+                            curTest = (curTest + site[curTest]) % siteLen
+            i += 1
+                
+
     return loops[:len(loops) - 1]
 
 def loopTime(loops):
