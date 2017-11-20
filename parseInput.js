@@ -9,5 +9,9 @@ window.onload = function() {
     var input = document.getElementById('siteswapInput');
     var site = new Siteswap(String(input.value));
     console.log(site.isValid());
+    console.log(site.printArray());
+    console.log(site.printSite());
+    console.log(site.printLoops());
+    console.log(site.printLoopTime());
   }
 }

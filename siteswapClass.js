@@ -35,39 +35,40 @@ var Siteswap = function(siteswapString){
 	}
 
 	this.printSite = function() {
-		var returnStr = ''
+		var returnStr = '';
 		if (!valid) {
 			returnStr = 'Invalid siteswap. Siteswap requested: ' + siteStr;
 		}
 		else {
 			if (sync) {
-				tempSite = site;
+				var tempSite = site;
 				if (site.length < 2) {
 					tempSite = 2 * site;
 				}
 				for (i = 0; i < tempSite.length; i++) {
-					num = tempSite[i];
+					var beat = tempSite[i];
 					if (!(i % 2)) {
 						returnStr += '(';
 					}
-					if (num instanceof Array) {
+					if (beat instanceof Array) {
 						returnStr += '[';
-						for (thisNum in num) {
-							if (thisNum > 9) {
-								returnStr += String.fromCharCode(thisNum + 87);
+						for (var j = 0; j < beat.length; j++) {
+							var toss = beat[j];
+							if (toss > 9) {
+								returnStr += String.fromCharCode(toss + 87);
 							}
 							else {
-								returnStr += thisNum;
+								returnStr += toss;
 							}
-							returnStr += ']';
 						}
+						returnStr += ']';
 					}
 					else {
-						if (thisNum > 9) {
-							returnStr += String.fromCharCode(thisNum + 87);
+						if (beat > 9) {
+							returnStr += String.fromCharCode(beat + 87);
 						}
 						else {
-							returnStr += thisNum;
+							returnStr += beat;
 						}
 					}
 					if (!(i % 2)) {
@@ -79,25 +80,27 @@ var Siteswap = function(siteswapString){
 				}
 			}
 			else {
-				for (num in site) {
-					if (num instanceof Array) {
+				for (var i = 0; i < site.length; i++) {
+					var beat = site[i];
+					if (beat instanceof Array) {
 						returnStr += '[';
-						for (thisNum in num) {
-							if (thisNum > 9) {
-								returnStr += String.fromCharCode(thisNum + 87);
+						for (var j = 0; j < beat.length; j++) {
+							var toss = beat[j];
+							if (toss > 9) {
+								returnStr += String.fromCharCode(toss + 87);
 							}
 							else {
-								returnStr += thisNum;
+								returnStr += toss;
 							}
-							returnStr += ']';
 						}
+						returnStr += ']';
 					}
 					else {
-						if (thisNum > 9) {
-							returnStr += String.fromCharCode(thisNum + 87);
+						if (site[i] > 9) {
+							returnStr += String.fromCharCode(beat + 87);
 						}
 						else {
-							returnStr += thisNum;
+							returnStr += beat;
 						}
 					}
 				}
@@ -110,46 +113,47 @@ var Siteswap = function(siteswapString){
 	this.printLoops = function() {
 		returnStr = '';
 		if (!valid) {
-			return 'Invalid siteswap.';
+			console.log('cannot print loops, invalid siteswap');
+			return null;
 		}
 		else {
 			if (loops == null) {
 				return null;
 			}
 			else {
-				for (loop = 0; loop < numOfLoops; i++) {
-					for (num in loops[loop]) {
-						if (thisNum > 9) {
-							returnStr += String.fromCharCode(thisNum + 87);
+				for (var i = 0; i < numOfLoops; i++) {
+					var loop = loops[i];
+					for (var j = 0; j < loop.length; j++) {
+						var toss = loop[j];
+						if (toss > 9) {
+							returnStr += String.fromCharCode(toss + 87);
 						}
 						else {
-							returnStr += thisNum;
+							returnStr += toss;
 						}
 					}
-					if (loop < numOfLoops - 1) {
+					if (i < numOfLoops - 1) {
 						returnStr += ',';
 					}
 				}
 			}
 		}
-	}
 
+		return returnStr;
+	}
+	
 	this.printArray = function() {
 		return site;
 	}
-
 	this.printLoopTime = function() {
 		return loopTime;
 	}
-
 	this.isValid = function() {
 		return valid;
 	}
-
 	this.isMultiplex = function() {
 		return multiplex;
 	}
-
 	this.isSync = function() {
 		return sync;
 	}
