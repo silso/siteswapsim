@@ -14,15 +14,26 @@
 		When on right side of old string (located where the x is in (6,x)), copy directly to left side of new string.
 		When done with right side of old string, add on temp string.
 		Repeat previous 3 steps until through all of old string.
-	
+
 	##TRANSLATOR
 		##SYNC
 			Since siteswap is already validated for formatting,
 				we can pull out the numbers with the assumption that the parentheses and commas are correct.
-			
+			Sync pattern will be converted into an async format (a sequential array). Because of this, we change crossing
+				throws into odd numbers to simulate the throws going to the other hand.
+			However, if must increase the throws on one hand to an odd number, we must decrese the throws on the other hand,
+				in order to keep the throws landing at the right time.
+				This makes the pattern lopsided, but it works well for testing.
+			For every throw, check next char to see if it is an x. If it is,
+				we check the char behind to see where we are in the sync beat. If it is a '(',
+				we are on the left, so we add 1. Otherwise, we subtract 1.
+
+		##VANILLA
+			This part adds non-multiplex throws to the siteswap array. If we are not sync, 'add' will always be 0.
+			If we are sync, 'add' will depend on which hand we are thrown from.
 
 		##MULTIPLEX
 			There is a nested while loop for the multiplex since there are extra conditions we are looking for.
 			'multiplexStart' lets the while loop know where the start of the multiplex is, so it can check if it's
 				on the left or right side of the sync beat.
-			'add' 
+			'add'

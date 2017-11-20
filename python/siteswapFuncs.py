@@ -37,7 +37,7 @@ def siteswapTranslator(site):
 
     if siteStr[0] == '(':
         sync = True
-    
+
     ##STAR GET-RID-OF'R
     if siteStr[-1] == '*':
         newStr = siteStr[:-1]
@@ -98,7 +98,7 @@ def siteswapTranslator(site):
                 char = siteStr[i]
                 if char == ']': #end multiplex
                     break
-                
+
                 if sync and siteStr[i + 1] == 'x': #when crossing, num is made odd
                     if siteStr[multiplexStart - 1] == '(':
                         add = 1
@@ -106,17 +106,15 @@ def siteswapTranslator(site):
                         add = -1
                 else:
                     add = 0
-                
+
                 if char.isdigit():
                     siteArr[len(siteArr) - 1] += [int(char) + add]
                 elif siteStr[i] in letters:
                     siteArr[len(siteArr) - 1] += [10 + letters[char] + add]
                 i += 1
-        elif char == '*':
-            pass
-        
+
         i += 1
-        
+
     return siteArr, multiplex, sync, valid
 
 def repeatRemover(site):
@@ -125,7 +123,7 @@ def repeatRemover(site):
     newSite = site
     for i in range(1, math.floor(len(site) / 2) + 1):
         sequence = site[0:i]
-        
+
         k = i #index after sequence being checked
         while k < len(site) - i + 1: #loops until sequence cant fit
             if sequence == site[k:k + i]:
@@ -135,18 +133,18 @@ def repeatRemover(site):
         else:
             newSite = site[0:i]
             break
-        
+
     return newSite
 
 def siteswapTest(site):
     """takes in siteswap array, returns the throw-based validity of the pattern"""
-    
+
     siteLen = len(site)
     valid = True
     corrCatches = [0] * siteLen #how many should land in each index
     actualCatches = [0] * siteLen #how many actually land in each index
     for i in range(0, siteLen): #this loop builds corrCatches array
-        if isinstance(site[i], list): 
+        if isinstance(site[i], list):
             corrCatches[i] = len(site[i]) #amt of lands = amt of throws
         else:
             corrCatches[i] = 1 #this is even for 0 case since "throw" lands in same spot
@@ -160,7 +158,7 @@ def siteswapTest(site):
     for i in range(1, siteLen): #this loop compares corrCatches and actualCatches
         if valid:
             valid = corrCatches[i] == actualCatches[i]
-            
+
     return valid
 
 #finds loops
@@ -176,11 +174,11 @@ def loopFinder(site):
         timesTested = [0] * siteLen #how many throws on this beat have already been tested
 
         for i in range(0, siteLen):
-            if isinstance(site[i], list): 
+            if isinstance(site[i], list):
                 timesToTest[i] = len(site[i]) #multiplex throw
             else:
                 timesToTest[i] = 1 #vanilla throw
-                
+
         i = 0
         while i < siteLen:
             if not timesToTest[i] == timesTested[i] and site[i]:
@@ -216,11 +214,11 @@ def loopFinder(site):
         timesTested = [0] * siteLen #how many throws on this beat have already been tested
 
         for i in range(0, siteLen):
-            if isinstance(site[i], list): 
+            if isinstance(site[i], list):
                 timesToTest[i] = len(site[i]) #multiplex throw
             else:
                 timesToTest[i] = 1 #vanilla throw
-                
+
         i = 0
         while i < siteLen:
             if not timesToTest[i] == timesTested[i] and site[i]:
@@ -242,13 +240,13 @@ def loopFinder(site):
                             timesTested[curTest] += 1
                             curTest = (curTest + site[curTest]) % siteLen
             i += 1
-                
+
 
     return loops[:len(loops) - 1]
 
 def loopTime(loops):
     """return how long the pattern takes to repeat"""
-    
+
     loopTimes = []
     for loop in loops:
         singleLoopTime = 0
@@ -260,5 +258,5 @@ def loopTime(loops):
     lcm = loopTimes[0]
     for i in loopTimes:
         lcm = lcm * i / gcd(lcm, i)
-        
+
     return int(lcm)

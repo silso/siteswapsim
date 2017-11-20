@@ -1,6 +1,4 @@
-import random
 import string
-import math
 from siteswapFuncs import *
 
 class siteswap:
@@ -31,14 +29,18 @@ class siteswap:
                 self.__numOfLoops = len(self.__loops)
                 self.__loopTime = loopTime(self.__loops)
 
-    def print(self):
+    def printSite(self):
         if not self.__valid:
             print('What you typed: ', self.__siteStr)
         else:
             letters = dict(enumerate(string.ascii_lowercase))
             if self.__sync: #print sync
-                for i in range(0, len(self.__site)):
-                    num = self.__site[i]
+                if len(self.__site) < 2:
+                    tempSite = 2 * self.__site
+                else:
+                    tempSite = self.__site
+                for i in range(0, len(tempSite)):
+                    num = tempSite[i]
                     if not i % 2:
                         print('(', end='')
                     if isinstance(num, list):

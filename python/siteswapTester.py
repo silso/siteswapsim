@@ -18,6 +18,7 @@ while True:
         swap.printLoopTime()
         print('   Siteswap array: ', end='')
         swap.printArray()
+        swap.printSite()
     else:
         print('Invalid siteswap: ', end='')
         if swap.isMultiplex():
