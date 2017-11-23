@@ -1,0 +1,15 @@
+.slider {
+  margin: 20px;
+  display: inline-block;
+}
+
+.ui-slider-vertical {
+    height: 500px;
+    width: 6px;
+}
+.ui-slider .ui-slider-handle {
+    height: 17px;
+    width: 17px;
+    border-radius: 8px;
+    margin-left: -1px;
+}

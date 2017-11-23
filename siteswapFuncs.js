@@ -1,7 +1,6 @@
-//Alexander Roelofs
-//2017/11/12
-
 //Includes functions for class siteswap
+
+'use strict';
 
 var siteswapTranslator = function(site) {
   /**
@@ -65,7 +64,7 @@ var siteswapTranslator = function(site) {
     while (j < strLen - 1) {
       j += 1; //skip '('
       newStr += '(';
-      leftSide = '';
+      var leftSide = '';
       while (siteStr[j] != ',') {
         leftSide += siteStr[j];
         j += 1;
@@ -84,7 +83,7 @@ var siteswapTranslator = function(site) {
   }
 
   //TRANSLATOR
-  i = 0; //index in siteswap string
+  var i = 0; //index in siteswap string
   siteArr.length = 0; //index in siteswap array
   strLen = siteStr.length; //update string length if there was '*'
   while (i < strLen) {
@@ -197,7 +196,6 @@ var repeatRemover = function(site) {
 var siteswapTest = function(site) {
   //takes in siteswap array, returns the throw-based validity of the pattern
 
-  console.log(site);
   var siteLen = site.length;
   var valid = true;
   var corrCatches = Array.apply(null, Array(siteLen)).map(Number.prototype.valueOf, 0); //how many should land in each index

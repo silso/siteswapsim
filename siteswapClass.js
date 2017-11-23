@@ -1,130 +1,60 @@
-//import 'siteswapFuncs.js';
+'use strict';
 
 var Siteswap = function(siteswapString){
-	var siteStr = siteswapString;
-	var site = new Object();
-	var valid = true;
-	var loops = null;
-	var numOfLoops = null;
-	var loopTime = null;
-	var multiplex = false;
-	var sync = false;
+	this.siteStr = siteswapString;
+	this.site = new Object();
+	this.valid = true;
+	this.loops = null;
+	this.numOfLoops = null;
+	this.loopTime = null;
+	this.multiplex = false;
+	this.sync = false;
 
-	var results = siteswapTranslator(siteStr);
-	site = results.site;
-	multiplex = results.multiplex;
-	sync = results.sync;
-	valid = results.valid;
+	var results = siteswapTranslator(this.siteStr);
+	this.site = results.site;
+	this.multiplex = results.multiplex;
+	this.sync = results.sync;
+	this.valid = results.valid;
 
-	if (valid) {
-		site = repeatRemover(site);
-		valid = siteswapTest(site);
+	if (this.valid) {
+		this.site = repeatRemover(this.site);
+		this.valid = siteswapTest(this.site);
 		var tested = true;
 	}
 	else {
 		console.log('failed syntax');
 	}
 
-	if (valid) {
-		loops = loopFinder(site);
-		numOfLoops = loops.length;
-		loopTime = loopTimeFinder(loops);
+	if (this.valid) {
+		this.loops = loopFinder(this.site);
+		this.numOfLoops = this.loops.length;
+		this.loopTime = loopTimeFinder(this.loops);
 	}
 	else if (tested) {
 		console.log('failed testing');
 	}
+}
 
-	this.printSite = function() {
-		var returnStr = '';
-		if (!valid) {
-			returnStr = 'Invalid siteswap. Siteswap requested: ' + siteStr;
-		}
-		else {
-			if (sync) {
-				var tempSite = site;
-				if (site.length < 2) {
-					tempSite = 2 * site;
-				}
-				for (i = 0; i < tempSite.length; i++) {
-					var beat = tempSite[i];
-					if (!(i % 2)) {
-						returnStr += '(';
-					}
-					if (beat instanceof Array) {
-						returnStr += '[';
-						for (var j = 0; j < beat.length; j++) {
-							var toss = beat[j];
-							if (toss > 9) {
-								returnStr += String.fromCharCode(toss + 87);
-							}
-							else {
-								returnStr += toss;
-							}
-						}
-						returnStr += ']';
-					}
-					else {
-						if (beat > 9) {
-							returnStr += String.fromCharCode(beat + 87);
-						}
-						else {
-							returnStr += beat;
-						}
-					}
-					if (!(i % 2)) {
-						returnStr += ',';
-					}
-					else {
-						returnStr += ')';
-					}
-				}
-			}
-			else {
-				for (var i = 0; i < site.length; i++) {
-					var beat = site[i];
-					if (beat instanceof Array) {
-						returnStr += '[';
-						for (var j = 0; j < beat.length; j++) {
-							var toss = beat[j];
-							if (toss > 9) {
-								returnStr += String.fromCharCode(toss + 87);
-							}
-							else {
-								returnStr += toss;
-							}
-						}
-						returnStr += ']';
-					}
-					else {
-						if (site[i] > 9) {
-							returnStr += String.fromCharCode(beat + 87);
-						}
-						else {
-							returnStr += beat;
-						}
-					}
-				}
-			}
-		}
-
-		return returnStr;
+Siteswap.prototype.printSite = function() {
+	var returnStr = '';
+	if (!this.valid) {
+		returnStr = 'Invalid siteswap. Siteswap requested: ' + this.siteStr;
 	}
-
-	this.printLoops = function() {
-		returnStr = '';
-		if (!valid) {
-			console.log('cannot print loops, invalid siteswap');
-			return null;
-		}
-		else {
-			if (loops == null) {
-				return null;
+	else {
+		if (this.sync) {
+			var tempSite = this.site;
+			if (this.site.length < 2) {
+				tempSite = 2 * this.site;
 			}
-			else {
-				for (var i = 0; i < numOfLoops; i++) {
-					var loop = loops[i];
-					for (var j = 0; j < loop.length; j++) {
-						var toss = loop[j];
+			for (i = 0; i < tempSite.length; i++) {
+				var beat = tempSite[i];
+				if (!(i % 2)) {
+					returnStr += '(';
+				}
+				if (beat instanceof Array) {
+					returnStr += '[';
+					for (var j = 0; j < beat.length; j++) {
+						var toss = beat[j];
 						if (toss > 9) {
 							returnStr += String.fromCharCode(toss + 87);
 						}
@@ -132,29 +62,138 @@ var Siteswap = function(siteswapString){
 							returnStr += toss;
 						}
 					}
-					if (i < numOfLoops - 1) {
-						returnStr += ',';
+					returnStr += ']';
+				}
+				else {
+					if (beat > 9) {
+						returnStr += String.fromCharCode(beat + 87);
+					}
+					else {
+						returnStr += beat;
+					}
+				}
+				if (!(i % 2)) {
+					returnStr += ',';
+				}
+				else {
+					returnStr += ')';
+				}
+			}
+		}
+		else {
+			for (var i = 0; i < this.site.length; i++) {
+				var beat = this.site[i];
+				if (beat instanceof Array) {
+					returnStr += '[';
+					for (var j = 0; j < beat.length; j++) {
+						var toss = beat[j];
+						if (toss > 9) {
+							returnStr += String.fromCharCode(toss + 87);
+						}
+						else {
+							returnStr += toss;
+						}
+					}
+					returnStr += ']';
+				}
+				else {
+					if (this.site[i] > 9) {
+						returnStr += String.fromCharCode(beat + 87);
+					}
+					else {
+						returnStr += beat;
 					}
 				}
 			}
 		}
+	}
 
-		return returnStr;
+	return returnStr;
+}
+
+Siteswap.prototype.printLoops = function() {
+	var returnStr = '';
+	if (!this.valid) {
+		console.log('cannot print loops, invalid siteswap');
+		return null;
 	}
-	
-	this.printArray = function() {
-		return site;
+	else {
+		if (this.loops == null) {
+			return null;
+		}
+		else {
+			for (var i = 0; i < this.numOfLoops; i++) {
+				var loop = this.loops[i];
+				for (var j = 0; j < loop.length; j++) {
+					var toss = loop[j];
+					if (toss > 9) {
+						returnStr += String.fromCharCode(toss + 87);
+					}
+					else {
+						returnStr += toss;
+					}
+				}
+				if (i < this.numOfLoops - 1) {
+					returnStr += ',';
+				}
+			}
+		}
 	}
-	this.printLoopTime = function() {
-		return loopTime;
+
+	return returnStr;
+}
+
+Siteswap.prototype.printLadderInfo = function(repeats) {
+	/**
+	 * returns object of default times and throw positions
+	 * time is beats, where there is (by default) 1 beat between every throw. if
+	 * sync, then evens are on left, odds are on right, with 1 beat between sync
+	 * left hand throw and sync right hand throw (as if it was async)
+	 */
+
+	var defaultLadder = new Object();
+	defaultLadder.endTime = this.loopTime * repeats;
+	defaultLadder.throws = [];
+	var Throw = function(start, end) {
+		this.start = start;
+		this.end = end;
 	}
-	this.isValid = function() {
-		return valid;
+
+	for (var i = 0; i < defaultLadder.endTime; i++) {
+		var curBeat = this.site[i % this.site.length];
+		if (curBeat instanceof Array) {
+			for (var j = 0; j < this.site[i].length; j++) {
+				var end = i + curBeat[j]; //if throw goes off diagram, we want it null
+				if (i + curBeat[j] > defaultLadder.endTime) {
+					end = null;
+				}
+				defaultLadder.throws.push(new Throw(i, end));
+			}
+		}
+		else {
+			var end = i + curBeat; //if throw goes off diagram, we want it null
+			if (i + curBeat > defaultLadder.endTime) {
+				end = null;
+			}
+			defaultLadder.throws.push(new Throw(i, end));
+		}
 	}
-	this.isMultiplex = function() {
-		return multiplex;
-	}
-	this.isSync = function() {
-		return sync;
-	}
+
+	return defaultLadder;
+}
+
+Siteswap.prototype.printArray = function() {
+	return this.site;
+}
+Siteswap.prototype.printLoopTime = function() {
+	return this.loopTime;
+}
+Siteswap.prototype.isValid = function() {
+	return this.valid;
+}
+Siteswap.prototype.isMultiplex = function() {
+	return this.multiplex;
+}
+Siteswap.prototype.isSync = function() {
+	return this.sync;
 }
