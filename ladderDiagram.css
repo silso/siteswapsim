@@ -1,15 +1,49 @@
 .slider {
   margin: 20px;
   display: inline-block;
+  float: left;
 }
 
 .ui-slider-vertical {
-    height: 500px;
-    width: 6px;
+  height: 500px;
+  width: 1px;
 }
 .ui-slider .ui-slider-handle {
-    height: 17px;
-    width: 17px;
-    border-radius: 8px;
-    margin-left: -1px;
+  height: 13px;
+  width: 13px;
+  border-radius: 7px;
+  margin-left: -3px;
+  font-size: 12px;
+}
+
+/* .ui-slider {
+  display: none;
+} */
+
+.inner {
+  position: relative;
+  display: inline-block;
+}
+
+#outer {
+  overflow: auto;
+}
+
+#sliders {
+  left: 100%;
+  margin-left: -100%;
+  float: left;
+}
+
+#lines {
+}
+
+.ui-slider .ui-slider-handle-disabled {
+    background: url("images/ui-bg_glass_75_e6e6e6_1x400.png") repeat-x scroll 50% 50% #E5DEDE;
+    border: 1px solid #D3D3D3;
+    color: #222;
+    font-weight: normal;
+}
+
+#leftSlider span {
 }

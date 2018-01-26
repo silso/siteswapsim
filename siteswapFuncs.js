@@ -119,7 +119,7 @@ var siteswapTranslator = function(site) {
 
     //MULTIPLEX
     else if (char == '[') {
-      mutliplex = true;
+      multiplex = true;
       siteArr[siteArr.length] = [];
 
       var multiplexStart = i; //only used for sync 'x's
@@ -263,9 +263,18 @@ var loopFinder = function(site) {
         else {
           //add num to the loop
           if (site[i] instanceof Array) {
-            loops[loopNum].push(site[curTest][timesTested[curTest]]);
-            timesTested[curTest] += 1;
-            curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen;
+            console.log(site[curTest]);
+            console.log(site[curTest][timesTested[curTest]]);
+            if (site[curTest] instanceof Array) {
+              loops[loopNum].push(site[curTest][timesTested[curTest]]);
+              timesTested[curTest] += 1;
+              curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen;
+            }
+            else {
+              loops[loopNum].push(site[curTest]);
+              timesTested[curTest] += 1;
+              curTest = (curTest + site[curTest]) % siteLen;
+            }
           }
           else {
             loops[loopNum].push(site[curTest]);

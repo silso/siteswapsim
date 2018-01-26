@@ -149,20 +149,28 @@ Siteswap.prototype.printLadderInfo = function(repeats) {
 	 * time is beats, where there is (by default) 1 beat between every throw. if
 	 * sync, then evens are on left, odds are on right, with 1 beat between sync
 	 * left hand throw and sync right hand throw (as if it was async)
+	 * NOT YET COMPATIBLE WITH SYNC/MULTIPLEX
 	 */
 
 	var defaultLadder = new Object();
 	defaultLadder.endTime = this.loopTime * repeats;
 	defaultLadder.throws = [];
+
+	/**
+	 * Throw will have start property, which is where ball comes from, and end
+	 * property, where balls land. This is for drawing lines between handles and
+	 * maybe for simulation too. if throw lands off diagram (larger than
+	 * loop time), make value null (maybe should change this).
+	 */
 	var Throw = function(start, end) {
 		this.start = start;
 		this.end = end;
 	}
 
-	for (var i = 0; i < defaultLadder.endTime; i++) {
-		var curBeat = this.site[i % this.site.length];
+	for (var i = 0; i < defaultLadder.endTime; i++) { //goes through every beat in loop time
+		var curBeat = this.site[i % this.site.length]; //index in siteswap array
 		if (curBeat instanceof Array) {
-			for (var j = 0; j < this.site[i].length; j++) {
+			for (var j = 0; j < curBeat.length; j++) {
 				var end = i + curBeat[j]; //if throw goes off diagram, we want it null
 				if (i + curBeat[j] > defaultLadder.endTime) {
 					end = null;
