@@ -1,10 +1,13 @@
 /*jshint esversion: 6 */
 /*global window, document, console */
-(function() {
+window.onload = function() {
 	"use strict";
-	var HEIGHT = window.innerHeight,
-		WIDTH = window.innerWidth,
+	var wrapper = document.getElementById("animationWrapper"),
+		HEIGHT = wrapper.clientHeight,
+		WIDTH = wrapper.clientWidth,
 		SCALE = 4,
+		TRANSX = 0,
+		TRANSY = 0,
 		
 		//gravitational acceleration
 		G = -1/2000,
@@ -18,12 +21,15 @@
 		interval = 1000/FPS,
 		delta = now - then;
 	
+	var canvas = document.getElementById("animationCanvas");
+	var ctx = canvas.getContext("2d");
+	
 	var printCount = 0;
 	var print = function(string) {
-			if ((printCount += 1) < 300) {
-				console.log(string);
-			}
-		};
+		if ((printCount += 1) < 300) {
+			console.log(string);
+		}
+	};
 	
 	
 	////////
@@ -78,6 +84,7 @@
 				//if it's not, increment index and set the start variables
 				curIndex = (curIndex + 1) % hM.length;
 				this.setStart();
+				this.move();
 			} else {
 				//if it is, set position appropriately using the form mentioned earlier
 				this.p = {
@@ -311,12 +318,25 @@
 
 			if (delta > interval) {
 				then = now - (delta % interval);
-
-				var ctx = document.getElementById("canvas").getContext("2d");
-
-
-				//ctx.globalCompositeOperation = 'luminosity';
+				
+				//for some reason, the canvas likes to be a little bit larger than the wrapper, so I multiply by .995
+				HEIGHT = 0.995*wrapper.clientHeight;
+				WIDTH = 0.995*wrapper.clientWidth;
+				// if (Math.floor(HEIGHT) !== canvas.height) {
+					canvas.height = HEIGHT;
+				// }
+				// if (Math.floor(WIDTH) !== canvas.width) {
+					canvas.width = WIDTH;
+				// }
+				
+				console.log(HEIGHT + ", " + canvas.height);
+				
+				// ctx.globalCompositeOperation = "luminosity";
+				
 				ctx.clearRect(0, 0, WIDTH, HEIGHT);
+				
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				ctx.translate(TRANSX, TRANSY);
 
 				leftHand.draw(ctx);
 				rightHand.draw(ctx);
@@ -329,7 +349,83 @@
 
 		window.requestAnimationFrame(draw);
 	}
+	
+	var events = {
+		dragging: false,
+		startX: 0,
+		startY: 0,
+		mouseDown: function(e) {
+			var r = canvas.getBoundingClientRect();
+			if (e.button === 0) {
+				events.dragging = true;
+				
+				events.startX = (e.clientX - r.left) - TRANSX;
+				events.startY = (e.clientY - r.top) - TRANSY;
+			}
+			else if (e.button === 1) {
+				TRANSX = 0;
+				TRANSY = 0;
+				SCALE = 4;
+			}
+			else {
+				console.log("mX = " + (e.clientX - r.left - r.width/2)/SCALE + ", TX = " + TRANSX/SCALE);
+			}
+		},
+		
+		mouseMove: function(e) {
+			if (events.dragging) {
+				var r = canvas.getBoundingClientRect();
+				var x = e.clientX - r.left;
+				var y = e.clientY - r.top;
+				
+				TRANSX = (x - events.startX);
+				TRANSY = (y - events.startY);
+			}
+		},
+		
+		mouseUp: function(e) {
+			events.dragging = false;
+		},
+		
+		mouseWheel: function(e) {
+			var scaleFactor = 1.4;
+			var scrollDir = e.wheelDelta;
+			var r = canvas.getBoundingClientRect();
+			
+			var mX = (e.clientX - r.left - r.width/2)/SCALE;
+			var mY = (e.clientY - r.top - r.height/2)/SCALE;
+			var TX = TRANSX/SCALE;
+			var TY = TRANSY/SCALE;
+			
+			//why was this so hard to figure out
+			if (scrollDir > 0) {
+				TRANSX = (mX + (TX - mX)*scaleFactor)*SCALE;
+				TRANSY = (mY + (TY - mY)*scaleFactor)*SCALE;
+				
+				SCALE *= scaleFactor;
+			}
+			else {
+				TRANSX = (mX + (TX - mX)/scaleFactor)*SCALE;
+				TRANSY = (mY + (TY - mY)/scaleFactor)*SCALE;
+				
+				SCALE /= scaleFactor;
+			}
+		},
+		
+		doubleClick: function(e) {
+			console.log("double!");
+			e.preventDefault();
+		}
+	}
+	
+	canvas.addEventListener('mousedown', events.mouseDown, false);
+	canvas.addEventListener('mousemove', events.mouseMove, false);
+	canvas.addEventListener('mouseup', events.mouseUp, false);
+	canvas.addEventListener('mousewheel', events.mouseWheel, false);
+	canvas.addEventListener('DOMMouseScroll', events.mouseWheel, false);
+	//canvas.addEventListener('dblclick', events.doubleClick, false);
 
 	init();
+}
 
-})();
+//FIGURE OUT WHY SETTING CANVAS HEIGHT AND WIDTH EVERY FRAM HAS AN EFFECT ON PANNING

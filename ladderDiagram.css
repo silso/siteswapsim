@@ -1,3 +1,42 @@
+html, body {
+  height: calc(100% - 8px);
+}
+
+#flexContainer {
+  display: flex;
+  height: 100%;
+}
+
+#userEntryWrapper {
+  flex-grow: 1;
+}
+
+#animationWrapper {
+  overflow: hidden;
+  flex-grow: 1;
+  min-width: 500px;
+}
+
+#animationCanvas {
+  border: 1px solid black;
+  background-color: #eee;
+}
+
+.grabbable {
+    cursor: move;
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+}
+
+.grabbable:active { 
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+}
+
+
+
 .slider {
   margin: 20px;
   display: inline-block;
