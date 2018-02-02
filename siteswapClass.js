@@ -1,5 +1,7 @@
 'use strict';
 
+//1[53]21
+
 var Siteswap = function(siteswapString){
 	this.siteStr = siteswapString;
 	this.site = new Object();
@@ -7,6 +9,7 @@ var Siteswap = function(siteswapString){
 	this.loops = null;
 	this.numOfLoops = null;
 	this.loopTime = null;
+	this.beatPattern = null;
 	this.multiplex = false;
 	this.sync = false;
 
@@ -46,14 +49,14 @@ Siteswap.prototype.printSite = function() {
 			if (this.site.length < 2) {
 				tempSite = 2 * this.site;
 			}
-			for (i = 0; i < tempSite.length; i++) {
+			for (let i = 0; i < tempSite.length; i++) {
 				var beat = tempSite[i];
 				if (!(i % 2)) {
 					returnStr += '(';
 				}
 				if (beat instanceof Array) {
 					returnStr += '[';
-					for (var j = 0; j < beat.length; j++) {
+					for (let j = 0; j < beat.length; j++) {
 						var toss = beat[j];
 						if (toss > 9) {
 							returnStr += String.fromCharCode(toss + 87);
@@ -81,11 +84,11 @@ Siteswap.prototype.printSite = function() {
 			}
 		}
 		else {
-			for (var i = 0; i < this.site.length; i++) {
+			for (let i = 0; i < this.site.length; i++) {
 				var beat = this.site[i];
 				if (beat instanceof Array) {
 					returnStr += '[';
-					for (var j = 0; j < beat.length; j++) {
+					for (let j = 0; j < beat.length; j++) {
 						var toss = beat[j];
 						if (toss > 9) {
 							returnStr += String.fromCharCode(toss + 87);
@@ -122,9 +125,9 @@ Siteswap.prototype.printLoops = function() {
 			return null;
 		}
 		else {
-			for (var i = 0; i < this.numOfLoops; i++) {
+			for (let i = 0; i < this.numOfLoops; i++) {
 				var loop = this.loops[i];
-				for (var j = 0; j < loop.length; j++) {
+				for (let j = 0; j < loop.length; j++) {
 					var toss = loop[j];
 					if (toss > 9) {
 						returnStr += String.fromCharCode(toss + 87);
@@ -167,10 +170,10 @@ Siteswap.prototype.printLadderInfo = function(repeats) {
 		this.end = end;
 	}
 
-	for (var i = 0; i < defaultLadder.endTime; i++) { //goes through every beat in loop time
+	for (let i = 0; i < defaultLadder.endTime; i++) { //goes through every beat in loop time
 		var curBeat = this.site[i % this.site.length]; //index in siteswap array
 		if (curBeat instanceof Array) {
-			for (var j = 0; j < curBeat.length; j++) {
+			for (let j = 0; j < curBeat.length; j++) {
 				var end = i + curBeat[j]; //if throw goes off diagram, we want it null
 				if (i + curBeat[j] > defaultLadder.endTime) {
 					end = null;
@@ -180,13 +183,13 @@ Siteswap.prototype.printLadderInfo = function(repeats) {
 		}
 		else {
 			var end = i + curBeat; //if throw goes off diagram, we want it null
-			if (i + curBeat > defaultLadder.endTime) {
-				end = null;
-			}
+			// if (i + curBeat > defaultLadder.endTime) {
+			// 	end = null;
+			// }
 			defaultLadder.throws.push(new Throw(i, end));
 		}
 	}
-
+	console.log('asdf', defaultLadder);
 	return defaultLadder;
 }
 

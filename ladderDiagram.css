@@ -29,7 +29,7 @@ html, body {
     cursor: -webkit-grab;
 }
 
-.grabbable:active { 
+.grabbable:active {
     cursor: grabbing;
     cursor: -moz-grabbing;
     cursor: -webkit-grabbing;
@@ -38,20 +38,22 @@ html, body {
 
 
 .slider {
-  margin: 20px;
+  background: transparent;
+  margin: 50px;
   display: inline-block;
   float: left;
+  border: 50px;
 }
 
 .ui-slider-vertical {
-  height: 500px;
-  width: 1px;
+  height: 700px;
+  width: 7px;
 }
 .ui-slider .ui-slider-handle {
   height: 13px;
   width: 13px;
   border-radius: 7px;
-  margin-left: -3px;
+  margin-left: 0px;
   font-size: 12px;
 }
 
@@ -74,11 +76,8 @@ html, body {
   float: left;
 }
 
-#lines {
-}
-
 .ui-slider .ui-slider-handle-disabled {
-    background: url("images/ui-bg_glass_75_e6e6e6_1x400.png") repeat-x scroll 50% 50% #E5DEDE;
+    background: repeat-x scroll 50% 50% #E5DEDE; /*cheese*/
     border: 1px solid #D3D3D3;
     color: #222;
     font-weight: normal;

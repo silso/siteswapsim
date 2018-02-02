@@ -316,3 +316,5 @@ var loopTimeFinder = function(loops) {
 
   return Number(lt);
 }
+
+var beatPatternGenerator = function(){}
