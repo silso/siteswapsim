@@ -458,17 +458,16 @@ var AnimationScript = function() {
 		console.log("%%%%%%%%%%%%%%%");
 		//loop through loops
 		for (let i = 0; i < loops.length; i++) {
+			let loop = loops[i];
 			//sum of throw numbers in a loop to find number of props
 			let loopSum = 0;
-			for (let j = 0; j < loops[i].length; j++) {
-				loopSum += loops[i][j].n;
+			for (let j = 0; j < loop.length; j++) {
+				loopSum += loop[j].n;
 			}
 			
-			
 			//number of balls to be created
-			let numBalls = loopSum / site.length;
+			let loopPropCount = loopSum / site.length;
 			
-			let loop = loops[i];
 			
 			//MOVE THESE TWO ELSEWHERE
 			//beat pattern
@@ -480,85 +479,95 @@ var AnimationScript = function() {
 			
 			//length of loop when accounting for ball landing in original hand
 			let realLength = loop.length * (loopSum % 2 + 1);
-			//sum of previous throw numbers (to determine hand)
-			let curSum = 0;
 			
-			//index of current throw in loop
-			let loopIndex = 0;
-			//index of next throw in loop
-			let nextLoopIndex = (loopIndex + 1) % loop.length;
 			
-			//index of current throw in beatPattern (and throwInfo)
-			let throwIndex = loop[0].i;
-			//index of next throw in beatPattern
-			let nextThrowIndex = tI[throwIndex].end % tI.length;
-			//index of current catch in beatPattern (where current throw is landing) (nextThrowIndex - 1)
-			let catchIndex = (nextThrowIndex + tI.length - 1) % tI.length;
-			
-			//shifts the ball movement such that first throw starts at t=0
-			let endTime = inputPreset.throwInfo.endTime;
-			let shift = bP[throwIndex].start;
-			
-			//runs through a loop - twice if the loop's sum is odd (so that it isn't asymmetrical)
-			for (let j = 0; j < realLength; j++) {
-				// console.log("j = " + j);
-				// console.log(throwIndex, nextThrowIndex, catchIndex);
+			for (let j = 0; j < loopPropCount; j++) {
+				//sum of previous throw numbers (to determine hand)
+				let curSum = 0;
 				
-				//apply aforementioned shift
-				function shiftThrow(time) {
-					return ((time + endTime - shift) % endTime) * 1000;
-				}
 				
-				//if offsetIndex is odd, switch all hands
-				let offsetIndex = (j * inputPreset.site.loopTime / numBalls) % 2;
+				let sitePos = j * (site.length / loopPropCount);
 				
-				//throw object with n = throw number and i = bP index
-				let curThrow = loop[loopIndex];
-				//true if current throw is from left hand
-				let isLeft = !(curSum%2);
-				//true if current throw will land in left hand
-				let isNextLeft = !((curSum + curThrow.n) % 2);
 				
-				//if the last catch is at the very last time, do not set it to zero, set it to the last time
-				let lastCatch;
-				if (shiftThrow(bP[nextThrowIndex].start) === 0) {
-					lastCatch = endTime * 1000;
-				}
-				else {
-					lastCatch = shiftThrow(bP[nextThrowIndex].start);
-				}
+				//index of current throw in loop
+				let loopIndex = 0;
+				//index of next throw in loop
+				let nextLoopIndex = (loopIndex + 1) % loop.length;
 				
-				//timings are multiplied by 1000 because beatPattern uses seconds instead of ms
-				bM[j] = {
-					throw: {
-						p: {
-							x: isLeft ^ offsetIndex ? -5 : 5,
-							y: 0
-						},
-						start: shiftThrow(bP[throwIndex].start),
-						end: shiftThrow(bP[catchIndex].end)
-					},
-					catch: {
-						p: {
-							x: isNextLeft ^ offsetIndex ? -35: 35,
-							y: 0
-						},
-						start: shiftThrow(bP[catchIndex].end),
-						end: lastCatch,
-						hand: isNextLeft ^ offsetIndex ? "left" : "right"
+				//index of current throw in beatPattern (and throwInfo)
+				let throwIndex = loop[j * (loop.length / loopPropCount)].i;
+				//index of next throw in beatPattern
+				let nextThrowIndex = tI[throwIndex].end % tI.length;
+				//index of current catch in beatPattern (where current throw is landing) (nextThrowIndex - 1)
+				let catchIndex = (nextThrowIndex + tI.length - 1) % tI.length;
+				
+				//shifts the ball movement such that first throw starts at t=0
+				let endTime = inputPreset.throwInfo.endTime;
+				let shift = bP[throwIndex].start;
+				
+				for (let k = 0; k < realLength; k++) {
+					// console.log("j = " + j);
+					// console.log(throwIndex, nextThrowIndex, catchIndex);
+					
+					//apply aforementioned shift
+					function shiftThrow(time) {
+						return ((time + endTime - shift) % endTime) * 1000;
 					}
-				};
+					
+					//if offsetIndex is odd, switch all hands
+					let offsetIndex = (j * inputPreset.site.loopTime / numBalls) % 2;
+					
+					//throw object with n = throw number and i = bP index
+					let curThrow = loop[loopIndex];
+					//true if current throw is from left hand
+					let isLeft = !(curSum%2);
+					//true if current throw will land in left hand
+					let isNextLeft = !((curSum + curThrow.n) % 2);
+					
+					//if the last catch is at the very last time, do not set it to zero, set it to the last time
+					let lastCatch;
+					if (shiftThrow(bP[nextThrowIndex].start) === 0) {
+						lastCatch = endTime * 1000;
+					}
+					else {
+						lastCatch = shiftThrow(bP[nextThrowIndex].start);
+					}
+					
+					//timings are multiplied by 1000 because beatPattern uses seconds instead of ms
+					bM[j] = {
+						throw: {
+							p: {
+								x: isLeft ^ offsetIndex ? -5 : 5,
+								y: 0
+							},
+							start: shiftThrow(bP[throwIndex].start),
+							end: shiftThrow(bP[catchIndex].end)
+						},
+						catch: {
+							p: {
+								x: isNextLeft ^ offsetIndex ? -35: 35,
+								y: 0
+							},
+							start: shiftThrow(bP[catchIndex].end),
+							end: lastCatch,
+							hand: isNextLeft ^ offsetIndex ? "left" : "right"
+						}
+					};
+					
+					//update vars
+					curSum += loop[j];
+					
+					loopIndex = nextLoopIndex;
+					nextLoopIndex = (loopIndex + 1) % loop.length;
+					
+					throwIndex = nextThrowIndex;
+					nextThrowIndex = tI[throwIndex].end % tI.length;
+					catchIndex = (nextThrowIndex + tI.length - 1) % tI.length;
+					
+				}
 				
-				//update vars
-				curSum += loop[j];
-				
-				loopIndex = nextLoopIndex;
-				nextLoopIndex = (loopIndex + 1) % loop.length;
-				
-				throwIndex = nextThrowIndex;
-				nextThrowIndex = tI[throwIndex].end % tI.length;
-				catchIndex = (nextThrowIndex + tI.length - 1) % tI.length;
 			}
+			
 			
 			console.log(bM);
 			

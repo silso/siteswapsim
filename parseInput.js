@@ -4,11 +4,13 @@
 //TODO: make sliders/canvas fit window height
 //TODO: make slider handle value not on slider (by appending an element)
 
+//temporary global to figure out animation stuff
+var preset;
+
 $(document).ready(function() {
 
   //misc initializations
   var site,
-    preset,
     throwTime = 0.9, //starting value for dwell
     dwellLimit = 0.1, //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
     throwLimit = 0.1, //smallest allowed value for throws time
@@ -39,13 +41,14 @@ $(document).ready(function() {
       //last catch is special, only one handle and is static
       this.beatPattern.push(new Throw(this.throwInfo.endTime, null));
 
-      console.log(this.beatPattern);
+      // console.log(this.beatPattern);
     }
 
   siteswapForm.onsubmit = function(e) {
     e.preventDefault();
     parseInput();
     resetLadder();
+    animationInstance.init(preset);
   }
 
   var parseInput = function() {
@@ -53,16 +56,16 @@ $(document).ready(function() {
     site = new Siteswap(String(input.value));
     preset = new Preset(site);
 
-    console.log('array:', site.printArray());
-    console.table({
-      'valid': site.isValid(),
-      'siteswap': site.printSite(),
-      'loops': site.printLoops(),
-      'looptime': site.printLoopTime()
-    });
+    // console.log('array:', site.printArray());
+    // console.table({
+    //   'valid': site.isValid(),
+    //   'siteswap': site.printSite(),
+    //   'loops': site.printLoops(),
+    //   'looptime': site.printLoopTime()
+    // });
 
-    console.log('throwInfo: ', preset.throwInfo);
-    console.log('beatPattern: ', preset.beatPattern);
+    // console.log('throwInfo: ', preset.throwInfo);
+    // console.log('beatPattern: ', preset.beatPattern);
   }
 
   //canvas initializations
@@ -86,7 +89,7 @@ $(document).ready(function() {
           rightNodes.push(preset.beatPattern[i].end);
       }
     }
-
+    
     //without this, extra handles dont get added when loop time increases
     $('.slider').slider();
     $('.slider').slider('destroy');

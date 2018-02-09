@@ -29,6 +29,7 @@ var Siteswap = function(siteswapString){
 	}
 
 	if (this.valid) {
+		this.propCount = propCount(this.site);
 		this.loops = loopFinder(this.site);
 		this.numOfLoops = this.loops.length;
 		this.loopTime = loopTimeFinder(this.loops);
@@ -189,7 +190,6 @@ Siteswap.prototype.printLadderInfo = function(repeats) {
 			defaultLadder.throws.push(new Throw(i, end));
 		}
 	}
-	console.log('asdf', defaultLadder);
 	return defaultLadder;
 }
 

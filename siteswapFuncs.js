@@ -249,8 +249,7 @@ var loopFinder = function(site) {
     }
   }
 
-  var i = 0;
-  while (i < siteLen) {
+  for (let i = 0; i < siteLen; i++) {
     if (timesToTest[i] != timesTested[i] && site[i]) {
       var curTest = i;
       while (true) {
@@ -263,29 +262,34 @@ var loopFinder = function(site) {
         else {
           //add num to the loop
           if (site[i] instanceof Array) {
-            console.log(site[curTest]);
-            console.log(site[curTest][timesTested[curTest]]);
             if (site[curTest] instanceof Array) {
-              loops[loopNum].push(site[curTest][timesTested[curTest]]);
+              loops[loopNum].push({
+                n: site[curTest][timesTested[curTest]],
+                i: curTest
+              });
               timesTested[curTest] += 1;
               curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen;
             }
             else {
-              loops[loopNum].push(site[curTest]);
+              loops[loopNum].push({
+                n: site[curTest],
+                i: curTest
+              });
               timesTested[curTest] += 1;
               curTest = (curTest + site[curTest]) % siteLen;
             }
           }
           else {
-            loops[loopNum].push(site[curTest]);
+            loops[loopNum].push({
+              n: site[curTest],
+              i: curTest
+            });
             timesTested[curTest] += 1;
             curTest = (curTest + site[curTest]) % siteLen;
           }
         }
       }
     }
-
-    i += 1;
   }
 
   return loops.slice(0, loops.length - 1);
@@ -301,7 +305,7 @@ var loopTimeFinder = function(loops) {
   for (var loop = 0; loop < loops.length; loop++) {
     var singleLoopTime = 0;
     for (var throw_ = 0; throw_ < loops[loop].length; throw_++) {
-      singleLoopTime += loops[loop][throw_]; //add the throw heights together
+      singleLoopTime += loops[loop][throw_].n; //add the throw heights together
     }
     if (singleLoopTime % 2) {
       singleLoopTime *= 2; //if the loop is odd, it must loop again to return to the same hand
@@ -318,3 +322,18 @@ var loopTimeFinder = function(loops) {
 }
 
 var beatPatternGenerator = function(){}
+
+var propCount = function(site) {
+  var sum = 0;
+  for (var i = 0; i < site.length; i++) {
+    if (site[i] instanceof Array) {
+      for (var j = 0; j < site[i].length; j++) {
+        sum += site[i][j];
+      }
+    }
+    else {
+      sum += site[i];
+    }
+  }
+  return sum / site.length;
+}
