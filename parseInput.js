@@ -11,7 +11,7 @@ $(document).ready(function() {
 
   //misc initializations
   var site,
-    throwTime = 0.9, //starting value for dwell
+    throwTime = 0.5, //starting value for dwell
     dwellLimit = 0.1, //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
     throwLimit = 0.1, //smallest allowed value for throws time
     siteswapForm = document.getElementById('siteswapForm');
