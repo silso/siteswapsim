@@ -16,19 +16,16 @@
   <body>
     <div id='flexContainer'>
       <div id='userEntryWrapper'>
-        <div id='userEntry'>
-          <form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap'></input></form>
-          <div id='ladderDiagram'>
-            <button id='resetLadder'>reset ladder</button>
-            <div id='outer'>
-              <div class='inner' id='lines'>
-                <canvas id='ladderLines' style='border:1px solid #d3d3d3' ></canvas>
-              </div>
-              <div class='inner' id='sliders'>
-                <span tabindex="0" class="slider-handle" style="bottom: 22%;"></span>
-                <div id='leftSlider' class='slider'></div>
-                <div id='rightSlider' class='slider'></div>
-              </div>
+        <form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap'></input></form>
+        <div id='ladderDiagram'>
+          <button id='resetLadder'>reset ladder</button>
+          <div id='outer'>
+            <div class='inner' id='lines'>
+              <canvas id='ladderLines' style='border:1px solid #d3d3d3'></canvas>
+            </div>
+            <div class='inner' id='sliders'>
+              <div id='leftSlider' class='slider'></div>
+              <div id='rightSlider' class='slider'></div>
             </div>
           </div>
         </div>

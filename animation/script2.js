@@ -8,30 +8,30 @@ window.onload = function() {
 		SCALE = 4,
 		TRANSX = 0,
 		TRANSY = 0,
-		
+
 		//gravitational acceleration
 		G = -1/2000,
 		//frames per second (max)
 		FPS = 60,
 		//scales the start and end velocities of the hand movements
 		K = 0.001,
-		
+
 		now = Date.now(),
 		then = Date.now(),
 		interval = 1000/FPS,
 		delta = now - then;
-	
+
 	var canvas = document.getElementById("animationCanvas");
 	var ctx = canvas.getContext("2d");
-	
+
 	var printCount = 0;
 	var print = function(string) {
 		if ((printCount += 1) < 300) {
 			console.log(string);
 		}
 	};
-	
-	
+
+
 	////////
 	//Hand class: moves and draws a hand according to the array/loop of hand movements hM.
 	//refer to the start of the init() function for the structure of these arrays
@@ -78,7 +78,7 @@ window.onload = function() {
 			this.t = (now - this.ti) % hM[hM.length - 1].t;
 			//time relative to the start of the hand movement
 			let t = K*(this.t - curMove.ti);
-			
+
 			//check whether this.t is within the current hand movement
 			if (this.t < curMove.ti || this.t > curMove.t) {
 				//if it's not, increment index and set the start variables
@@ -93,8 +93,8 @@ window.onload = function() {
 				};
 			}
 		};
-		
-		
+
+
 		//called each frame before the move method, draws a circle at the Hand's position
 		this.draw = function(ctx) {
 			//save the current context brush(?)
@@ -103,38 +103,38 @@ window.onload = function() {
 			ctx.fillStyle = "#222";
 			//trace a circular path at the appropriate position, (0, 0) is at the center of the screen
 			ctx.beginPath();
-			ctx.arc(WIDTH/2 + SCALE*this.p.x, 
-				HEIGHT/2 - SCALE*this.p.y, 
+			ctx.arc(WIDTH/2 + SCALE*this.p.x,
+				HEIGHT/2 - SCALE*this.p.y,
 				SCALE*9/2, 0, 2*Math.PI);
 			ctx.fill();
 			//restore the previous context brush(?)
 			ctx.restore();
 		};
-		
-		
+
+
 		//called by a ball during the ball's "catch" phase, sets the ball's position to the hand's position
 		this.grab = function(ball) {
 			ball.setPos(this.p);
 		};
-		
-		
+
+
 		//called during the global init() function, sets the origin time for the hand movements, declares Hand properties, then runs the method setStart()
 		this.init = function(time) {
 			//the Date.now() time corresponding to when the loop's t=0 is based
 			this.ti = time;
-			
+
 			//initializing other properties of the class that are used elsewhere
 			this.t = this.ti;
 			this.p = {};
-			
+
 			curIndex = 0;
 			this.setStart();
 		};
 	};
-	
-	
+
+
 	////////
-	//Ball class: 
+	//Ball class:
 	var Ball = function(color, radius, bM, offset) {
 
 		this.setStart = function() {
@@ -149,12 +149,12 @@ window.onload = function() {
 				this.i = (this.i + 1) % bM.length;
 				this.setStart();
 			} else if (this.t < this.tc) {
-				this.p.x = 
-					((bM[this.i].catch.p.x - bM[this.i].throw.p.x) / (this.tc - this.tci))*(this.t - this.tci) + 
+				this.p.x =
+					((bM[this.i].catch.p.x - bM[this.i].throw.p.x) / (this.tc - this.tci))*(this.t - this.tci) +
 					bM[this.i].throw.p.x;
-				this.p.y = 
-					0.5*G*(this.t - this.tci)*(this.t - this.tci) + 
-					((-0.5*G*(this.tc - this.tci)*(this.tc - this.tci) + bM[this.i].catch.p.y - bM[this.i].throw.p.y) / (this.tc - this.tci))*(this.t - this.tci) + 
+				this.p.y =
+					0.5*G*(this.t - this.tci)*(this.t - this.tci) +
+					((-0.5*G*(this.tc - this.tci)*(this.tc - this.tci) + bM[this.i].catch.p.y - bM[this.i].throw.p.y) / (this.tc - this.tci))*(this.t - this.tci) +
 					bM[this.i].throw.p.y;
 			} else {
 				bM[this.i].catch.h.grab(this);
@@ -170,14 +170,14 @@ window.onload = function() {
 			ctx.save();
 			ctx.fillStyle = this.c;
 			ctx.beginPath();
-			ctx.arc(WIDTH / 2 + SCALE * this.p.x, 
-					HEIGHT / 2 - SCALE * this.p.y, 
+			ctx.arc(WIDTH / 2 + SCALE * this.p.x,
+					HEIGHT / 2 - SCALE * this.p.y,
 					SCALE * this.r / 2, 0, 2 * Math.PI);
 			ctx.fill();
 			ctx.restore();
 		};
 
-		this.init = function(time) {		
+		this.init = function(time) {
 			this.ti = time;
 			this.offset = offset;
 
@@ -303,10 +303,10 @@ window.onload = function() {
 			new Ball("#FF00FF", 7, ballMovements, 1800),
 			new Ball("#00FFFF", 7, ballMovements, 2400)
 		];
-		
+
 		balls.forEach(function(a) {a.init(now);});
-		
-		
+
+
 		//
 
 
@@ -318,7 +318,7 @@ window.onload = function() {
 
 			if (delta > interval) {
 				then = now - (delta % interval);
-				
+
 				//for some reason, the canvas likes to be a little bit larger than the wrapper, so I multiply by .995
 				HEIGHT = 0.995*wrapper.clientHeight;
 				WIDTH = 0.995*wrapper.clientWidth;
@@ -328,13 +328,13 @@ window.onload = function() {
 				// if (Math.floor(WIDTH) !== canvas.width) {
 					canvas.width = WIDTH;
 				// }
-				
-				console.log(HEIGHT + ", " + canvas.height);
-				
+
+				//console.log(HEIGHT + ", " + canvas.height);
+
 				// ctx.globalCompositeOperation = "luminosity";
-				
+
 				ctx.clearRect(0, 0, WIDTH, HEIGHT);
-				
+
 				ctx.setTransform(1, 0, 0, 1, 0, 0);
 				ctx.translate(TRANSX, TRANSY);
 
@@ -349,7 +349,7 @@ window.onload = function() {
 
 		window.requestAnimationFrame(draw);
 	}
-	
+
 	var events = {
 		dragging: false,
 		startX: 0,
@@ -358,7 +358,7 @@ window.onload = function() {
 			var r = canvas.getBoundingClientRect();
 			if (e.button === 0) {
 				events.dragging = true;
-				
+
 				events.startX = (e.clientX - r.left) - TRANSX;
 				events.startY = (e.clientY - r.top) - TRANSY;
 			}
@@ -371,53 +371,53 @@ window.onload = function() {
 				console.log("mX = " + (e.clientX - r.left - r.width/2)/SCALE + ", TX = " + TRANSX/SCALE);
 			}
 		},
-		
+
 		mouseMove: function(e) {
 			if (events.dragging) {
 				var r = canvas.getBoundingClientRect();
 				var x = e.clientX - r.left;
 				var y = e.clientY - r.top;
-				
+
 				TRANSX = (x - events.startX);
 				TRANSY = (y - events.startY);
 			}
 		},
-		
+
 		mouseUp: function(e) {
 			events.dragging = false;
 		},
-		
+
 		mouseWheel: function(e) {
 			var scaleFactor = 1.4;
 			var scrollDir = e.wheelDelta;
 			var r = canvas.getBoundingClientRect();
-			
+
 			var mX = (e.clientX - r.left - r.width/2)/SCALE;
 			var mY = (e.clientY - r.top - r.height/2)/SCALE;
 			var TX = TRANSX/SCALE;
 			var TY = TRANSY/SCALE;
-			
+
 			//why was this so hard to figure out
 			if (scrollDir > 0) {
 				TRANSX = (mX + (TX - mX)*scaleFactor)*SCALE;
 				TRANSY = (mY + (TY - mY)*scaleFactor)*SCALE;
-				
+
 				SCALE *= scaleFactor;
 			}
 			else {
 				TRANSX = (mX + (TX - mX)/scaleFactor)*SCALE;
 				TRANSY = (mY + (TY - mY)/scaleFactor)*SCALE;
-				
+
 				SCALE /= scaleFactor;
 			}
 		},
-		
+
 		doubleClick: function(e) {
 			console.log("double!");
 			e.preventDefault();
 		}
 	}
-	
+
 	canvas.addEventListener('mousedown', events.mouseDown, false);
 	canvas.addEventListener('mousemove', events.mouseMove, false);
 	canvas.addEventListener('mouseup', events.mouseUp, false);
