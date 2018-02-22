@@ -12,8 +12,9 @@
 //get rid of ghosts when you zoom in while panning at the same time
 //stop panning (simulate mouseUp) when mouse leaves canvas (is it possible?)
 
-let balls = [];
+let dwellPath = [];
 let hands = {};
+let balls = [];
 
 let AnimationScript = function() {
 	"use strict";
@@ -24,7 +25,8 @@ let AnimationScript = function() {
 		TRANSX = 0,
 		TRANSY = 0,
 
-		SPEED = 4,
+		SPEED = 3.5,
+		SHIFT = 100000,
 
 		//gravitational acceleration
 		G = -1/2000,
@@ -34,14 +36,15 @@ let AnimationScript = function() {
 		K = 0.001,
 
 		now = Date.now(),
-		then = Date.now(),
-		interval = 1000/FPS,
-		delta = now - then,
 
 		canvas,
 		ctx;
 
 	let eventsAdded = false;
+
+	let mod = function(a, b) {
+		return (a >= 0) ? a % b : mod(a + b, b);
+	}
 
 	////////
 	//Hand class: moves and draws a hand according to the array/loop of hand movements hM.
@@ -87,7 +90,7 @@ let AnimationScript = function() {
 		this.move = function() {
 			// console.log(":::", this.t, );
 			//time relative to the start of the hand movements loop
-			this.t = (now - this.ti + this.offset) % hM[hM.length - 1].end;
+			this.t = mod(now - this.ti - this.offset, hM[hM.length - 1].end);
 			//time relative to the start of the hand movement
 			let t = K*(this.t - curMove.start);
 
@@ -340,390 +343,39 @@ let AnimationScript = function() {
 		const site = inputPreset.site.site;
 		const loops = inputPreset.site.loops;
 
-		let lH = [];
-		let rH = [];
-
-
-		/*for (let i = 0; i < site.length; i++) {
-			lH[2*i] = {
-				p: {x:-5, y:0},
-				v: {
-					//these are the wrong numbers, x should depend on throw height too
-					x:30,
-					y:100*(site[i] - 1)
-				},
-				ti:1000*(2*i),
-				t:1000*(2*i+1)
-			}
-			lH[2*i + 1] = {
-				p: {x:-35, y:0},
-				v: {
-					x:-30,
-					y:-50*(site[(i + 1) % site.length] - 1)
-				},
-				ti:1000*(2*i+1),
-				t:1000*(2*i+2)
-			}
-			rH[2*i] = {
-				p: {x:35, y:0},
-				v: {
-					x:30,
-					y:-50*(site[i] - 1)
-				},
-				ti:1000*(2*i),
-				t:1000*(2*i+1)
-			}
-			rH[2*i + 1] = {
-				p: {x:5, y:0},
-				v: {
-					x:-30,
-					y:100*(site[(i + 1) % site.length] - 1)
-				},
-				ti:1000*(2*i+1),
-				t:1000*(2*i+2)
-			}
-		}*/
-
-		/*(function() {
-			let bP = JSON.parse(JSON.stringify(inputPreset.beatPattern));
-			bP.forEach(function(thr) {
-				thr.start /= SPEED/500;
-				thr.end /= SPEED/500;
-			});
-
-			let siteSum = 0;
-			for (let i = 0; i < site.length; i++) {
-				siteSum += site[i];
-			}
-
-			let realLength = site.length * (siteSum % 2 + 1);
-
-			for (let i = 0; i < realLength; i++) {
-				let index = i % site.length;
-				let nextI = (index + 1) % site.length;
-				if (site[index] instanceof Array) {
-					let multiplexSum = 0;
-					for (let j = 0; j < site[index].length; j++) {
-						multiplexSum += site[index][j];
-					}
-
-					let throwBP = bP[index];
-					//bP element of where this throw will land
-					let catchBP = bP[(index + Math.min(...site[index]) - 1) % site.length];
-
-					if (!(i % 2)) {
-						lH.push({
-							p: {
-								x: -5,
-								y: 0
-							},
-							v: {
-								x: (35 - (-5))/(catchBP.end - throwBP.start),
-								y: 150*Math.log(Math.min(...site[index]) + 1)
-							},
-							start: throwBP.start,
-							end: throwBP.end
-						},
-						{
-							p: {
-								x: -35,
-								y: 0
-							},
-							v: {
-								x: -30,
-								y: -250
-							},
-							start: throwBP.end,
-							end: bP[(index + 2) % bP.length].start
-						});
-					}
-					else {
-						rH.push({
-							p: {
-								x: 5,
-								y: 0
-							},
-							v: {
-								x: (-35 - 5)/(catchBP.end - throwBP.start),
-								y: 150*Math.log(Math.min(...site[index]) + 1)
-							},
-							start: throwBP.start,
-							end: throwBP.end
-						},
-						{
-							p: {
-								x: 35,
-								y: 0
-							},
-							v: {
-								x: 30,
-								y: -250
-							},
-							start: throwBP.end,
-							end: bP[(index + 2) % bP.length].start
-						});
-					}
-				}
-				else {
-					let throwBP = bP[index];
-					//bP element of where this throw will land
-					let catchBP = bP[(index + site[index] - 1) % site.length];
-
-					if (!(i % 2)) {
-						lH.push({
-							p: {
-								x: -5,
-								y: 0
-							},
-							v: {
-								x: (35 - (-5))/(catchBP.end - throwBP.start),
-								y: 150*Math.log(site[index] + 1)
-							},
-							start: throwBP.start,
-							end: throwBP.end
-						},
-						{
-							p: {
-								x: -35,
-								y: 0
-							},
-							v: {
-								x: -30,
-								y: -250
-							},
-							start: throwBP.end,
-							end: bP[(index + 2) % bP.length].start
-						});
-					}
-					else {
-						rH.push({
-							p: {
-								x: 5,
-								y: 0
-							},
-							v: {
-								x: (-35 - 5)/(catchBP.end - throwBP.start),
-								y: 150*Math.log(site[index] + 1)
-							},
-							start: throwBP.start,
-							end: throwBP.end
-						},
-						{
-							p: {
-								x: 35,
-								y: 0
-							},
-							v: {
-								x: 30,
-								y: -250
-							},
-							start: throwBP.end,
-							end: bP[(index + 2) % bP.length].start
-						});
-					}
-				}
-			}
-		})();*/
-
-		/*(function() {
-			let bP = JSON.parse(JSON.stringify(inputPreset.beatPattern));
-			bP.forEach(function(thr) {
-				thr.start /= SPEED/1000;
-				thr.end /= SPEED/1000;
-			});
-
-			let siteSum = 0;
-			for (let i = 0; i < site.length; i++) {
-				siteSum += site[i];
-			}
-
-			let realLength = site.length * (siteSum % 2 + 1);
-
-			for (let i = 0; i < realLength; i++) {
-				let index = i % bP.length;
-				let nextI = (index + 1) % bP.length;
-				if (site[index] instanceof Array) {
-					let multiplexSum = 0;
-					for (let j = 0; j < site[index].length; j++) {
-						multiplexSum += site[index][j];
-					}
-
-					let throwBP = bP[index];
-					//bP element of where this throw will land
-					let catchBP = bP[(index + Math.min(...site[index]) - 1) % site.length];
-
-					if (!(i % 2)) {
-						lH.push({
-							p: {
-								x: -5,
-								y: 0
-							},
-							v: {
-								x: (35 - (-5))/(catchBP.end - throwBP.start),
-								y: 150*Math.log(Math.min(...site[index]) + 1)
-							},
-							start: throwBP.start,
-							end: throwBP.end
-						},
-						{
-							p: {
-								x: -35,
-								y: 0
-							},
-							v: {
-								x: -30,
-								y: -250
-							},
-							start: throwBP.end,
-							end: bP[(index + 2) % bP.length].start
-						});
-					}
-					else {
-						rH.push({
-							p: {
-								x: 5,
-								y: 0
-							},
-							v: {
-								x: (-35 - 5)/(catchBP.end - throwBP.start),
-								y: 150*Math.log(Math.min(...site[index]) + 1)
-							},
-							start: throwBP.start,
-							end: throwBP.end
-						},
-						{
-							p: {
-								x: 35,
-								y: 0
-							},
-							v: {
-								x: 30,
-								y: -250
-							},
-							start: throwBP.end,
-							end: bP[(index + 2) % bP.length].start
-						});
-					}
-				}
-				else {
-					let throwBP = bP[index];
-					let nextThrowBP = bP[(index + 2) % bP.length];
-					console.log(throwBP);
-					//bP element of where this throw will land
-					let catchBP = bP[(index + site[index % site.length] - 1) % site.length];
-
-					if (!(i % 2)) {
-						lH.push({
-							p: {
-								x: -5,
-								y: 0
-							},
-							v: {
-								x: (35 - (-5))/(catchBP.end - throwBP.start),
-								y: 150*Math.log(site[index] + 1)
-							},
-							start: throwBP.start,
-							end: nextThrowBP.start
-						},
-						{
-							p: {
-								x: -35,
-								y: 0
-							},
-							v: {
-								x: -30,
-								y: -250
-							},
-							start: nextThrowBP.start,
-							end: nextThrowBP.end
-						});
-					}
-					else {
-						rH.push({
-							p: {
-								x: 5,
-								y: 0
-							},
-							v: {
-								x: (-35 - 5)/(catchBP.end - throwBP.start),
-								y: 150*Math.log(site[index] + 1)
-							},
-							start: throwBP.start,
-							end: nextThrowBP.start
-						},
-						{
-							p: {
-								x: 35,
-								y: 0
-							},
-							v: {
-								x: 30,
-								y: -250
-							},
-							start: nextThrowBP.start,
-							end: nextThrowBP.end
-						});
-					}
-				}
-			}
-		})();*/
-
-		// lH = [
-		// 	{
-		// 		p: {
-		// 			x: -5,
-		// 			y: 0
-		// 		},
-		// 		v: {
-		// 			x: 10,
-		// 			y: 250
-		// 		},
-		// 		start: 0,
-		// 		end: 750
-		// 	},
-		// 	{
-		// 		p: {
-		// 			x: -35,
-		// 			y: 0
-		// 		},
-		// 		v: {
-		// 			x: -50,
-		// 			y: -150
-		// 		},
-		// 		start: 750,
-		// 		end: 1000
-		// 	}
-		// ];
-		// rH = [
-		// 	{
-		// 		p: {
-		// 			x: 5,
-		// 			y: 0
-		// 		},
-		// 		v: {
-		// 			x: -10,
-		// 			y: 250
-		// 		},
-		// 		start: 0,
-		// 		end: 750
-		// 	},
-		// 	{
-		// 		p: {
-		// 			x: 35,
-		// 			y: 0
-		// 		},
-		// 		v: {
-		// 			x: 50,
-		// 			y: -150
-		// 		},
-		// 		start: 750,
-		// 		end: 1000
-		// 	}
-		// ];
-
+		//generate dwellpath
 		(function() {
-			let site = inputPreset.site.site;
-			console.log(site);
+			let bP = inputPreset.beatPattern;
+
+			for (let i = 0; i < bP.length - 1; i += 2) {
+				dwellPath[i] = [
+					{
+						x: -10,
+						y: 0
+					},
+					{
+						x: -35,
+						y: 0
+					}
+				];
+				dwellPath[i + 1] = [
+					{
+						x: 35,
+						y: 0
+					},
+					{
+						x: 10,
+						y: 0
+					}
+				];
+			}
+		})();
+
+		//generate handmovements
+		(function() {
+			let lH = [];
+			let rH = [];
+
 			let bP = JSON.parse(JSON.stringify(inputPreset.beatPattern));
 			bP.forEach(function(thr) {
 				thr.start /= SPEED/1000;
@@ -736,7 +388,6 @@ let AnimationScript = function() {
 			let bPLength = bP.length - 1;
 
 			for (let i = 0; i < bPLength; i += 2) {
-				console.log(i);
 
 				let lHThrow = bP[i].start;
 				let rHCatch = bP[i].end - rHOffset;
@@ -750,32 +401,26 @@ let AnimationScript = function() {
 				if (rHNextCatch === 0) rHNextCatch = endTime;
 
 				//when the ball is going to land
-				let lHThrowCatch = bP[(i + site[i % site.length]) % bPLength].start;
-				if (lHThrowCatch === 0) lHThrowCatch = endTime;
-				let rHThrowCatch = (bP[(i + 1 + site[i % site.length]) % bPLength].start - rHOffset) % endTime;
-				if (rHThrowCatch === 0) rHThrowCatch = endTime;
+				let lHThrowTime = bP[(i + site[i % site.length]) % bPLength].start - lHThrow;
+				if (lHThrowTime === 0) lHThrowTime = endTime;
+				let rHThrowTime = mod(bP[(i + 1 + site[(i + 1) % site.length]) % bPLength].start - rHOffset, endTime) - rHThrow;
+				if (rHThrowTime === 0) rHThrowTime = endTime;
 
 				lH.push(
 					{
-						p: {
-							x: -5,
-							y: 0
-						},
+						p: dwellPath[i][0],
 						v: {
-							x: (35 - (-5))/(lHThrowCatch - lHThrow),
-							y: 100*(site[i % site.length] + 1)
+							x: 2000*(35 - (-5))/lHThrowTime * ((site[i % site.length] % 2) ? 1 : -1),
+							y: 100*(site[i % site.length] + 0.5)
 						},
 						start: lHThrow,
 						end: lHCatch
 					},
 					{
-						p: {
-							x: -35,
-							y: 0
-						},
+						p: dwellPath[i][1],
 						v: {
 							x: -30,
-							y: -150
+							y: -50*(site[i % site.length] + 0.5)
 						},
 						start: lHCatch,
 						end: lHNextThrow
@@ -784,24 +429,18 @@ let AnimationScript = function() {
 
 				rH.push(
 					{
-						p: {
-							x: 35,
-							y: 0
-						},
+						p: dwellPath[i + 1][0],
 						v: {
 							x: 10,
-							y: -100
+							y: -50*(site[(i + 1) % site.length] + 1)
 						},
 						start: rHCatch,
 						end: rHThrow
 					},
 					{
-						p: {
-							x: 5,
-							y: 0
-						},
+						p: dwellPath[i + 1][1],
 						v: {
-							x: (-35 - 5)/(rHThrowCatch - rHThrow),
+							x: 2000*(-35 - 5)/rHThrowTime * ((site[(i + 1) % site.length] % 2) ? 1 : -1),
 							y: 100*(site[(i + 1) % site.length] + 1)
 						},
 						start: rHThrow,
@@ -811,8 +450,7 @@ let AnimationScript = function() {
 			}
 
 			let leftHand = new Hand(lH, 0, "left");
-			console.log(rHOffset);
-			let rightHand = new Hand(rH, rHOffset + bP[1].start + 2*endTime, "right");
+			let rightHand = new Hand(rH, rHOffset, "right");
 
 			hands = {
 				left: leftHand,
@@ -824,181 +462,120 @@ let AnimationScript = function() {
 			}
 		})();
 
-		console.log(lH, rH);
-
-		// let balls = [];
-
-		let handMovements = [
-			{
-				p: {
-					x:-5,
-					y:0
-				},
-				v: {
-					x:30,
-					y:500
-				},
-				ti:0,
-				t:300
-			},
-			{
-				p: {
-					x:-35,
-					y:0
-				},
-				v: {
-					x:-30,
-					y:-250
-				},
-				ti:300,
-				t:600
-			}
-		];
-		let handMovements2 = [
-			{
-				p: {
-					x:35,
-					y:0
-				},
-				v: {
-					x:30,
-					y:-250
-				},
-				ti:0,
-				t:300
-			},
-			{
-				p: {
-					x:5,
-					y:0
-				},
-				v: {
-					x:-30,
-					y:500
-				},
-				ti:300,
-				t:600
-			}
-		];
-
-
-
-		//create a dwellpath array of objects, and use those to define the start and endpoints of the balls.
-
-
-		console.log("%%%%%%%%%%%%%%%");
-		//loop through loops
-		for (let i = 0; i < loops.length; i++) {
-			let loop = loops[i];
-			//sum of throw numbers in a loop to find number of props
-			let loopSum = 0;
-			for (let j = 0; j < loop.length; j++) {
-				loopSum += loop[j].n;
-			}
-
-
-			//number of balls to be created
-			let loopPropCount = loopSum / site.length;
-
-
-			//beat pattern
-			let bP = inputPreset.beatPattern;
-
-			//length of loop when accounting for ball landing in original hand
-			let realLength = loop.length * (loopSum % 2 + 1);
-
-
-			for (let j = 0; j < loopPropCount; j++) {
-				let bM = [];
-
-				// console.log(i, j);
-
-				let sitePos = j * (site.length / loopPropCount);
-				let endTime = inputPreset.throwInfo.endTime;
-
-
-				//index of current throw in loop
-				let loopIndex = 0;
-				//index of next throw in loop
-				let nextLoopIndex = (loopIndex + 1) % loop.length;
-
-
-				//throw object with n = throw number and i = bP index
-				//need to make these throw objects work for siteswaps (i includes i and j)
-				let curThrow = loop[loopIndex];
-
-
-				//index of current throw in beatPattern (and throwInfo)
-				let throwIndex = j * (endTime / loopPropCount) +  curThrow.i % endTime;
-				//index of next throw in beatPattern
-				let nextThrowIndex = (throwIndex + curThrow.n) % endTime;
-				//index of current catch in beatPattern (where current throw is landing) (nextThrowIndex - 1)
-				let catchIndex = (nextThrowIndex + endTime - 1) % endTime;
-
-				// console.log(throwIndex, nextThrowIndex, catchIndex);
-
-				//shifts the ball movement such that first throw starts at t=0
-				let shift = bP[throwIndex].start;
-
-				console.log(i, j, shift);
-
-				for (let k = 0; k < realLength; k++) {
-
-					//apply aforementioned shift
-					function shiftTime(time) {
-						return ((time + endTime - shift) % endTime)/SPEED * 1000;
-					}
-
-					let isLeft = !(throwIndex % 2);
-					let isNextLeft = !(nextThrowIndex % 2);
-
-					//if the last catch is at the very last time, do not set it to zero, set it to the last time
-					let lastCatch;
-					if (shiftTime(bP[nextThrowIndex].start) === 0) {
-						lastCatch = endTime/SPEED * 1000;
-					}
-					else {
-						lastCatch = shiftTime(bP[nextThrowIndex].start);
-					}
-
-					bM[k] = {
-						throw: {
-							p: {
-								x: isLeft ? -5 : 5,
-								y: 0 //dP
-							},
-							start: shiftTime(bP[throwIndex].start),
-							end: shiftTime(bP[catchIndex].end)
-						},
-						catch: {
-							p: {
-								x: isNextLeft ? -35 : 35,
-								y: 0
-							},
-							start: shiftTime(bP[catchIndex].end),
-							end: lastCatch,
-							hand: isNextLeft ? "left" : "right"
-						}
-					}
-
-					//update vars
-					loopIndex = nextLoopIndex;
-					nextLoopIndex = (loopIndex + 1) % loop.length;
-
-					curThrow = loop[loopIndex];
-
-					throwIndex = nextThrowIndex;
-					nextThrowIndex = (throwIndex + curThrow.n) % endTime;
-					catchIndex = (nextThrowIndex + endTime - 1) % endTime;
+		//generate ballmovements
+		(function() {
+			for (let i = 0; i < loops.length; i++) {
+				let loop = loops[i];
+				//sum of throw numbers in a loop to find number of props
+				let loopSum = 0;
+				for (let j = 0; j < loop.length; j++) {
+					loopSum += loop[j].n;
 				}
 
-				let color = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";
-				let newBall = new Ball(color, 7, bM, -shift/SPEED * 1000, i + "," + j);
-				newBall.init(now);
-				console.log(i, j, newBall);
-				balls.push(newBall);
+
+				//number of balls to be created
+				let loopPropCount = loopSum / site.length;
+
+
+				//beat pattern
+				let bP = inputPreset.beatPattern;
+
+				//length of loop when accounting for ball landing in original hand
+				let realLength = loop.length * (loopSum % 2 + 1);
+
+
+				for (let j = 0; j < loopPropCount; j++) {
+					let bM = [];
+
+					// console.log(i, j);
+
+					let sitePos = j * (site.length / loopPropCount);
+					let endTime = inputPreset.throwInfo.endTime;
+
+
+					//index of current throw in loop
+					let loopIndex = 0;
+					//index of next throw in loop
+					let nextLoopIndex = (loopIndex + 1) % loop.length;
+
+
+					//throw object with n = throw number and i = bP index
+					//need to make these throw objects work for siteswaps (i includes i and j)
+					let curThrow = loop[loopIndex];
+
+
+					//index of current throw in beatPattern (and throwInfo)
+					let throwIndex = j * (endTime / loopPropCount) +  curThrow.i % endTime;
+					//index of next throw in beatPattern
+					let nextThrowIndex = (throwIndex + curThrow.n) % endTime;
+					//index of current catch in beatPattern (where current throw is landing) (nextThrowIndex - 1)
+					let catchIndex = (nextThrowIndex + endTime - 1) % endTime;
+
+					// console.log(throwIndex, nextThrowIndex, catchIndex);
+
+					//shifts the ball movement such that first throw starts at t=0
+					let shift = bP[throwIndex].start;
+
+					// console.log(i, j, shift);
+
+					for (let k = 0; k < realLength; k++) {
+
+						//apply aforementioned shift
+						function shiftTime(time) {
+							return ((time + endTime - shift) % endTime)/SPEED * 1000;
+						}
+
+						let isLeft = !(throwIndex % 2);
+						let isNextLeft = !(nextThrowIndex % 2);
+
+						//if the last catch is at the very last time, do not set it to zero, set it to the last time
+						let lastCatch;
+						if (shiftTime(bP[nextThrowIndex].start) === 0) {
+							lastCatch = endTime/SPEED * 1000;
+						}
+						else {
+							lastCatch = shiftTime(bP[nextThrowIndex].start);
+						}
+
+						bM[k] = {
+							throw: {
+								p: {
+									x: isLeft ? -10 : 10,
+									y: 0 //dP
+								},
+								start: shiftTime(bP[throwIndex].start),
+								end: shiftTime(bP[catchIndex].end)
+							},
+							catch: {
+								p: {
+									x: isNextLeft ? -35 : 35,
+									y: 0
+								},
+								start: shiftTime(bP[catchIndex].end),
+								end: lastCatch,
+								hand: isNextLeft ? "left" : "right"
+							}
+						}
+
+						//update vars
+						loopIndex = nextLoopIndex;
+						nextLoopIndex = (loopIndex + 1) % loop.length;
+
+						curThrow = loop[loopIndex];
+
+						throwIndex = nextThrowIndex;
+						nextThrowIndex = (throwIndex + curThrow.n) % endTime;
+						catchIndex = (nextThrowIndex + endTime - 1) % endTime;
+					}
+
+					let color = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";
+					let newBall = new Ball(color, 7, bM, -shift/SPEED * 1000, i + "," + j);
+					newBall.init(now);
+					// console.log(i, j, newBall);
+					balls.push(newBall);
+				}
 			}
-		}
+		})();
 
 
 
@@ -1006,7 +583,7 @@ let AnimationScript = function() {
 
 		function draw() {
 
-			now = Date.now();
+			now = Date.now() + SHIFT;
 
 			//for some reason, the canvas likes to be a little bit larger than the wrapper, so I multiply by .995
 			HEIGHT = 0.995*wrapper.clientHeight;
@@ -1018,11 +595,16 @@ let AnimationScript = function() {
 				canvas.width = WIDTH;
 			}
 
-			// ctx.globalCompositeOperation = "luminosity";
 
+			// ctx.globalCompositeOperation = "source-over";
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			// ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+			// ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+			// ctx.fillRect(0, 0, WIDTH, HEIGHT);
 			ctx.clearRect(0, 0, WIDTH, HEIGHT);
 			ctx.translate(TRANSX, TRANSY);
+
+			// ctx.globalCompositeOperation = "multiply";
 
 			hands.left.draw(ctx);
 			hands.right.draw(ctx);
