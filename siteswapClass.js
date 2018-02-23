@@ -191,7 +191,6 @@ Siteswap.prototype.printThrowInfo = function(repeats) {
 		}
 	}
 
-	console.log('asdf', throwInfo);
 	return throwInfo;
 }
 

@@ -5,6 +5,7 @@
 //TODO: give ladder lines colors based on the loop they are in
 //TODO: make ladder display appropriately with sync patterns
 //TODO: expand the limits of handles to actual theoretical limits instead of nearest handles
+//TODO: disable 0 throws
 
 var preset;
 
@@ -50,7 +51,6 @@ $(document).ready(function() {
 				if (beatPatternIndex % 2) { //if its on the right hand
 					this.beatPattern.push(new Throw(this.throwInfo.throws[i].start + 1, this.throwInfo.throws[i].start + this.throwTime));
 				} else {
-					console.log(this.throwInfo.throws[i].start);
 					this.beatPattern.push(new Throw(this.throwInfo.throws[i].start, this.throwInfo.throws[i].start + this.throwTime + 1));
 				}
 				beatPatternIndex++;
@@ -59,7 +59,6 @@ $(document).ready(function() {
 		//last catch is special, only one handle and is static
 		this.beatPattern.push(new Throw(this.throwInfo.endTime, null));
 
-		console.log(this.beatPattern);
 	}
 
 	//INPUT
@@ -74,7 +73,7 @@ $(document).ready(function() {
 		site = new Siteswap(String(input.value));
 		preset = new Preset(site);
 
-		console.log('array:', site.printArray());
+		console.log('siteswap array:', site.printArray());
 		console.table({
 			'valid': site.isValid(),
 			'siteswap': site.printSite(),
@@ -145,7 +144,6 @@ $(document).ready(function() {
 				$('#leftSlider').find('.ui-slider-handle:first').addClass('ui-slider-handle-disabled');
 				$('#leftSlider').find('.ui-slider-handle:last').addClass('ui-slider-handle-disabled');
             for (let i = 0; i < preset.throwInfo.endTime; i++) {
-               console.log(preset.throwInfo.throws[i]);
                if (preset.throwInfo.throws[i].start == preset.throwInfo.throws[i].end) {
                   console.log('asdf');
                   $('div span:nth-child(' + i + ')').addClass('ui-slider-handle-disabled');
