@@ -1,39 +1,42 @@
 <!doctype html>
 <html>
-  <head>
-    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-    <script src='jquery-ui-1.12.1/jquery-ui.min.js'></script>
-    <script src='siteswapFuncs.js'></script>
-    <script src='siteswapClass.js'></script>
-    <script src='parseInput.js'></script>
-    <script src='ladderDiagram.js'></script>
-    <script src='animation/script2.js'></script>
 
-    <link rel='stylesheet' href='jquery-ui-1.12.1/jquery-ui.css'>
-    <link rel='stylesheet' href='ladderDiagram.css'>
-  </head>
+<head>
+	<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+	<script src='jquery-ui-1.12.1/jquery-ui.min.js'></script>
+	<script src='siteswapFuncs.js'></script>
+	<script src='siteswapClass.js'></script>
+	<script src='parseInput.js'></script>
+	<script src='ladderDiagram.js'></script>
+	<script src='animation/script2.js'></script>
 
-  <body>
-    <div id='flexContainer'>
-      <div id='userEntryWrapper'>
-        <form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap'></input></form>
-        <div id='ladderDiagram'>
-          <button id='resetLadder'>reset ladder</button>
-          <div id='outer'>
-            <div class='inner' id='lines'>
-              <canvas id='ladderLines' style='border:1px solid #d3d3d3'></canvas>
-            </div>
-            <div class='inner' id='sliders'>
-              <div id='leftSlider' class='slider'></div>
-              <div id='rightSlider' class='slider'></div>
-            </div>
-          </div>
-        </div>
-      </div>
+	<link rel='stylesheet' href='jquery-ui-1.12.1/jquery-ui.css'>
+	<link rel='stylesheet' href='ladderDiagram.css'>
+</head>
 
-      <div id='animationWrapper'>
-        <canvas id='animationCanvas' class='grabbable' oncontextmenu="return false;"></canvas>
-      </div>
-    </div>
-  </body>
+<body>
+	<div id='flexContainer'>
+		<div id='userEntryWrapper'>
+			<form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap'></input>
+			</form>
+			<div id='ladderDiagram'>
+				<button id='resetLadder'>reset ladder</button>
+				<div id='outer'>
+					<div class='inner' id='lines'>
+						<canvas id='ladderLines' style='border:1px solid #d3d3d3'></canvas>
+					</div>
+					<div class='inner' id='sliders'>
+						<div id='leftSlider' class='slider'></div>
+						<div id='rightSlider' class='slider'></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id='animationWrapper'>
+			<canvas id='animationCanvas' class='grabbable' oncontextmenu="return false;"></canvas>
+		</div>
+	</div>
+</body>
+
 </html>
