@@ -1,6 +1,6 @@
 'use strict';
 
-//1[53]21
+//1[53]12
 
 var Siteswap = function(siteswapString){
 	this.siteStr = siteswapString;
@@ -147,7 +147,7 @@ Siteswap.prototype.printLoops = function() {
 	return returnStr;
 }
 
-Siteswap.prototype.printLadderInfo = function(repeats) {
+Siteswap.prototype.printThrowInfo = function(repeats) {
 	/**
 	 * returns object of default times and throw positions
 	 * time is beats, where there is (by default) 1 beat between every throw. if
@@ -156,9 +156,9 @@ Siteswap.prototype.printLadderInfo = function(repeats) {
 	 * NOT YET COMPATIBLE WITH SYNC/MULTIPLEX
 	 */
 
-	var defaultLadder = new Object();
-	defaultLadder.endTime = this.loopTime * repeats;
-	defaultLadder.throws = [];
+	var throwInfo = new Object();
+	throwInfo.endTime = this.loopTime * repeats;
+	throwInfo.throws = [];
 
 	/**
 	 * Throw will have start property, which is where ball comes from, and end
@@ -166,31 +166,34 @@ Siteswap.prototype.printLadderInfo = function(repeats) {
 	 * maybe for simulation too. if throw lands off diagram (larger than
 	 * loop time), make value null (maybe should change this).
 	 */
+
 	var Throw = function(start, end) {
 		this.start = start;
 		this.end = end;
 	}
 
-	for (let i = 0; i < defaultLadder.endTime; i++) { //goes through every beat in loop time
+	for (let i = 0; i < throwInfo.endTime; i++) { //goes through every beat in loop time
 		var curBeat = this.site[i % this.site.length]; //index in siteswap array
 		if (curBeat instanceof Array) {
 			for (let j = 0; j < curBeat.length; j++) {
-				var end = i + curBeat[j]; //if throw goes off diagram, we want it null
-				if (i + curBeat[j] > defaultLadder.endTime) {
-					end = null;
+				var end = (i + curBeat[j]);
+				if (end == 0) {
+					end = 6;
 				}
-				defaultLadder.throws.push(new Throw(i, end));
+				throwInfo.throws.push(new Throw(i, end));
 			}
 		}
 		else {
-			var end = i + curBeat; //if throw goes off diagram, we want it null
-			// if (i + curBeat > defaultLadder.endTime) {
-			// 	end = null;
-			// }
-			defaultLadder.throws.push(new Throw(i, end));
+			var end = (i + curBeat);
+			if (end == 0) {
+				end = 6;
+			}
+			throwInfo.throws.push(new Throw(i, end));
 		}
 	}
-	return defaultLadder;
+
+	console.log('asdf', throwInfo);
+	return throwInfo;
 }
 
 Siteswap.prototype.printArray = function() {

@@ -110,6 +110,7 @@ var siteswapTranslator = function(site) {
     //VANILLA
     if (!isNaN(char)) {
       siteArr[siteArr.length] = parseInt(char) + add;
+      console.log(parseInt(char) + add);
       siteArr.length += 1;
     }
     else if (char.charCodeAt() >= 97) {
@@ -156,6 +157,15 @@ var siteswapTranslator = function(site) {
     }
 
     i += 1;
+  }
+
+  if (sync) { //this rotates everything in the pattern so we can make the 1 throws go from the left hand, specifically so sync works on ladder diagram
+    var newSiteArr = [];
+    for (let i = 0; i < siteArr.length - 1; i++) {
+      newSiteArr[i] = siteArr[i + 1];
+    }
+    newSiteArr[siteArr.length - 1] = siteArr[0];
+    siteArr = newSiteArr;
   }
 
   return {site: siteArr, multiplex: multiplex, sync: sync, valid: valid};
