@@ -128,7 +128,7 @@ Siteswap.prototype.printLoops = function() {
 			for (let i = 0; i < this.numOfLoops; i++) {
 				var loop = this.loops[i];
 				for (let j = 0; j < loop.length; j++) {
-					var toss = loop[j];
+					var toss = loop[j].n;
 					if (toss > 9) {
 						returnStr += String.fromCharCode(toss + 87);
 					}

@@ -24,6 +24,7 @@ $(document).ready(function() {
 		this.dwellLimit = 0.1; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
 		this.throwLimit = 0.1; //smallest allowed value to throw one ball then catch a different ball in the same hand
 		this.speedLimit = 0.1; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		this.makeBeatPattern();
 	}
 	Preset.prototype.makeBeatPattern = function() {
 		//makes an array of catch objects, each throw is 1 time unit, dwell time varies on user input
@@ -97,8 +98,10 @@ $(document).ready(function() {
 	var marginSide = parseInt($('#leftSlider').css('marginLeft')) + 4; //+4 for border and inside width
 
 	var resetLadder = function() {
-		//create arrays of values which will represent starting handle positions on the sliders
+
 		preset.makeBeatPattern();
+		//create arrays of values which will represent starting handle positions on the sliders
+		//preset.makeBeatPattern();
 		var leftNodes = [],
 			rightNodes = [];
 		for (let i = 0; i < preset.beatPattern.length; i++) {
@@ -143,10 +146,16 @@ $(document).ready(function() {
 				//disable t=0 and t=max handle, these handles restrict the time it takes the repeat
 				$('#leftSlider').find('.ui-slider-handle:first').addClass('ui-slider-handle-disabled');
 				$('#leftSlider').find('.ui-slider-handle:last').addClass('ui-slider-handle-disabled');
+				//disable 0 catches
             for (let i = 0; i < preset.throwInfo.endTime; i++) {
-               if (preset.throwInfo.throws[i].start == preset.throwInfo.throws[i].end) {
-                  console.log('asdf');
-                  $('div span:nth-child(' + i + ')').addClass('ui-slider-handle-disabled');
+					var curThrow = preset.throwInfo.throws[i];
+               if (curThrow.start == curThrow.end) { //if zero throw
+						if (!(curThrow.start % 2)) { //if on left slider
+							$('#leftSlider span:nth-child(' + curThrow.start + ')').addClass('ui-slider-handle-disabled'); //disable nth and nth + 1 handles
+							document.querySelector('#leftSlider span:nth-child(' + curThrow.start + ')').style.display = 'none';
+							$('#leftSlider span:nth-child(' + parseInt(curThrow.start + 1) + ')').addClass('ui-slider-handle-disabled');
+							document.querySelector('#leftSlider span:nth-child(' + parseInt(curThrow.start + 1) + ')').style.display = 'none';
+						}
                }
             }
 				//console.log($('#leftSlider').slider('values'));
@@ -181,6 +190,21 @@ $(document).ready(function() {
 			max: preset.throwInfo.endTime,
 			values: rightNodes.slice(0, rightNodes.length - 1),
 
+			create: function(ev, ui) {
+				//disable 0 catches
+				for (let i = 0; i < preset.throwInfo.endTime; i++) {
+					var curThrow = preset.throwInfo.throws[i];
+					if (curThrow.start == curThrow.end) { //if zero throw
+						if (curThrow.start % 2) { //if on right slider
+							$('#rightSlider span:nth-child(' + curThrow.start + ')').addClass('ui-slider-handle-disabled'); //disable nth and nth + 1 handles
+							document.querySelector('#rightSlider span:nth-child(' + curThrow.start + ')').style.display = 'none';
+							$('#rightSlider span:nth-child(' + parseInt(curThrow.start + 1) + ')').addClass('ui-slider-handle-disabled');
+							document.querySelector('#rightSlider span:nth-child(' + parseInt(curThrow.start + 1) + ')').style.display = 'none';
+						}
+					}
+				}
+			},
+
 			slide: function(ev, ui) {
 				//show slider value when sliding
 				$('#rightSlider').find('.ui-state-active')
@@ -207,7 +231,7 @@ $(document).ready(function() {
 
 	//CANVAS FUNCTIONS
 	//coordinate conversion, needs to know where y slider is (marginSide) and conversion between canvas pixels and slider values (sizeRatio)
-	var coordinateFinder = function(throwNum, isLeft, isThrow, marginSide, sizeRatio) { //isThrow should be 1 or 0
+	var coordinateFinder = function(throwNum, isLeft, marginSide, sizeRatio) { //isThrow should be 1 or 0
 		if (isLeft) { //left slider, Math.ceil() because catch handles aren't on the integer
 			return {
 				x: 0,
@@ -222,7 +246,9 @@ $(document).ready(function() {
 
 	//fills canvasLines array with start and end points on the canvas
 	var updateCanvasLines = function(preset, canvas, marginSide, sizeRatio) {
+		var endTime = preset.throwInfo.endTime
 		var canvasLines = [];
+		var zeroThrows = new Array(endTime).fill(0);
 		//fill canvasLines, then drawCanvasLines will use this array to draw on canvas
 		for (let i = 0; i < preset.throwInfo.throws.length; i++) {
 			var curThrow = preset.throwInfo.throws[i]; //curThrow has start and end
@@ -230,17 +256,18 @@ $(document).ready(function() {
 			//curThrow.start is throw number without its position on slider, so we have to use preset.beatPattern as well
 			//same goes for .end, with +5 since the catch node is on the previous throw
 			//(eg the catch for 7 is at time 6.9, which is on throw 6). also we dont want to mod negative nums so we add 6 (-1 + 6 = 5).
-			var coords = coordinateFinder(preset.beatPattern[curThrow.start].start, !(curThrow.start % 2), 1, marginSide, sizeRatio),
-				nextCoords = coordinateFinder(preset.beatPattern[(curThrow.end - 1) % preset.throwInfo.endTime].end, curThrow.start % 2, 0, marginSide, sizeRatio),
+			var coords = coordinateFinder(preset.beatPattern[curThrow.start].start, !(curThrow.start % 2), marginSide, sizeRatio),
+				nextCoords = coordinateFinder(preset.beatPattern[(curThrow.end - 1) % endTime].end, curThrow.start % 2, marginSide, sizeRatio),
 				odd = true,
 				left = true;
 
 			if (curThrow.start == curThrow.end) { //dont draw those silly 0 throws
+				zeroThrows[(i - 1) % endTime] = 1;
 				continue;
 			}
 
 			if (!((curThrow.end - curThrow.start) % 2)) {
-				odd = false;
+				odd = false; //throw lands in same hand its thrown from
 				if (curThrow.start % 2) {
 					left = false; //whether this line is on the left slider
 				}
@@ -251,7 +278,8 @@ $(document).ready(function() {
 					coords: coords,
 					nextCoords: nextCoords,
 					odd: odd,
-					left: left
+					left: left,
+					throw: true //this is not a dwell line but a throw line
 				});
 			} else {
 				canvasLines.push({ //draw two lines, one going off bottom of canvas
@@ -261,7 +289,8 @@ $(document).ready(function() {
 					},
 					nextCoords: nextCoords,
 					odd: odd,
-					left: left
+					left: left,
+					throw: true
 				});
 				canvasLines.push({ //and other going off the top of canvas
 					coords: coords,
@@ -270,7 +299,20 @@ $(document).ready(function() {
 						y: nextCoords.y + canvas.height
 					},
 					odd: odd,
-					left: left
+					left: left,
+					throw: true
+				});
+			}
+		}
+
+		for (let i = 0; i < endTime; i++) {
+			if (!zeroThrows[i]) {
+				canvasLines.push({
+					coords: coordinateFinder(preset.beatPattern[i].end, i % 2, marginSide, sizeRatio),
+					nextCoords: coordinateFinder(preset.beatPattern[i + 1].start, i % 2, marginSide, sizeRatio),
+					odd: true, //odd so it draws straight lines
+					left: true,
+					throw: false
 				});
 			}
 		}
@@ -281,29 +323,47 @@ $(document).ready(function() {
 	var drawCanvasLines = function(canvasLines) {
 		ctx.clearRect(-100, -100, c.width + 100, c.height + 100);
 		//draw throw lines
-		ctx.beginPath();
 		for (let i = 0; i < canvasLines.length; i++) {
-			var coords = {
-					x: canvasLines[i].coords.x,
-					y: canvasLines[i].coords.y
-				},
-				nextCoords = {
-					x: canvasLines[i].nextCoords.x,
-					y: canvasLines[i].nextCoords.y
-				};
+			ctx.beginPath();
+			if (canvasLines[i].throw) {
+				ctx.lineWidth = 1;
+				var coords = {
+						x: canvasLines[i].coords.x,
+						y: canvasLines[i].coords.y
+					},
+					nextCoords = {
+						x: canvasLines[i].nextCoords.x,
+						y: canvasLines[i].nextCoords.y
+					};
 
-			ctx.moveTo(coords.x, coords.y);
-			if (canvasLines[i].odd) {
-				ctx.lineTo(nextCoords.x, nextCoords.y);
-			} else {
-				if (canvasLines[i].left) {
-					ctx.bezierCurveTo(coords.x + 40, coords.y, coords.x + 40, nextCoords.y, coords.x, nextCoords.y);
+				ctx.moveTo(coords.x, coords.y);
+				if (canvasLines[i].odd) {
+					ctx.lineTo(nextCoords.x, nextCoords.y);
 				} else {
-					ctx.bezierCurveTo(coords.x - 40, coords.y, coords.x - 40, nextCoords.y, coords.x, nextCoords.y);
+					if (canvasLines[i].left) {
+						ctx.bezierCurveTo(coords.x + 40, coords.y, coords.x + 40, nextCoords.y, coords.x, nextCoords.y);
+					} else {
+						ctx.bezierCurveTo(coords.x - 40, coords.y, coords.x - 40, nextCoords.y, coords.x, nextCoords.y);
+					}
 				}
 			}
+			else {
+				var coords = {
+						x: canvasLines[i].coords.x,
+						y: canvasLines[i].coords.y
+					},
+					nextCoords = {
+						x: canvasLines[i].nextCoords.x,
+						y: canvasLines[i].nextCoords.y
+					};
+
+				ctx.moveTo(coords.x, coords.y);
+				ctx.lineWidth = 5;
+				ctx.lineTo(nextCoords.x, nextCoords.y);
+			}
+
+			ctx.stroke();
 		}
-		ctx.stroke();
 	}
 
 	var restrictHandleMovement = function(preset, ui, slider, isLeft) {
@@ -342,7 +402,6 @@ $(document).ready(function() {
 			var zeroThrowAbove = false;
 			for (let i = 0; i < throwArray.length; i++) {
 				if (throwArray[i].end == handleIndex + 2) {
-					console.log('asdf', throwArray[i]);
 					if (throwArray[i].start == throwArray[i].end) {
 						zeroThrowAbove = true;
 					}
@@ -380,9 +439,6 @@ $(document).ready(function() {
 				}
 			}
 		}
-
-		console.log('upperlimit', upperLimit);
-		console.log('lowerlimit', lowerLimit);
 
 		//get rid of slider text
 		slider.find('.ui-slider-handle').text((''));

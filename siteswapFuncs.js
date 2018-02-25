@@ -1,6 +1,8 @@
 //Includes functions for class siteswap
 'use strict';
 
+//TODO: expand siteswap in loops to standardize the output: eg siteswap 3 produces loops 3,3,3 instead of 3
+
 var siteswapTranslator = function(site) {
 	/**
 	 * takes in siteswap in string form, returns siteswap in array form, along with
@@ -252,6 +254,14 @@ var loopFinder = function(site) {
 	var loops = [[]]; //array of loops
 	var loopNum = 0; //index where next loop goes in loops
 
+	for (let i = 0; i < siteLen; i++) {
+		if (site[i] instanceof Array) {
+			for (let j = 0; j < site[i].length; j++) {
+
+			}
+		}
+	}
+
 	var tested = [];
 	for (let i = 0; i < siteLen; i++) {
 		if (site[i] instanceof Array) {
@@ -281,7 +291,7 @@ var loopFinder = function(site) {
 				}
 			}
 			if (isTestedi) { //if none are untested, move to next index in siteswap
-				console.log('multiplex at i = ', i, ' is fully tested, incrementing');
+				console.log('multiplex at i = ',i, ' is fully tested, incrementing');
 				i++;
 				continue;
 			}
@@ -308,14 +318,20 @@ var loopFinder = function(site) {
 					}
 					console.log('adding throw',site[k][l]);
 					//at this point we should be at an untested throw, so we add to loops
-					loops[loopNum].push(site[k][l]);
+					loops[loopNum].push({
+						n: site[k][l],
+						i: k
+					});
 					tested[k][l] = 1;
 					k = (k + site[k][l]) % siteLen;
 				}
 				else { //if k is at a normal throw
 					if (!tested[k]) { //if k is at an untested throw
 						console.log('adding throw',site[k]);
-						loops[loopNum].push(site[k]);
+						loops[loopNum].push({
+							n: site[k],
+							i: k
+						});
 						tested[k] = 1;
 						k = (k + site[k]) % siteLen;
 					}
@@ -350,14 +366,20 @@ var loopFinder = function(site) {
 						}
 						console.log('adding throw',site[k][j]);
 						//at this point we should be at an untested throw, so we add to loops
-						loops[loopNum].push(site[k][j]);
+						loops[loopNum].push({
+							n: site[k][j],
+							i: k
+						});
 						tested[k][j] = 1;
 						k = (k + site[k][j]) % siteLen;
 					}
 					else { //if k is at a normal throw
 						if (!tested[k]) { //if k is at an untested throw
 							console.log('adding throw',site[k]);
-							loops[loopNum].push(site[k]);
+							loops[loopNum].push({
+								n: site[k],
+								i: k
+							});
 							tested[k] = 1;
 							k = (k + site[k]) % siteLen;
 						}
@@ -444,7 +466,7 @@ var loopTimeFinder = function(loops) {
 	for (var loop = 0; loop < loops.length; loop++) {
 		var singleLoopTime = 0;
 		for (var throw_ = 0; throw_ < loops[loop].length; throw_++) {
-			singleLoopTime += loops[loop][throw_]; //add the throw heights together
+			singleLoopTime += loops[loop][throw_].n; //add the throw heights together
 		}
 		if (singleLoopTime % 2) {
 			singleLoopTime *= 2; //if the loop is odd, it must loop again to return to the same hand
@@ -452,8 +474,15 @@ var loopTimeFinder = function(loops) {
 		loopTimes.push(singleLoopTime);
 	}
 
-	var lt = loopTimes[0];
-	for (var i = 1; i < loopTimes.length; i++) {
+	var lt = -1; //make it not possible to start with 0 throw
+	for (var i = 0; i < loopTimes.length; i++) {
+		if (lt < 0) {
+			if (loopTimes[i])
+				lt = loopTimes[i];
+		}
+		if (!loopTimes[i]) {
+			continue;
+		}
 		lt = lcm(lt, loopTimes[i]); //find lcm of all loops
 	}
 
