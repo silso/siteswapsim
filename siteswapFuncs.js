@@ -110,7 +110,7 @@ var siteswapTranslator = function(site) {
     //VANILLA
     if (!isNaN(char)) {
       siteArr[siteArr.length] = parseInt(char) + add;
-      console.log(parseInt(char) + add);
+      // console.log(parseInt(char) + add);
       siteArr.length += 1;
     }
     else if (char.charCodeAt() >= 97) {

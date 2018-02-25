@@ -12,9 +12,6 @@
 //get rid of ghosts when you zoom in while panning at the same time
 //stop panning (simulate mouseUp) when mouse leaves canvas (is it possible?)
 
-let dwellPath = [];
-let hands = {};
-let balls = [];
 
 let AnimationScript = function() {
 	"use strict";
@@ -22,8 +19,6 @@ let AnimationScript = function() {
 		HEIGHT,
 		WIDTH,
 		SCALE = 4,
-		TRANSX = 0,
-		TRANSY = 0,
 
 		SPEED = 3.5,
 		SHIFT = 100000,
@@ -36,11 +31,15 @@ let AnimationScript = function() {
 		K = 0.001,
 
 		now = Date.now(),
+		start = now,
 
 		canvas,
 		ctx;
 
-	let eventsAdded = false;
+	let EVENTSADDED = false;
+	let dwellPath = [];
+	let hands = {};
+	let balls = [];
 
 	let mod = function(a, b) {
 		return (a >= 0) ? a % b : mod(a + b, b);
@@ -232,113 +231,10 @@ let AnimationScript = function() {
 		};
 	};
 
-
-	//
-
-
-	this.init = function(inputPreset) {
-
-		now = Date.now();
-
-		wrapper = document.getElementById("animationWrapper");
-		HEIGHT = wrapper.clientHeight;
-		WIDTH = wrapper.clientWidth;
-		canvas = document.getElementById("animationCanvas");
-		ctx = canvas.getContext("2d");
-
-		//handles events with a couple meta variables
-		let events = {
-			//true while mouse is dragging
-			dragging: false,
-			//where the mouse started dragging from
-			startX: 0,
-			startY: 0,
-			mouseDown: function(e) {
-				let r = canvas.getBoundingClientRect();
-				//left click starts a drag
-				if (e.button === 0) {
-					events.dragging = true;
-
-					events.startX = (e.clientX - r.left) - TRANSX;
-					events.startY = (e.clientY - r.top) - TRANSY;
-				}
-				//middle mouse resets camera
-				else if (e.button === 1) {
-					TRANSX = 0;
-					TRANSY = 0;
-					SCALE = 4;
-				}
-				//right click logs debug info (currently coordinates of cursor)
-				else {
-					console.log((-TRANSX + (e.clientX - r.left - r.width/2))/SCALE + ", " + (TRANSY - (e.clientY - r.top - r.height/2))/SCALE);
-				}
-			},
-
-			//translate the canvas according to where the mouse is compared to where is started
-			mouseMove: function(e) {
-				if (events.dragging) {
-					let r = canvas.getBoundingClientRect();
-					let x = e.clientX - r.left;
-					let y = e.clientY - r.top;
-
-					TRANSX = (x - events.startX);
-					TRANSY = (y - events.startY);
-				}
-			},
-
-			//stop dragging when mouse is released
-			mouseUp: function(e) {
-				events.dragging = false;
-			},
-
-			//zoom in and out when scroll wheel is used
-			mouseWheel: function(e) {
-				e.preventDefault();
-
-				let scaleFactor = 1.4;
-				let scrollDir = e.wheelDelta;
-				let r = canvas.getBoundingClientRect();
-
-				//in-animation coordinates of mouse relative to image origin (center of juggling patter typically)
-				let mX = (e.clientX - r.left - r.width/2)/SCALE;
-				let mY = (e.clientY - r.top - r.height/2)/SCALE;
-				//in-animation coordinates of how much image origin has moved relative to canvas origin
-				let TX = TRANSX/SCALE;
-				let TY = TRANSY/SCALE;
-
-				//why was this so hard to figure out
-				if (scrollDir > 0) {
-					//pan camera so that the camera zooms in on the mouse
-					TRANSX = (mX + (TX - mX)*scaleFactor)*SCALE;
-					TRANSY = (mY + (TY - mY)*scaleFactor)*SCALE;
-
-					//zoom in
-					SCALE *= scaleFactor;
-				}
-				else {
-					TRANSX = (mX + (TX - mX)/scaleFactor)*SCALE;
-					TRANSY = (mY + (TY - mY)/scaleFactor)*SCALE;
-
-					SCALE /= scaleFactor;
-				}
-			}
-		};
-
-		if (!eventsAdded) {
-			canvas.addEventListener('mousedown', events.mouseDown, false);
-			canvas.addEventListener('mousemove', events.mouseMove, false);
-			canvas.addEventListener('mouseup', events.mouseUp, false);
-			canvas.addEventListener('mousewheel', events.mouseWheel, false);
-			canvas.addEventListener('DOMMouseScroll', events.mouseWheel, false);
-
-			eventsAdded = true;
-		}
-
-
-
-
-
-
+	this.generateMovements = function(inputPreset) {
+		dwellPath = [];
+		balls = [];
+		hands = {};
 		//take siteswap and generate movements accordingly
 		const site = inputPreset.site.site;
 		const loops = inputPreset.site.loops;
@@ -458,28 +354,26 @@ let AnimationScript = function() {
 			};
 
 			for (let hand in hands) {
-				hands[hand].init(now);
+				hands[hand].init(start);
 			}
 		})();
+
 
 		//generate ballmovements
 		(function() {
 			for (let i = 0; i < loops.length; i++) {
 				let loop = loops[i];
+
 				//sum of throw numbers in a loop to find number of props
 				let loopSum = 0;
 				for (let j = 0; j < loop.length; j++) {
 					loopSum += loop[j].n;
 				}
 
-
 				//number of balls to be created
 				let loopPropCount = loopSum / site.length;
-
-
 				//beat pattern
 				let bP = inputPreset.beatPattern;
-
 				//length of loop when accounting for ball landing in original hand
 				let realLength = loop.length * (loopSum % 2 + 1);
 
@@ -487,22 +381,17 @@ let AnimationScript = function() {
 				for (let j = 0; j < loopPropCount; j++) {
 					let bM = [];
 
-					// console.log(i, j);
-
 					let sitePos = j * (site.length / loopPropCount);
 					let endTime = inputPreset.throwInfo.endTime;
-
 
 					//index of current throw in loop
 					let loopIndex = 0;
 					//index of next throw in loop
 					let nextLoopIndex = (loopIndex + 1) % loop.length;
 
-
 					//throw object with n = throw number and i = bP index
 					//need to make these throw objects work for siteswaps (i includes i and j)
 					let curThrow = loop[loopIndex];
-
 
 					//index of current throw in beatPattern (and throwInfo)
 					let throwIndex = j * (endTime / loopPropCount) +  curThrow.i % endTime;
@@ -511,15 +400,11 @@ let AnimationScript = function() {
 					//index of current catch in beatPattern (where current throw is landing) (nextThrowIndex - 1)
 					let catchIndex = (nextThrowIndex + endTime - 1) % endTime;
 
-					// console.log(throwIndex, nextThrowIndex, catchIndex);
-
 					//shifts the ball movement such that first throw starts at t=0
 					let shift = bP[throwIndex].start;
 
-					// console.log(i, j, shift);
 
 					for (let k = 0; k < realLength; k++) {
-
 						//apply aforementioned shift
 						function shiftTime(time) {
 							return ((time + endTime - shift) % endTime)/SPEED * 1000;
@@ -570,15 +455,119 @@ let AnimationScript = function() {
 
 					let color = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";
 					let newBall = new Ball(color, 7, bM, -shift/SPEED * 1000, i + "," + j);
-					newBall.init(now);
-					// console.log(i, j, newBall);
+					newBall.init(start);
 					balls.push(newBall);
 				}
 			}
 		})();
+	}
 
 
+	//
 
+
+	this.init = function(inputPreset) {
+		let TRANSX = 0,
+			TRANSY = 0;
+
+		now = Date.now();
+
+		wrapper = document.getElementById("animationWrapper");
+		HEIGHT = wrapper.clientHeight;
+		WIDTH = wrapper.clientWidth;
+		canvas = document.getElementById("animationCanvas");
+		ctx = canvas.getContext("2d");
+
+		//handles events with a couple meta variables
+		let events = {
+			//true while mouse is dragging
+			dragging: false,
+			//where the mouse started dragging from
+			startX: 0,
+			startY: 0,
+			mouseDown: function(e) {
+				let r = canvas.getBoundingClientRect();
+				//left click starts a drag
+				if (e.button === 0) {
+					events.dragging = true;
+
+					events.startX = (e.clientX - r.left) - TRANSX;
+					events.startY = (e.clientY - r.top) - TRANSY;
+				}
+				//middle mouse resets camera
+				else if (e.button === 1) {
+					TRANSX = 0;
+					TRANSY = 0;
+					SCALE = 4;
+				}
+				//right click logs debug info (currently coordinates of cursor)
+				else {
+					console.log((-TRANSX + (e.clientX - r.left - r.width/2))/SCALE + ", " + (TRANSY - (e.clientY - r.top - r.height/2))/SCALE);
+				}
+			},
+
+			//translate the canvas according to where the mouse is compared to where is started
+			mouseMove: function(e) {
+				if (events.dragging) {
+					let r = canvas.getBoundingClientRect();
+					let x = e.clientX - r.left;
+					let y = e.clientY - r.top;
+
+					TRANSX = (x - events.startX);
+					TRANSY = (y - events.startY);
+				}
+			},
+
+			//stop dragging when mouse is released
+			mouseUp: function(e) {
+				events.dragging = false;
+			},
+
+			//zoom in and out when scroll wheel is used
+			mouseWheel: function(e) {
+				e.preventDefault();
+
+				let scaleFactor = 1.4;
+				let scrollDir = e.wheelDelta;
+				let r = canvas.getBoundingClientRect();
+
+				//in-animation coordinates of mouse relative to image origin (center of juggling patter typically)
+				let mX = (e.clientX - r.left - r.width/2)/SCALE;
+				let mY = (e.clientY - r.top - r.height/2)/SCALE;
+				//in-animation coordinates of how much image origin has moved relative to canvas origin
+				let TX = TRANSX/SCALE;
+				let TY = TRANSY/SCALE;
+
+				//why was this so hard to figure out
+				if (scrollDir > 0) {
+					//pan camera so that the camera zooms in on the mouse
+					TRANSX = (mX + (TX - mX)*scaleFactor)*SCALE;
+					TRANSY = (mY + (TY - mY)*scaleFactor)*SCALE;
+
+					//zoom in
+					SCALE *= scaleFactor;
+				}
+				else {
+					TRANSX = (mX + (TX - mX)/scaleFactor)*SCALE;
+					TRANSY = (mY + (TY - mY)/scaleFactor)*SCALE;
+
+					SCALE /= scaleFactor;
+				}
+			}
+		};
+
+		if (!EVENTSADDED) {
+			canvas.addEventListener('mousedown', events.mouseDown, false);
+			canvas.addEventListener('mousemove', events.mouseMove, false);
+			canvas.addEventListener('mouseup', events.mouseUp, false);
+			canvas.addEventListener('mousewheel', events.mouseWheel, false);
+			canvas.addEventListener('DOMMouseScroll', events.mouseWheel, false);
+
+			EVENTSADDED = true;
+		}
+
+
+		this.generateMovements(inputPreset);
 
 
 		function draw() {
@@ -620,5 +609,3 @@ let AnimationScript = function() {
 
 	};
 };
-
-let animationInstance = new AnimationScript();

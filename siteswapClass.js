@@ -192,7 +192,7 @@ Siteswap.prototype.printThrowInfo = function(repeats) {
 		}
 	}
 
-	console.log('asdf', throwInfo);
+	// console.log('asdf', throwInfo);
 	return throwInfo;
 }
 

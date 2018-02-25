@@ -6,10 +6,9 @@
 //TODO: make ladder display appropriately with sync patterns
 //TODO: expand the limits of handles to actual theoretical limits instead of nearest handles
 
-var preset;
-
 //temporary global to figure out animation stuff
 var preset;
+var animationInstance;
 
 $(document).ready(function() {
 
@@ -53,7 +52,7 @@ $(document).ready(function() {
 				if (beatPatternIndex % 2) { //if its on the right hand
 					this.beatPattern.push(new Throw(this.throwInfo.throws[i].start + 1, this.throwInfo.throws[i].start + this.throwTime));
 				} else {
-					console.log(this.throwInfo.throws[i].start);
+					// console.log(this.throwInfo.throws[i].start);
 					this.beatPattern.push(new Throw(this.throwInfo.throws[i].start, this.throwInfo.throws[i].start + this.throwTime + 1));
 				}
 				beatPatternIndex++;
@@ -62,7 +61,7 @@ $(document).ready(function() {
 		//last catch is special, only one handle and is static
 		this.beatPattern.push(new Throw(this.throwInfo.endTime, null));
 
-		console.log(this.beatPattern);
+		// console.log(this.beatPattern);
 	}
 
 	//INPUT
@@ -70,6 +69,10 @@ $(document).ready(function() {
 		e.preventDefault();
 		parseInput();
 		resetLadder();
+
+      animationInstance = undefined;
+      animationInstance = new AnimationScript();
+      animationInstance.init(preset);
 	}
 
 	var parseInput = function() { //create siteswap and preset objects from entry
@@ -77,16 +80,16 @@ $(document).ready(function() {
 		site = new Siteswap(String(input.value));
 		preset = new Preset(site);
 
-		console.log('array:', site.printArray());
-		console.table({
-			'valid': site.isValid(),
-			'siteswap': site.printSite(),
-			'loops': site.printLoops(),
-			'looptime': site.printLoopTime()
-		});
+		// console.log('array:', site.printArray());
+		// console.table({
+		// 	'valid': site.isValid(),
+		// 	'siteswap': site.printSite(),
+		// 	'loops': site.printLoops(),
+		// 	'looptime': site.printLoopTime()
+		// });
 
-		console.log('throwInfo: ', preset.throwInfo);
-		console.log('beatPattern: ', preset.beatPattern);
+		// console.log('throwInfo: ', preset.throwInfo);
+		// console.log('beatPattern: ', preset.beatPattern);
 	}
 
 	//LADDER DIAGRAM
@@ -148,9 +151,9 @@ $(document).ready(function() {
 				$('#leftSlider').find('.ui-slider-handle:first').addClass('ui-slider-handle-disabled');
 				$('#leftSlider').find('.ui-slider-handle:last').addClass('ui-slider-handle-disabled');
             for (let i = 0; i < preset.throwInfo.endTime; i++) {
-               console.log(preset.throwInfo.throws[i]);
+               // console.log(preset.throwInfo.throws[i]);
                if (preset.throwInfo.throws[i].start == preset.throwInfo.throws[i].end) {
-                  console.log('asdf');
+                  // console.log('asdf');
                   $('div span:nth-child(' + i + ')').addClass('ui-slider-handle-disabled');
                }
             }
@@ -168,6 +171,8 @@ $(document).ready(function() {
 				} else {
 					preset.beatPattern[ui.handleIndex].end = ui.value;
 				}
+
+				animationInstance.generateMovements(preset);
 
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 			},
@@ -198,6 +203,8 @@ $(document).ready(function() {
 					preset.beatPattern[ui.handleIndex].end = ui.value;
 				}
 
+				animationInstance.generateMovements(preset);
+				
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 			},
 
@@ -347,7 +354,7 @@ $(document).ready(function() {
 			var zeroThrowAbove = false;
 			for (let i = 0; i < throwArray.length; i++) {
 				if (throwArray[i].end == handleIndex + 2) {
-					console.log('asdf', throwArray[i]);
+					// console.log('asdf', throwArray[i]);
 					if (throwArray[i].start == throwArray[i].end) {
 						zeroThrowAbove = true;
 					}
@@ -385,9 +392,6 @@ $(document).ready(function() {
 				}
 			}
 		}
-
-		console.log('upperlimit', upperLimit);
-		console.log('lowerlimit', lowerLimit);
 
 		//get rid of slider text
 		slider.find('.ui-slider-handle').text((''));
