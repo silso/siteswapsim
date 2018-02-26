@@ -38,11 +38,27 @@ body {
 	cursor: -webkit-grabbing;
 }
 
+#siteswapForm {
+	margin: 7px;
+	height: 24px;
+}
+
+.ui-spinner-button {
+	height: 11px;
+}
+
+.ui-spinner-input {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	margin-top: 3px;
+	margin-bottom: 3px;
+}
+
+/*<editor-fold> LADDER DIAGRAM ************************************************/
 .inner {
 	position: relative;
-	/* display: inline-block;
-     */
-	height: 100%;
+	height: calc(100% - 20px);
+	margin: 7px;
 }
 
 #ladderDiagram {
@@ -51,29 +67,29 @@ body {
 }
 
 #resetLadder {
-	position: relative;
+	/* position: relative; */
+	height: 24px;
+	padding: 1px;
+	display: inline-block;
+	margin: 7px;
 }
 
-#siteswapForm {
-	/* position: relative;
-     */
+#repeatCount {
+	height: 10px;
+	width: 30px;
+}
+
+#repeatCountOuter {
+	height: 22px;
+	display: inline-block;
+	margin: 7px;
 }
 
 #outer {
 	position: relative;
-	/* overflow: auto;
-     */
 	height: calc(100% - 21px);
 	width: 300px;
 }
-
-
-/* #sliders {
-     left: 100%;
-     margin-left: -100%;
-     float: left;
-}
- */
 
 #sliders {
 	position: absolute;
@@ -91,15 +107,11 @@ body {
 
 .slider {
 	background: transparent;
-	margin-top: 2px;
-	margin-bottom: 2px;
-	margin-left: 50px;
-	margin-right: 50px;
+	margin: 0px 60px 0px 60px;
 	display: inline-block;
 	float: left;
-	border: 50px;
 	width: 7px;
-	height: calc(100% - 10px);
+	height: calc(100% - 2px);
 }
 
 .ui-slider .ui-slider-handle {
@@ -117,3 +129,5 @@ body {
 	color: #222;
 	font-weight: normal;
 }
+
+/*</editor-fold> LADDER DIAGRAM ***********************************************/

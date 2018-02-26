@@ -16,10 +16,15 @@
 <body>
 	<div id='flexContainer'>
 		<div id='userEntryWrapper'>
-			<form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap'></input>
-			</form>
+				<form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap' class='ui-widget-content ui-widget ui-corner-all'></input></form>
 			<div id='ladderDiagram'>
-				<button id='resetLadder'>reset ladder</button>
+				<div id='ladderInput'>
+					<div id='repeatCountOuter'>
+						<label for='repeatCount' class='ui-widget'># of repeats:</label>
+						<input id='repeatCount' name='value'>
+					</div>
+					<button id='resetLadder' class='ui-button ui-widget ui-corner-all'>reset ladder</button> <!--ui-widget ui-corner-all-->
+				</div>
 				<div id='outer'>
 					<div class='inner' id='lines'>
 						<canvas id='ladderLines' style='border:1px solid #d3d3d3'></canvas>

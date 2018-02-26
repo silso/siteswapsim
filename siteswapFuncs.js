@@ -29,19 +29,17 @@ var siteswapTranslator = function(site) {
 	}
 
 	//SYNTAX CHECKER
-	//Stolen from gunswap.co
+	//Modified (stolen) from gunswap.co
 	var TOSS = '(\\d|[a-w])';
 	var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
 	var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
-	var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
+	var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)'; // /\((((\d|[a-w])x?)|(\[((\d|[a-w])x?)+\])),(((\d|[a-w])+x?)|(\[((\d|[a-w])x?)+\]))\)+\*$/
 
 	if (site[strLen - 1] == '*') { //'*' only allowed with sync patterns
-		var BEAT = new RegExp('(' + SYNC + ')+', 'g');
-		if (siteStr.match(BEAT) != siteStr.slice(0, -1)) {
-			valid = false;
-		}
+		var BEAT = new RegExp('^(' + SYNC + ')+\\*$', 'g');
+		valid = BEAT.test(siteStr);
 	} else {
-		var BEAT = new RegExp('((' + TOSS + '|' + MULTIPLEX + ')+$)|(' + SYNC + '+$)', 'g');
+		var BEAT = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+$', 'g');
 		if (siteStr.match(BEAT) != siteStr) {
 			valid = false;
 		}
@@ -87,7 +85,7 @@ var siteswapTranslator = function(site) {
 		siteStr = newStr;
 	}
 
-	//TRANSLATOR
+	//translator
 	var i = 0; //index in siteswap string
 	siteArr.length = 0; //index in siteswap array
 	strLen = siteStr.length; //update string length if there was '*'
@@ -158,7 +156,9 @@ var siteswapTranslator = function(site) {
 	}
 
 	if (sync) { //this rotates everything in the pattern so we can make the 1 throws go from the left hand, specifically so sync works on ladder diagram
-		var newSiteArr = [];
+		var newSiteArr = new Object();
+		newSiteArr.slice = siteArr.slice;
+		newSiteArr.length = siteArr.length;
 		for (let i = 0; i < siteArr.length - 1; i++) {
 			newSiteArr[i] = siteArr[i + 1];
 		}
@@ -277,46 +277,46 @@ var loopFinder = function(site) {
 
 	var i = 0;
 	while (i < siteLen) {
-		console.log('tested:', JSON.stringify(tested));
+		//console.log('tested:', JSON.stringify(tested));
 		if (site[i] instanceof Array) {
-			console.log('site[',i,'] is an array');
+			//console.log('site[',i,'] is an array');
 			var isTestedi = true; //wish there were for elses
 			//var j = 0; //j moves to first untested index in array
 			for (let j = 0; j < site[i].length; j++) { //check throws in array
 
 				if (!tested[i][j]) { //if throw in array is untested, do stuff
-					console.log('j = ',j,' is untested');
+					//console.log('j = ',j,' is untested');
 					isTestedi = false;
 					break;
 				}
 			}
 			if (isTestedi) { //if none are untested, move to next index in siteswap
-				console.log('multiplex at i = ',i, ' is fully tested, incrementing');
+				//console.log('multiplex at i = ',i, ' is fully tested, incrementing');
 				i++;
 				continue;
 			}
 
 			var k = i; //we change k as we jump around the siteswap
 			while (true) {
-				console.log('looping');
+				//console.log('looping');
 				if (site[k] instanceof Array) { //if k is at a multiplex
-					console.log('site[',k,'] is an array');
+					//console.log('site[',k,'] is an array');
 					var l = 0;
 					var isTestedk = true;
 					for (; l < site[k].length; l++) { //increment j to untested index
 						if (!tested[i][l]) {
-							console.log('l = ',l,' is untested');
+							//console.log('l = ',l,' is untested');
 							isTestedk = false;
 							break;
 						}
 					}
 					if (isTestedk) { //if none untested, assume loop is done since site is valid
-						console.log('all of site[',k,'] is tested, loop is done')
+						//console.log('all of site[',k,'] is tested, loop is done')
 						loopNum++;
 						loops.push([]);
 						break;
 					}
-					console.log('adding throw',site[k][l]);
+					//console.log('adding throw',site[k][l]);
 					//at this point we should be at an untested throw, so we add to loops
 					loops[loopNum].push({
 						n: site[k][l],
@@ -327,7 +327,7 @@ var loopFinder = function(site) {
 				}
 				else { //if k is at a normal throw
 					if (!tested[k]) { //if k is at an untested throw
-						console.log('adding throw',site[k]);
+						//console.log('adding throw',site[k]);
 						loops[loopNum].push({
 							n: site[k],
 							i: k
@@ -347,24 +347,24 @@ var loopFinder = function(site) {
 			if (!tested[i]) {
 				var k = i; //we change k as we jump around the siteswap
 				while (true) {
-					console.log('tested:', JSON.stringify(tested));
+					//console.log('tested:', JSON.stringify(tested));
 					if (site[k] instanceof Array) { //if k is at a multiplex
 						var j = 0;
 						var isTestedk = true;
 						for (; j < site[k].length; j++) { //increment j to untested index
 							if (!tested[k][j]) {
-								console.log(j,'break');
+								//console.log(j,'break');
 								isTestedk = false;
 								break;
 							}
 						}
-						console.log(j);
+						//console.log(j);
 						if (isTestedk) { //if none untested, assume loop is done since site is valid
 							loopNum++;
 							loops.push([]);
 							break;
 						}
-						console.log('adding throw',site[k][j]);
+						//console.log('adding throw',site[k][j]);
 						//at this point we should be at an untested throw, so we add to loops
 						loops[loopNum].push({
 							n: site[k][j],
@@ -375,7 +375,7 @@ var loopFinder = function(site) {
 					}
 					else { //if k is at a normal throw
 						if (!tested[k]) { //if k is at an untested throw
-							console.log('adding throw',site[k]);
+							//console.log('adding throw',site[k]);
 							loops[loopNum].push({
 								n: site[k],
 								i: k

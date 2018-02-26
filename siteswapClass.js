@@ -1,7 +1,5 @@
 'use strict';
 
-//1[53]12
-
 var Siteswap = function(siteswapString){
 	this.siteStr = siteswapString;
 	this.site = new Object();
