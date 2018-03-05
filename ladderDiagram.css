@@ -41,6 +41,23 @@ body {
 #siteswapForm {
 	margin: 7px;
 	height: 24px;
+	display: inline-block;
+}
+
+/* #siteswapInput:valid, #siteswapInput:required {
+	border-color: black;
+	background-color: white;
+}
+
+#siteswapInput:invalid {
+	border-color: red;
+	background-color: pink;
+} */
+
+#siteswapEntryError {
+	margin: 7px;
+	height: 24px;
+	display: inline-block;
 }
 
 .ui-spinner-button {

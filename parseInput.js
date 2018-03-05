@@ -63,25 +63,47 @@ $(document).ready(function() {
 	siteswapForm.onsubmit = function(e) {
 		e.preventDefault();
 		parseInput();
-		resetLadder();
 	}
 
 	//create siteswap and preset objects from entry
 	var parseInput = function() {
+		//SYNTAX CHECKER
+		//Modified (stolen) from gunswap.co
 		var input = document.getElementById('siteswapInput');
-		site = new Siteswap(String(input.value));
-		preset = new Preset(site);
+		var TOSS = '(\\d|[a-w])';
+		var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
+		var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
+		var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
+		var PATTERN = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$');
 
-		console.log('siteswap array:', site.printArray());
-		console.table({
-			'valid': site.isValid(),
-			'siteswap': site.printSite(),
-			'loops': site.printLoops(),
-			'looptime': site.printLoopTime()
-		});
+		var error = document.getElementById('siteswapEntryError');
+		if(!PATTERN.test(input.value)) {
+			error.innerHTML = 'invalid syntax';
+		}
+		else {
+			site = new Siteswap(String(input.value));
+			if (!site.valid) {
+				error.innerHTML = 'Invalid pattern';
+			}
+			else if (!site.site[0]) {
+				error.innerHTML = 'cannot start on 0';
+			}
+			else { //if pattern valid
+				preset = new Preset(site);
 
-		console.log('throwInfo: ', preset.throwInfo);
-		console.log('beatPattern: ', preset.beatPattern);
+				console.log('siteswap array:', site.printArray());
+				console.table({
+					'valid': site.isValid(),
+					'siteswap': site.printSite(),
+					'loops': site.printLoops(),
+					'looptime': site.printLoopTime()
+				});
+				console.log('throwInfo: ', preset.throwInfo);
+				console.log('beatPattern: ', preset.beatPattern);
+
+				resetLadder();
+			}
+		}
 	}
 	//</editor-fold> INPUT ******************************************************
 

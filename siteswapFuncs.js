@@ -28,33 +28,6 @@ var siteswapTranslator = function(site) {
 		return newArr;
 	}
 
-	//SYNTAX CHECKER
-	//Modified (stolen) from gunswap.co
-	var TOSS = '(\\d|[a-w])';
-	var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
-	var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
-	var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)'; // /\((((\d|[a-w])x?)|(\[((\d|[a-w])x?)+\])),(((\d|[a-w])+x?)|(\[((\d|[a-w])x?)+\]))\)+\*$/
-
-	if (site[strLen - 1] == '*') { //'*' only allowed with sync patterns
-		var BEAT = new RegExp('^(' + SYNC + ')+\\*$', 'g');
-		valid = BEAT.test(siteStr);
-	} else {
-		var BEAT = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+$', 'g');
-		if (siteStr.match(BEAT) != siteStr) {
-			valid = false;
-		}
-	}
-
-	if (!valid) {
-		console.log("failed regex");
-		return {
-			siteArr: site,
-			multiplex: multiplex,
-			sync: sync,
-			valid: valid
-		};
-	}
-
 	if (siteStr[0] == '(') {
 		sync = true;
 	}

@@ -16,7 +16,17 @@
 <body>
 	<div id='flexContainer'>
 		<div id='userEntryWrapper'>
-				<form id='siteswapForm'><input type='text' id='siteswapInput' placeholder='siteswap' class='ui-widget-content ui-widget ui-corner-all'></input></form>
+			<div id='siteswapEntry'>
+				<form id='siteswapForm'>
+					<input type='text' id='siteswapInput' placeholder='siteswap' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off'>
+					<!-- required pattern='^((\d|[a-w])|(\[(\d|[a-w])+\]))+$|^(\((((\d|[a-w])x?)|(\[((\d|[a-w])x?)+\])),(((\d|[a-w])x?)|(\[((\d|[a-w])x?)+\]))\))+\*?$'
+					onsubmit='submit(event)'
+					oninvalid="this.setCustomValidity('Invalid syntax')">
+					oninput="this.setCustomValidity(' ')" -->
+					</input>
+				</form>
+				<p id='siteswapEntryError' class='ui-widget'>Error</p>
+			</div>
 			<div id='ladderDiagram'>
 				<div id='ladderInput'>
 					<div id='repeatCountOuter'>
@@ -41,6 +51,7 @@
 			<canvas id='animationCanvas' class='grabbable' oncontextmenu="return false;"></canvas>
 		</div>
 	</div>
+
 </body>
 
 </html>

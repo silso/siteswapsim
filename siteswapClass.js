@@ -23,6 +23,7 @@ var Siteswap = function(siteswapString){
 		var tested = true;
 	}
 	else {
+		//$('siteswapInput')[0].setCustomValidity('bad syntax');
 		console.log('failed syntax');
 	}
 
