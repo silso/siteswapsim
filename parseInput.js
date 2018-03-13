@@ -68,11 +68,13 @@ $(document).ready(function() {
 	siteswapForm.onsubmit = function(e) {
 		e.preventDefault();
 		parseInput();
-		resetLadder();
 
       animationInstance = undefined;
       animationInstance = new AnimationScript();
-      animationInstance.init(preset);
+		
+		resetLadder();
+
+      animationInstance.init(preset, false);
 	}
 
 	var parseInput = function() { //create siteswap and preset objects from entry
@@ -172,14 +174,14 @@ $(document).ready(function() {
 					preset.beatPattern[ui.handleIndex].end = ui.value;
 				}
 
-				animationInstance.generateMovements(preset);
-
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 			},
 
 			stop: function(ev, ui) {
 				restrictHandleMovement(preset, ui, $('#leftSlider'), true);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
+
+				animationInstance.generateMovements(preset);
 			}
 		});
 
@@ -203,18 +205,20 @@ $(document).ready(function() {
 					preset.beatPattern[ui.handleIndex].end = ui.value;
 				}
 
-				animationInstance.generateMovements(preset);
-				
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 			},
 
 			stop: function(ev, ui) {
 				restrictHandleMovement(preset, ui, $('#rightSlider'), false);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
+
+				animationInstance.generateMovements(preset);
 			}
 		});
 
 		updateCanvasLines(preset, c, marginSide, sizeRatio);
+
+		animationInstance.generateMovements(preset);
 	};
 
 	//CANVAS FUNCTIONS

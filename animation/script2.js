@@ -4,6 +4,8 @@
 //handles interactions with the canvas such as panning and zooming
 //
 //TO DO:
+//make hands and balls completely time-dependant - no matter how you change time
+//(forward, backwards, jumping) the positions will all be correct after one call of draw
 //create settings menu:
 //		-time-scaling slider (maybe outside settings menu)
 //		-k and g value sliders
@@ -11,6 +13,7 @@
 //make canvas resize faster on low fps (and just in general)
 //get rid of ghosts when you zoom in while panning at the same time
 //stop panning (simulate mouseUp) when mouse leaves canvas (is it possible?)
+
 
 
 let AnimationScript = function() {
@@ -41,9 +44,15 @@ let AnimationScript = function() {
 	let hands = {};
 	let balls = [];
 
+	let modCalls = 0;
 	let mod = function(a, b) {
+		if (modCalls++ > 1000){
+			console.log(a, b);
+			return "help";
+		}
 		return (a >= 0) ? a % b : mod(a + b, b);
 	}
+
 
 	////////
 	//Hand class: moves and draws a hand according to the array/loop of hand movements hM.
@@ -77,6 +86,7 @@ let AnimationScript = function() {
 			//the path the hands follow is of the form ax^3 + bx^2 + cx + d
 			//this applies to the x and the y directions
 			//a and b are calculated and stored as coefXA, coefXB, coefYA, etc.
+			//this was figured out using Cramer's rule
 			coefXA = (2 * curMove.p.x - 2 * nextMove.p.x + curMove.v.x * totalTime + nextMove.v.x * totalTime) / (totalTime * totalTime * totalTime);
 			coefXB = (-3 * curMove.p.x + 3 * nextMove.p.x - 2 * curMove.v.x * totalTime - nextMove.v.x * totalTime) / (totalTime * totalTime);
 
@@ -86,10 +96,12 @@ let AnimationScript = function() {
 
 
 		//called each frame, moves the hand depending on the time relative to the loop of hand movements
-		this.move = function() {
+		this.move = function(time) {
 			// console.log(":::", this.t, );
 			//time relative to the start of the hand movements loop
-			this.t = mod(now - this.ti - this.offset, hM[hM.length - 1].end);
+			modCalls = 0;
+			this.t = mod(time - this.ti - this.offset, hM[hM.length - 1].end);
+
 			//time relative to the start of the hand movement
 			let t = K*(this.t - curMove.start);
 
@@ -98,7 +110,7 @@ let AnimationScript = function() {
 				//if it's not, increment index and set the start variables
 				curIndex = (curIndex + 1) % hM.length;
 				this.setStart();
-				this.move();
+				this.move(time);
 			} else {
 				//if it is, set position appropriately using the form mentioned earlier
 				this.p = {
@@ -170,9 +182,9 @@ let AnimationScript = function() {
 		};
 
 		//called every frame, positions the ball according to a parabolic trajectory when in the middle of a throw, and according a hand's position when in a catch
-		this.move = function() {
+		this.move = function(time) {
 			//setting t to now relative to the length of time of the loop
-			this.t = (now - this.ti + this.offset) % bM[bM.length - 1].catch.end;
+			this.t = (time - this.ti + this.offset) % bM[bM.length - 1].catch.end;
 
 			//if this.t is outside of range of ballMovement
 			if (this.t > catchEnd || this.t < throwStart) {
@@ -231,10 +243,11 @@ let AnimationScript = function() {
 		};
 	};
 
-	this.generateMovements = function(inputPreset) {
+	this.generateMovements = function(inputPreset, print) {
 		dwellPath = [];
 		balls = [];
 		hands = {};
+
 		//take siteswap and generate movements accordingly
 		const site = inputPreset.site.site;
 		const loops = inputPreset.site.loops;
@@ -296,18 +309,23 @@ let AnimationScript = function() {
 				let rHNextCatch = (bP[(i + 2) % bPLength].end - rHOffset) % endTime;
 				if (rHNextCatch === 0) rHNextCatch = endTime;
 
-				//when the ball is going to land
-				let lHThrowTime = bP[(i + site[i % site.length]) % bPLength].start - lHThrow;
+				//when the ball is going to land (throw duration)
+				let lHThrowTime = mod(bP[(i + site[i % site.length]) % bPLength].start - lHThrow, endTime);
 				if (lHThrowTime === 0) lHThrowTime = endTime;
+				modCalls = 0;
 				let rHThrowTime = mod(bP[(i + 1 + site[(i + 1) % site.length]) % bPLength].start - rHOffset, endTime) - rHThrow;
 				if (rHThrowTime === 0) rHThrowTime = endTime;
+
+				//copying speed of ball at time of throw
+				let startLHV = mod(-0.5*G*lHThrowTime*lHThrowTime + dwellPath[i][1].y - dwellPath[i][0].y, endTime) / lHThrowTime
+				if (startLHV < 0) console.log(i, lHThrowTime, dwellPath[i]);
 
 				lH.push(
 					{
 						p: dwellPath[i][0],
 						v: {
 							x: 2000*(35 - (-5))/lHThrowTime * ((site[i % site.length] % 2) ? 1 : -1),
-							y: 100*(site[i % site.length] + 0.5)
+							y: 1000*startLHV
 						},
 						start: lHThrow,
 						end: lHCatch
@@ -316,7 +334,7 @@ let AnimationScript = function() {
 						p: dwellPath[i][1],
 						v: {
 							x: -30,
-							y: -50*(site[i % site.length] + 0.5)
+							y: -35*(site[i % site.length] + 0.5)
 						},
 						start: lHCatch,
 						end: lHNextThrow
@@ -328,7 +346,7 @@ let AnimationScript = function() {
 						p: dwellPath[i + 1][0],
 						v: {
 							x: 10,
-							y: -50*(site[(i + 1) % site.length] + 1)
+							y: -35*(site[(i + 1) % site.length] + 1)
 						},
 						start: rHCatch,
 						end: rHThrow
@@ -357,7 +375,6 @@ let AnimationScript = function() {
 				hands[hand].init(start);
 			}
 		})();
-
 
 		//generate ballmovements
 		(function() {
@@ -407,7 +424,8 @@ let AnimationScript = function() {
 					for (let k = 0; k < realLength; k++) {
 						//apply aforementioned shift
 						function shiftTime(time) {
-							return ((time + endTime - shift) % endTime)/SPEED * 1000;
+							//this rounds using toPrecision because modulus and floating point arithmetic don't mix well
+							return (parseFloat(Number(time + endTime - shift).toPrecision(6)) % endTime)/SPEED * 1000;
 						}
 
 						let isLeft = !(throwIndex % 2);
@@ -460,6 +478,11 @@ let AnimationScript = function() {
 				}
 			}
 		})();
+
+		if (print) {
+			console.log(balls);
+			console.log(hands);
+		}
 	}
 
 
@@ -598,9 +621,9 @@ let AnimationScript = function() {
 			hands.left.draw(ctx);
 			hands.right.draw(ctx);
 			for (let i = 0; i < balls.length; i++) balls[i].draw(ctx);
-			hands.left.move();
-			hands.right.move();
-			for (let i = 0; i < balls.length; i++) balls[i].move();
+			hands.left.move(now);
+			hands.right.move(now);
+			for (let i = 0; i < balls.length; i++) balls[i].move(now);
 
 			window.requestAnimationFrame(draw);
 		}
