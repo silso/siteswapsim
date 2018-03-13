@@ -3,6 +3,7 @@
 //TODO: (maybe) instead of destroying sliders in resetLadder, delete handles. this way functions aren't redefined each time ladder is reset
 //TODO: make slider handle value not on slider (by appending an element)
 //TODO: give ladder lines colors based on the loop they are in
+
 var preset;
 
 $(document).ready(function() {
@@ -13,8 +14,10 @@ $(document).ready(function() {
 	//<editor-fold> PRESET DEFINITION *******************************************
 	var Preset = function(site) {
 		//this class holds the config of the siteswap, including rhythm.
+		var repeats = document.getElementById('repeatCount').value; //get # of repeats from spinner
+
 		this.site = site; //siteswap object
-		this.throwInfo = site.printThrowInfo(1); //such terrible names, idk. this has info about where lines go
+		this.throwInfo = site.printThrowInfo(repeats); //such terrible names, idk. this has info about where lines go
 		this.beatPattern = [0, 1]; //rhythm of this instance of a siteswap
 		this.throwTime = 0.5; //starting value for dwell (in slider length units)
 		this.dwellLimit = 0.1; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
@@ -57,6 +60,9 @@ $(document).ready(function() {
 		this.beatPattern.push(new Throw(this.throwInfo.endTime, null));
 
 	}
+	Preset.prototype.makeThrowInfo = function(repeats) {
+		this.throwInfo = site.printThrowInfo(repeats);
+	}
 	//</editor-fold> PRESET DEFINITION ******************************************
 
 	//<editor-fold> INPUT *******************************************************
@@ -78,17 +84,22 @@ $(document).ready(function() {
 
 		var error = document.getElementById('siteswapEntryError');
 		if(!PATTERN.test(input.value)) {
-			error.innerHTML = 'invalid syntax';
+			error.innerHTML = 'Invalid syntax';
+			error.classList.add('siteswapEntryErrorInvalid');
 		}
 		else {
 			site = new Siteswap(String(input.value));
 			if (!site.valid) {
 				error.innerHTML = 'Invalid pattern';
+				error.classList.add('siteswapEntryErrorInvalid');
 			}
 			else if (!site.site[0]) {
-				error.innerHTML = 'cannot start on 0';
+				error.innerHTML = '0 at start=bad';
+				error.classList.add('siteswapEntryErrorInvalid');
 			}
 			else { //if pattern valid
+				error.innerHTML = '';
+				error.classList.remove('siteswapEntryErrorInvalid');
 				preset = new Preset(site);
 
 				console.log('siteswap array:', site.printArray());
@@ -295,7 +306,7 @@ $(document).ready(function() {
 
 	//fills canvasLines array with start and end points on the canvas
 	var updateCanvasLines = function(preset, canvas, marginSide, sizeRatio) {
-		var endTime = preset.throwInfo.endTime
+		var endTime = preset.throwInfo.endTime;
 		var canvasLines = [];
 		var zeroThrows = new Array(endTime).fill(0);
 		//coordinate conversion, needs to know where y slider is (marginSide) and conversion between canvas pixels and slider values (sizeRatio)
@@ -510,9 +521,11 @@ $(document).ready(function() {
 
 			create: function(ev, ui) {
 				//disable 0 catches
-				for (let i = 0; i < preset.throwInfo.endTime; i++) {
+				for (let i = 0; i < preset.throws.endTime; i++) {
 					var curThrow = preset.throwInfo.throws[i];
+					console.log(curThrow);
 					if (curThrow.start == curThrow.end) { //if zero throw
+						console.log('asdf');
 						if (curThrow.start % 2) { //if on right slider
 							$('#rightSlider span:nth-child(' + curThrow.start + ')').addClass('ui-slider-handle-disabled'); //disable nth and nth + 1 handles
 							document.querySelector('#rightSlider span:nth-child(' + curThrow.start + ')').style.display = 'none';
@@ -559,11 +572,20 @@ $(document).ready(function() {
 		}
 		window.onresize = updateCanvasSize; //change canvas size when height changes
 		updateCanvasSize(); //this updates sizeRatio and transforms canvas context
-		updateCanvasLines(preset, c, marginSide, sizeRatio);
 		//</editor-fold> CANVAS STUFF ********************************************
 	};
 
-	$('#resetLadder').click(resetLadder);
+	$('#resetLadder').click(function() {
+		try {
+			var repeats = document.getElementById('repeatCount').value;
+			preset.makeThrowInfo(repeats);
+			preset.makeBeatPattern();
+			resetLadder();
+		}
+		catch(e) {
+			console.log('no preset');
+		}
+	});
 
 	//</editor-fold> LADDER DIAGRAM *********************************************
 });

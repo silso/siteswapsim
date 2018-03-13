@@ -227,14 +227,6 @@ var loopFinder = function(site) {
 	var loops = [[]]; //array of loops
 	var loopNum = 0; //index where next loop goes in loops
 
-	for (let i = 0; i < siteLen; i++) {
-		if (site[i] instanceof Array) {
-			for (let j = 0; j < site[i].length; j++) {
-
-			}
-		}
-	}
-
 	var tested = [];
 	for (let i = 0; i < siteLen; i++) {
 		if (site[i] instanceof Array) {
