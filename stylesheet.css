@@ -1,0 +1,162 @@
+html,
+body {
+	height: calc(100% - 8px);
+}
+
+#flexContainer {
+	display: flex;
+	height: 100%;
+	min-width: 800px;
+}
+
+#userEntryWrapper {
+	overflow: hidden;
+	width: 300px;
+	min-height: 500px;
+}
+
+#animationWrapper {
+	overflow: hidden;
+	flex-grow: 1;
+	min-width: 500px;
+}
+
+#animationCanvas {
+	border: 1px solid black;
+	background-color: #eee;
+}
+
+.grabbable {
+	cursor: move;
+	cursor: grab;
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+
+.grabbable:active {
+	cursor: grabbing;
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+
+#siteswapEntry {
+	display: flex;
+	align-items: center;
+}
+
+#siteswapForm {
+	padding-top: 2px;
+	margin: 6px;
+	margin-right: 2px;
+	height: 24px;
+	display: inline-block;
+}
+
+#siteswapEntryError {
+	width: 86px;
+	font-size: 13px;
+	line-height: 24px;
+	margin: 6px;
+	margin-left: 2px;
+	margin-right: 4px;
+	height: 20px;
+	display: inline-block;
+	border-width: 1px;
+	border-style: solid;
+	border-color: white;
+	text-align: center;
+}
+
+.siteswapEntryErrorInvalid {
+	border-color: red !important;
+	background-color: pink !important;
+}
+
+/*<editor-fold> LADDER DIAGRAM ************************************************/
+/*<editor-fold> LADDER INPUT **************************************************/
+#repeatCount {
+	height: 10px;
+	width: 30px;
+}
+#repeatCountOuter {
+	height: 22px;
+	display: inline-block;
+	margin: 6px;
+}
+.ui-spinner-button {
+	height: 11px;
+}
+.ui-spinner-input {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	margin-top: 3px;
+	margin-bottom: 3px;
+}
+
+#resetLadder {
+	/* position: relative; */
+	height: 24px;
+	padding: 1px;
+	display: inline-block;
+	margin: 6px;
+	float: right;
+	/* width: 88px; */
+}
+/*</editor-fold> LADDER INPUT *************************************************/
+
+#ladderDiagram {
+	position: relative;
+	height: calc(100% - 38px);
+}
+
+#outer {
+	position: relative;
+	height: calc(100% - 34px);
+	width: 300px;
+}
+
+.inner {
+	position: relative;
+	height: calc(100% - 12px);
+	margin: 6px;
+}
+
+#lines {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	top: 0px;
+}
+
+#sliders {
+	position: absolute;
+	z-index: 2;
+	left: 0;
+	top: 0px;
+}
+
+.slider {
+	background: transparent;
+	margin: 0px 67px 0px 68px;
+	display: inline-block;
+	float: left;
+	width: 7px;
+	height: calc(100% - 2px);
+}
+
+.ui-slider .ui-slider-handle {
+	height: 13px;
+	width: 13px;
+	border-radius: 7px;
+	margin-left: 0px;
+	font-size: 12px;
+}
+
+.ui-slider .ui-slider-handle-disabled {
+	background: repeat-x scroll 50% 50% #E5DEDE;
+	/*idk why, but this makes disabled handles look right*/
+	border: 1px solid #D3D3D3;
+	color: #222;
+	font-weight: normal;
+}
+/*</editor-fold> LADDER DIAGRAM ***********************************************/

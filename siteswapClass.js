@@ -1,7 +1,5 @@
 'use strict';
 
-//1[53]12
-
 var Siteswap = function(siteswapString){
 	this.siteStr = siteswapString;
 	this.site = new Object();
@@ -25,6 +23,7 @@ var Siteswap = function(siteswapString){
 		var tested = true;
 	}
 	else {
+		//$('siteswapInput')[0].setCustomValidity('bad syntax');
 		console.log('failed syntax');
 	}
 
@@ -129,7 +128,7 @@ Siteswap.prototype.printLoops = function() {
 			for (let i = 0; i < this.numOfLoops; i++) {
 				var loop = this.loops[i];
 				for (let j = 0; j < loop.length; j++) {
-					var toss = loop[j];
+					var toss = loop[j].n;
 					if (toss > 9) {
 						returnStr += String.fromCharCode(toss + 87);
 					}
@@ -192,7 +191,6 @@ Siteswap.prototype.printThrowInfo = function(repeats) {
 		}
 	}
 
-	// console.log('asdf', throwInfo);
 	return throwInfo;
 }
 

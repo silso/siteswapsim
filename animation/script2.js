@@ -23,7 +23,7 @@ let AnimationScript = function() {
 		WIDTH,
 		SCALE = 4,
 
-		SPEED = 3.5,
+		SPEED = 4,
 		SHIFT = 100000,
 
 		//gravitational acceleration
@@ -47,7 +47,6 @@ let AnimationScript = function() {
 	let modCalls = 0;
 	let mod = function(a, b) {
 		if (modCalls++ > 1000){
-			console.log(a, b);
 			return "help";
 		}
 		return (a >= 0) ? a % b : mod(a + b, b);
@@ -97,7 +96,6 @@ let AnimationScript = function() {
 
 		//called each frame, moves the hand depending on the time relative to the loop of hand movements
 		this.move = function(time) {
-			// console.log(":::", this.t, );
 			//time relative to the start of the hand movements loop
 			modCalls = 0;
 			this.t = mod(time - this.ti - this.offset, hM[hM.length - 1].end);
@@ -158,6 +156,9 @@ let AnimationScript = function() {
 			this.id = ID;
 
 			curIndex = 0;
+
+			this.hM = hM;
+
 			this.setStart();
 		};
 	};
@@ -269,11 +270,11 @@ let AnimationScript = function() {
 				];
 				dwellPath[i + 1] = [
 					{
-						x: 35,
+						x: 10,
 						y: 0
 					},
 					{
-						x: 10,
+						x: 35,
 						y: 0
 					}
 				];
@@ -281,6 +282,8 @@ let AnimationScript = function() {
 		})();
 
 		//generate handmovements
+		//TODO: maybe change the bM arrays so that both right and left hand arrays start on a throw movment
+		//		not doing this might result in some issues when reading dwellPath
 		(function() {
 			let lH = [];
 			let rH = [];
@@ -313,19 +316,23 @@ let AnimationScript = function() {
 				let lHThrowTime = mod(bP[(i + site[i % site.length]) % bPLength].start - lHThrow, endTime);
 				if (lHThrowTime === 0) lHThrowTime = endTime;
 				modCalls = 0;
-				let rHThrowTime = mod(bP[(i + 1 + site[(i + 1) % site.length]) % bPLength].start - rHOffset, endTime) - rHThrow;
+				let rHThrowTime = mod(bP[(i + 1 + site[(i + 1) % site.length]) % bPLength].start - rHThrow, endTime) - rHOffset;
 				if (rHThrowTime === 0) rHThrowTime = endTime;
 
-				//copying speed of ball at time of throw
-				let startLHV = mod(-0.5*G*lHThrowTime*lHThrowTime + dwellPath[i][1].y - dwellPath[i][0].y, endTime) / lHThrowTime
-				if (startLHV < 0) console.log(i, lHThrowTime, dwellPath[i]);
+				//copying speed of ball at time of throw (from Ball.move)
+				let startLHVy = 1000*mod(-0.5*G*lHThrowTime*lHThrowTime + dwellPath[i][1].y - dwellPath[i][0].y, endTime) / lHThrowTime;
+				let startRHVy = 1000*mod(-0.5*G*rHThrowTime*rHThrowTime + dwellPath[i + 1][0].y - dwellPath[i + 1][1].y, endTime) / rHThrowTime;
+
+				//where the ball will be caught - where the ball is thrown from (displacement) divided by time to give velocity
+				let startLHVx = 1000*(dwellPath[(i + site[i % site.length]) % bPLength][1].x - dwellPath[i][0].x)/lHThrowTime;
+				let startRHVx = 1000*(dwellPath[(i + 1 + site[(i + 1) % site.length]) % bPLength][1].x - dwellPath[(i + 1) % bPLength][0].x)/lHThrowTime;
 
 				lH.push(
 					{
 						p: dwellPath[i][0],
 						v: {
-							x: 2000*(35 - (-5))/lHThrowTime * ((site[i % site.length] % 2) ? 1 : -1),
-							y: 1000*startLHV
+							x: startLHVx,
+							y: startLHVy
 						},
 						start: lHThrow,
 						end: lHCatch
@@ -343,7 +350,7 @@ let AnimationScript = function() {
 
 				rH.push(
 					{
-						p: dwellPath[i + 1][0],
+						p: dwellPath[mod(i - 1, bPLength)][1],
 						v: {
 							x: 10,
 							y: -35*(site[(i + 1) % site.length] + 1)
@@ -352,10 +359,10 @@ let AnimationScript = function() {
 						end: rHThrow
 					},
 					{
-						p: dwellPath[i + 1][1],
+						p: dwellPath[i + 1][0],
 						v: {
-							x: 2000*(-35 - 5)/rHThrowTime * ((site[(i + 1) % site.length] % 2) ? 1 : -1),
-							y: 100*(site[(i + 1) % site.length] + 1)
+							x: startRHVx,
+							y: startRHVy
 						},
 						start: rHThrow,
 						end: rHNextCatch
@@ -471,7 +478,7 @@ let AnimationScript = function() {
 						catchIndex = (nextThrowIndex + endTime - 1) % endTime;
 					}
 
-					let color = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";
+					let color = inputPreset.colors[i];
 					let newBall = new Ball(color, 7, bM, -shift/SPEED * 1000, i + "," + j);
 					newBall.init(start);
 					balls.push(newBall);
@@ -491,7 +498,7 @@ let AnimationScript = function() {
 
 	this.init = function(inputPreset) {
 		let TRANSX = 0,
-			TRANSY = 0;
+			TRANSY = 200;
 
 		now = Date.now();
 
