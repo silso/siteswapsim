@@ -22,22 +22,35 @@
 				</form>
 				<p id='siteswapEntryError' class='ui-widget ui-corner-all'></p>
 			</div>
-			<div id='ladderDiagram'>
-				<div id='ladderInput'>
-					<div id='repeatCountOuter'>
-						<label for='repeatCount' class='ui-widget'># of repeats:</label>
-						<input id='repeatCount' name='value' min='1' value='1'>
+			<div id='tabs'>
+				<ul id='tabNames'>
+					<li id='presetTab'><a href='#presetOptions'>Preset</a></li>
+					<li id='siteswapTab'><a href='#siteswapOptions'>Siteswap</a></li>
+					<li id='ladderTab'><a href='#ladderDiagram'>Ladder</a></li>
+				</ul>
+				<div id='ladderDiagram'>
+					<div id='ladderInput'>
+						<div id='repeatCountOuter'>
+							<label for='repeatCount' class='ui-widget'># of repeats:</label>
+							<input id='repeatCount' name='value' min='1' value='1'>
+						</div>
+						<button id='resetLadder' class='ui-button ui-widget ui-corner-all'>reset ladder</button> <!--ui-widget ui-corner-all-->
 					</div>
-					<button id='resetLadder' class='ui-button ui-widget ui-corner-all'>reset ladder</button> <!--ui-widget ui-corner-all-->
+					<div id='outer'>
+						<div class='inner' id='lines'>
+							<canvas id='ladderLines' style='border:1px solid #d3d3d3'></canvas>
+						</div>
+						<div class='inner' id='sliders'>
+							<div id='leftSlider' class='slider'></div>
+							<div id='rightSlider' class='slider'></div>
+						</div>
+					</div>
 				</div>
-				<div id='outer'>
-					<div class='inner' id='lines'>
-						<canvas id='ladderLines' style='border:1px solid #d3d3d3'></canvas>
-					</div>
-					<div class='inner' id='sliders'>
-						<div id='leftSlider' class='slider'></div>
-						<div id='rightSlider' class='slider'></div>
-					</div>
+				<div id='siteswapOptions'>
+					<p>siteswap options</p>
+				</div>
+				<div id='presetOptions'>
+					<p>preset options</p>
 				</div>
 			</div>
 		</div>

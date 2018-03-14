@@ -5,14 +5,16 @@ body {
 
 #flexContainer {
 	display: flex;
-	height: 100%;
+	height: calc(100% - 14px);
 	min-width: 800px;
 }
 
 #userEntryWrapper {
 	overflow: hidden;
-	width: 300px;
+	width: 310px;
 	min-height: 500px;
+	margin-right: 8px;
+	min-width: 310px;
 }
 
 #animationWrapper {
@@ -46,19 +48,16 @@ body {
 
 #siteswapForm {
 	padding-top: 2px;
-	margin: 6px;
-	margin-right: 2px;
+	margin: 0 2px 6px 6px;
 	height: 24px;
 	display: inline-block;
 }
 
 #siteswapEntryError {
-	width: 86px;
+	width: 102px;
 	font-size: 13px;
 	line-height: 24px;
-	margin: 6px;
-	margin-left: 2px;
-	margin-right: 4px;
+	margin: 0 0 6px 2px;
 	height: 20px;
 	display: inline-block;
 	border-width: 1px;
@@ -70,6 +69,32 @@ body {
 .siteswapEntryErrorInvalid {
 	border-color: red !important;
 	background-color: pink !important;
+}
+
+#tabs {
+	padding: 0;
+	height: calc(100% - 40px);
+}
+
+#tabNames {
+	padding: 0;
+}
+
+#ladderTab {
+	margin-right: 0px;
+}
+
+.ui-tabs-anchor {
+	padding: 4px 0 4px 0 !important;
+	width: 97px !important;
+	font-size: 13px !important;
+	text-align: center;
+	/* margin-right: 3px !important; */
+}
+
+#presetTab {
+	margin-right: 3px;
+	width: 98px;
 }
 
 /*<editor-fold> LADDER DIAGRAM ************************************************/
@@ -106,19 +131,20 @@ body {
 
 #ladderDiagram {
 	position: relative;
-	height: calc(100% - 38px);
+	height: calc(100% - 28px);
+	padding: 0;
 }
 
 #outer {
 	position: relative;
 	height: calc(100% - 34px);
-	width: 300px;
+	width: 100%;
 }
 
 .inner {
 	position: relative;
 	height: calc(100% - 12px);
-	margin: 6px;
+	margin: 6px 0 6px 0;
 }
 
 #lines {
@@ -126,6 +152,11 @@ body {
 	z-index: 1;
 	left: 0;
 	top: 0px;
+}
+
+#ladderLines {
+	border-left: 0 !important;
+	border-right: 0 !important;
 }
 
 #sliders {
@@ -137,7 +168,7 @@ body {
 
 .slider {
 	background: transparent;
-	margin: 0px 67px 0px 68px;
+	margin: 0px 72px 0px 73px;
 	display: inline-block;
 	float: left;
 	width: 7px;

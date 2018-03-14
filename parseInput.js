@@ -129,13 +129,31 @@ $(document).ready(function() {
 			}
 		}
 	}
-	//</editor-fold> INPUT ******************************************************
+	//</editor-fold> SITESWAP ENTRY *********************************************
+
+	//intialize tabs
+	$('#tabs').tabs();
+	//disable ladder tab until preset is entered
+	$('#tabs').tabs('disable', '#ladderDiagram');
 
 	//<editor-fold> LADDER DIAGRAM **********************************************
-
+	//initialize repeat count selector
 	$('#repeatCount').spinner();
 
-	//<editor-fold> SLIDER STUFF ************************************************
+	//initialize reset button
+	$('#resetLadder').click(function() {
+		try {
+			var repeats = document.getElementById('repeatCount').value;
+			preset.makeThrowInfo(repeats);
+			preset.makeBeatPattern();
+			resetLadder();
+		}
+		catch(e) {
+			console.log('no preset');
+		}
+	});
+
+	//<editor-fold> SLIDER FUNCS ************************************************
 	$('.slider').slider({orientation: 'vertical'}); //initialize sliders
 	var restrictHandleMovement = function(preset, ui, slider, isLeft) {
 		var handleIndex = ui.handleIndex, //handle number, starting with 0 from bottom, index is same in beatPattern
@@ -306,9 +324,9 @@ $(document).ready(function() {
 			return true;
 		}
 	});
-	//</editor-fold> SLIDER STUFF ***********************************************
+	//</editor-fold> SLIDER FUNCS ***********************************************
 
-	//<editor-fold> CANVAS STUFF ************************************************
+	//<editor-fold> CANVAS FUNCS ************************************************
 	//canvas initializations
 	var c = document.getElementById('ladderLines'); //initialize canvas
 	var ctx = c.getContext('2d');
@@ -349,7 +367,7 @@ $(document).ready(function() {
 				left = true;
 
 			if (curThrow.start == curThrow.end) { //dont draw those silly 0 throws
-				zeroThrows[(i - 1) % endTime] = 1;
+				zeroThrows[(curThrow.start - 1) % endTime] = 1;
 				continue;
 			}
 
@@ -453,9 +471,12 @@ $(document).ready(function() {
 			}
 		})();
 	}
-	//</editor-fold> CANVAS STUFF ***********************************************
+	//</editor-fold> CANVAS FUNCS ***********************************************
 
 	var resetLadder = function() {
+
+		$('#tabs').tabs('enable', '#ladderDiagram');
+
 		//<editor-fold> SLIDER STUFF *********************************************
 		preset.makeBeatPattern();
 		//create arrays of values which will represent starting handle positions on the sliders
@@ -489,7 +510,7 @@ $(document).ready(function() {
 				$('#leftSlider').find('.ui-slider-handle:first').addClass('ui-slider-handle-disabled');
 				$('#leftSlider').find('.ui-slider-handle:last').addClass('ui-slider-handle-disabled');
 				//disable 0 catches
-            for (let i = 0; i < preset.throwInfo.endTime; i++) {
+            for (let i = 0; i < preset.throwInfo.throws.length; i++) {
 					var curThrow = preset.throwInfo.throws[i];
                if (curThrow.start == curThrow.end) { //if zero throw
 						if (!(curThrow.start % 2)) { //if on left slider
@@ -538,9 +559,7 @@ $(document).ready(function() {
 				//disable 0 catches
 				for (let i = 0; i < preset.throwInfo.throws.length; i++) {
 					var curThrow = preset.throwInfo.throws[i];
-					console.log(curThrow);
 					if (curThrow.start == curThrow.end) { //if zero throw
-						console.log('asdf');
 						if (curThrow.start % 2) { //if on right slider
 							$('#rightSlider span:nth-child(' + curThrow.start + ')').addClass('ui-slider-handle-disabled'); //disable nth and nth + 1 handles
 							document.querySelector('#rightSlider span:nth-child(' + curThrow.start + ')').style.display = 'none';
@@ -585,8 +604,8 @@ $(document).ready(function() {
 		//<editor-fold> CANVAS STUFF *********************************************
 		var sizeRatio;
 		var updateCanvasSize = function() {
-			c.height = $('#sliders').height() - 2;
-			c.width = $('#sliders').width() - 2;
+			c.height = $('#tabs').height() - $('#tabNames').height() - 50;
+			c.width = $('#tabs').width();
 			sizeRatio = c.height / preset.throwInfo.endTime;
 
 			ctx.resetTransform();
@@ -600,17 +619,6 @@ $(document).ready(function() {
 		//</editor-fold> CANVAS STUFF ********************************************
 	};
 
-	$('#resetLadder').click(function() {
-		try {
-			var repeats = document.getElementById('repeatCount').value;
-			preset.makeThrowInfo(repeats);
-			preset.makeBeatPattern();
-			resetLadder();
-		}
-		catch(e) {
-			console.log('no preset');
-		}
-	});
-
 	//</editor-fold> LADDER DIAGRAM *********************************************
+	//</editor-fold> INPUT ******************************************************
 });
