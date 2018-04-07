@@ -20,27 +20,48 @@ $(document).ready(function() {
 
 		this.site = site; //siteswap object
 		this.throwInfo = site.printThrowInfo(repeats); //such terrible names, idk. this has info about where lines go
-		this.beats = {left: [], right: []}; //rhythm of this instance of a siteswap
-		this.throwTime = 0.7; //starting value for dwell (in slider length units)
+		this.beatPattern = [0, 1]; //rhythm of this instance of a siteswap
+		this.throwTime = 0.5; //starting value for dwell (in slider length units)
 		this.dwellLimit = .4; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
 		this.throwLimit = .25; //smallest allowed value to throw one ball then catch a different ball in the same hand
 		this.speedLimit = .4; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
-		this.makeBeats();
+		this.makeBeatPattern();
 		this.makeColors();
 	}
-	Preset.prototype.makeBeats = function() {
-		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
-		this.beats = {left: [], right: []};
-		this.beats.left.push(0);
-		var syncDiff = !this.site.sync; //make right hand throws 1 beat out of sync with left hand when pattern isn't sync
-		for (let i = 2; i <= this.throwInfo.endTime; i += 2) {
-			this.beats.left.push(i - 1 + this.throwTime); //left hand catch time
-			this.beats.left.push(i); //left hand throw time
-			this.beats.right.push(i - syncDiff - 1 + this.throwTime); //right hand catch time
-			this.beats.right.push(i - syncDiff); //right hand throw time
+	Preset.prototype.makeBeatPattern = function() {
+		//makes an array of catch objects, each throw is 1 time unit, dwell time varies on user input
+		//each object holds throws start and end time (the gap between one throw and the next catch, not when the thrown ball is caught)
+		var Throw = function(start, end) {
+			this.start = start;
+			this.end = end;
 		}
 
-		console.log(this.beats);
+		if (!this.site.sync) {
+			this.beatPattern = [new Throw(0, this.throwTime)];
+			for (let i = 1; i < this.throwInfo.throws.length; i++) {
+				if (this.throwInfo.throws[i].start == this.throwInfo.throws[i - 1].start) {
+					continue;
+				}
+				this.beatPattern.push(new Throw(this.throwInfo.throws[i].start, this.throwInfo.throws[i].start + this.throwTime));
+			}
+		} else {
+			this.beatPattern = [new Throw(0, 1 + this.throwTime)]
+			var beatPatternIndex = 1;
+			for (let i = 1; i < this.throwInfo.throws.length; i++) {
+				if (this.throwInfo.throws[i].start == this.throwInfo.throws[i - 1].start) {
+					continue;
+				}
+				if (beatPatternIndex % 2) { //if its on the right hand
+					this.beatPattern.push(new Throw(this.throwInfo.throws[i].start + 1, this.throwInfo.throws[i].start + this.throwTime));
+				} else {
+					this.beatPattern.push(new Throw(this.throwInfo.throws[i].start, this.throwInfo.throws[i].start + this.throwTime + 1));
+				}
+				beatPatternIndex++;
+			}
+		}
+		//last catch is special, only one handle and is static
+		this.beatPattern.push(new Throw(this.throwInfo.endTime, null));
+
 	}
 	Preset.prototype.makeThrowInfo = function(repeats) {
 		this.throwInfo = site.printThrowInfo(repeats);
@@ -68,7 +89,6 @@ $(document).ready(function() {
 		//SYNTAX CHECKER
 		//Modified (stolen) from gunswap.co
 		var input = document.getElementById('siteswapInput');
-		var siteString = input.value.toLowerCase();
 		var TOSS = '(\\d|[a-w])';
 		var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
 		var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
@@ -76,12 +96,12 @@ $(document).ready(function() {
 		var PATTERN = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$');
 
 		var error = document.getElementById('siteswapEntryError');
-		if(!PATTERN.test(siteString)) {
+		if(!PATTERN.test(input.value)) {
 			error.innerHTML = 'Invalid syntax';
 			error.classList.add('siteswapEntryErrorInvalid');
 		}
 		else {
-			site = new Siteswap(String(siteString));
+			site = new Siteswap(String(input.value));
 			if (!site.valid) {
 				error.innerHTML = 'Invalid pattern';
 				error.classList.add('siteswapEntryErrorInvalid');
@@ -103,7 +123,7 @@ $(document).ready(function() {
 					'looptime': site.printLoopTime()
 				});
 				console.log('throwInfo: ', preset.throwInfo);
-				console.log('beats: ', preset.beats);
+				console.log('beatPattern: ', preset.beatPattern);
 
 				resetLadder();
 			}
@@ -130,7 +150,7 @@ $(document).ready(function() {
 		try {
 			var repeats = document.getElementById('repeatCount').value;
 			preset.makeThrowInfo(repeats);
-			preset.makeBeats();
+			preset.makeBeatPattern();
 			resetLadder();
 		}
 		catch(e) {
@@ -141,11 +161,10 @@ $(document).ready(function() {
 	//<editor-fold> SLIDER FUNCS ************************************************
 	$('.slider').slider({orientation: 'vertical'}); //initialize sliders
 	var restrictHandleMovement = function(preset, ui, slider, isLeft) {
-		var handleIndex = ui.handleIndex, //handle number, starting with 0 from bottom, index is same in beats
+		var handleIndex = ui.handleIndex, //handle number, starting with 0 from bottom, index is same in beatPattern
 			value = ui.value,
 			newValue = ui.value,
-			beats = isLeft ? preset.beats.left : preset.beats.right,
-			otherBeats = isLeft ? preset.beats.right : preset.beats.left,
+			beatPattern = preset.beatPattern,
 			throwArray = preset.throwInfo.throws,
 			dwellLimit = preset.dwellLimit, //shortest time you can hold the ball for
 			throwLimit = preset.throwLimit, //shortest time you can throw a ball then catch another
@@ -155,56 +174,61 @@ $(document).ready(function() {
 			endTime = preset.throwInfo.endTime,
 			isThrow = (handleIndex % 2) ^ isLeft; //right hand throws are offset by one, so isLeft takes that into account
 
+
 		//Find limits of handle
 		//first set limits to neighboring handles: most common case
 		if (handleIndex > 0) { //exclude bottom handle, already limited by slider
-			lowerLimit = beats[handleIndex - 1] + (isThrow ? throwLimit : dwellLimit);
+			if (isThrow) { //if throw, it is limited on the bottom by dwell
+				lowerLimit = beatPattern[handleIndex - 1].end + dwellLimit;
+			} else { //if catch, the previous throw limits it
+				lowerLimit = beatPattern[handleIndex - 1].start + throwLimit;
+			}
 		}
-		if (isLeft || handleIndex < beats.length - 1) { //every movable left handle has handle above, top right handle already limited by slider
-			upperLimit = beats[handleIndex + 1] - (isThrow ? dwellLimit : throwLimit);
+		if (handleIndex < endTime - parseInt(isLeft ? 0 : 1)) { //top handle on left needs to be limited with the throwLimit but not the one on the right which can go to the top of the slider
+			if (isThrow) { //if throw, limited on top by throwLimit
+				upperLimit = beatPattern[handleIndex + 1].end - throwLimit;
+			} else { //if catch, limited on top by dwell
+				upperLimit = beatPattern[handleIndex + 1].start - dwellLimit;
+			}
 		}
-
-		// sometimes, however, they are limited by the hand throwing to it/they are throwing to (this is always true for 1 throws)
-		// also sometimes, we are limiting our throws with invisible zero throw handles. We want to avoid this
-		if (isThrow) { //throw handle (will set upper limit)
-			//first, we find the nearest non-zero handle above this throw
-			var upperIndex = handleIndex + 2;
+		//sometimes, however, they are limited by the hand throwing to it/they are throwing to (this is always true for 1 throws)
+		if (isThrow) { //throw handle, find nearest catch handle
+			var zeroThrowAbove = false;
 			for (let i = 0; i < throwArray.length; i++) {
-				if (throwArray[i].end == upperIndex) {
+				if (throwArray[i].end == handleIndex + 2) {
 					if (throwArray[i].start == throwArray[i].end) {
-						upperIndex += 2;
-						upperLimit = beats[upperIndex];
-						i = 0;
+						zeroThrowAbove = true;
 					}
 				}
 			}
-
-			//find nearest connected catch handle. we have to use for loops because there could be multiplexes
+			if (zeroThrowAbove) {
+				upperLimit = preset.throwInfo.endTime;
+			}
+			//we have to use for loops because there could be multiplexes
 			for (let i = 0; i < throwArray.length; i++) { //find throws that this handle matches
 				if (throwArray[i].start == handleIndex) {
-					//first part of following if is to make sure we wont index out of beats
-					if (throwArray[i].end <= preset.throwInfo.endTime && otherBeats[throwArray[i].end - 1] - speedLimit < upperLimit) { //in case there was a multiplex, we want to ensure it is the shortest throw
-						upperLimit = otherBeats[throwArray[i].end - 1] - speedLimit;
+					//first part of following if is to make sure we wont index out of beatpattern
+					if (throwArray[i].end <= preset.throwInfo.endTime && beatPattern[throwArray[i].end - 1].end < upperLimit) { //in case there was a multiplex, we want to ensure it is the shortest throw
+						upperLimit = beatPattern[throwArray[i].end - 1].end - speedLimit;
 					}
 				}
 			}
-		} else { //catch handle (will set lower limit)
-			//first, we find the nearest non-zero handle below this throw
-			var lowerIndex = handleIndex - 1;
+		} else { //catch handle
+			var zeroThrowBelow = false;
 			for (let i = 0; i < throwArray.length; i++) {
-				if (throwArray[i].start == lowerIndex) {
+				if (throwArray[i].start == handleIndex - 1) {
 					if (throwArray[i].start == throwArray[i].end) {
-						lowerIndex -= 2;
-						lowerLimit = beats[lowerIndex];
-						i = 0;
+						zeroThrowBelow = true;
 					}
 				}
 			}
-
+			if (zeroThrowBelow) {
+				lowerLimit = 0;
+			}
 			for (let i = 0; i < throwArray.length; i++) { //same deal as above
 				if (throwArray[i].end == handleIndex + 1) { //+1 since the catch handle seen the same as the throw handle above it in throwArray
-					if (otherBeats[throwArray[i].start] + speedLimit > lowerLimit) { //dont have to do check like above since start is always inside the ladder
-						lowerLimit = otherBeats[throwArray[i].start] + speedLimit;
+					if (beatPattern[throwArray[i].start].start > lowerLimit) { //dont have to do check like above since start is always inside the ladder
+						lowerLimit = beatPattern[throwArray[i].start].start + speedLimit;
 					}
 				}
 			}
@@ -223,11 +247,11 @@ $(document).ready(function() {
 			newValue = lowerLimit;
 		}
 
-		//store new value in beats
+		//store new value in beatPattern
 		if (isThrow) {
-			beats[handleIndex] = newValue;
+			beatPattern[handleIndex].start = newValue;
 		} else {
-			beats[handleIndex] = newValue;
+			beatPattern[handleIndex].end = newValue;
 		}
 	}
 
@@ -320,7 +344,7 @@ $(document).ready(function() {
 	var updateCanvasLines = function(preset, canvas, marginSide, sizeRatio) {
 		var endTime = preset.throwInfo.endTime;
 		var canvasLines = [];
-		var zeroThrows = new Array(endTime / 2).fill(0);
+		var zeroThrows = new Array(endTime).fill(0);
 		//coordinate conversion, needs to know where y slider is (marginSide) and conversion between canvas pixels and slider values (sizeRatio)
 		var coordinateFinder = function(throwNum, isLeft, marginSide, sizeRatio) { //isThrow should be 1 or 0
 			if (isLeft) {
@@ -338,15 +362,12 @@ $(document).ready(function() {
 		//fill canvasLines array with pixel start and pixel end coords, as well as info about the throw
 		for (let i = 0; i < preset.throwInfo.throws.length; i++) {
 			var curThrow = preset.throwInfo.throws[i]; //curThrow has start and end
-			//when start is odd, it is right hand, so select from right array
-			//within the array, select appropriate beat value. use endTime + 1 because the first beat is repeated at the top and bottom
-			var start = (curThrow.start % 2 ? preset.beats.right : preset.beats.left)[curThrow.start % (endTime + 1)];
-			var end = (curThrow.end % 2 ? preset.beats.right : preset.beats.left)[(curThrow.end - 1) % endTime];
-			//curThrow.start is throw number without its position on slider, so we have to use preset.beats as well
+
+			//curThrow.start is throw number without its position on slider, so we have to use preset.beatPattern as well
 			//same goes for .end, with +5 since the catch node is on the previous throw
 			//(eg the catch for 7 is at time 6.9, which is on throw 6). also we dont want to mod negative nums so we add 6 (-1 + 6 = 5).
-			var coords = coordinateFinder(start, !(curThrow.start % 2), marginSide, sizeRatio),
-				nextCoords = coordinateFinder(end, curThrow.start % 2, marginSide, sizeRatio),
+			var coords = coordinateFinder(preset.beatPattern[curThrow.start].start, !(curThrow.start % 2), marginSide, sizeRatio),
+				nextCoords = coordinateFinder(preset.beatPattern[(curThrow.end - 1) % endTime].end, curThrow.start % 2, marginSide, sizeRatio),
 				odd = true,
 				left = true;
 
@@ -395,20 +416,11 @@ $(document).ready(function() {
 		}
 
 		//push catch lines, excluding zero throws
-		for (let i = 2; i <= endTime; i += 2) {
-			if (!zeroThrows[i - 1]) { //right hand dwells
+		for (let i = 0; i < endTime; i++) {
+			if (!zeroThrows[i]) {
 				canvasLines.push({
-					coords: coordinateFinder(preset.beats.right[i - 2], false, marginSide, sizeRatio),
-					nextCoords: coordinateFinder(preset.beats.right[i - 1], false, marginSide, sizeRatio),
-					odd: true, //odd so it draws straight lines
-					left: true,
-					throw: false
-				});
-			}
-			if (!zeroThrows[i]) { //left hand dwells
-				canvasLines.push({
-					coords: coordinateFinder(preset.beats.left[i - 1], true, marginSide, sizeRatio),
-					nextCoords: coordinateFinder(preset.beats.left[i], true, marginSide, sizeRatio),
+					coords: coordinateFinder(preset.beatPattern[i].end, i % 2, marginSide, sizeRatio),
+					nextCoords: coordinateFinder(preset.beatPattern[i + 1].start, i % 2, marginSide, sizeRatio),
 					odd: true, //odd so it draws straight lines
 					left: true,
 					throw: false
@@ -463,7 +475,6 @@ $(document).ready(function() {
 				ctx.stroke();
 			}
 		})();
-
 	}
 	//</editor-fold> CANVAS FUNCS ***********************************************
 
@@ -472,10 +483,19 @@ $(document).ready(function() {
 		$('#tabs').tabs('enable', '#ladderDiagram');
 
 		//<editor-fold> SLIDER STUFF *********************************************
-		preset.makeBeats();
+		preset.makeBeatPattern();
 		//create arrays of values which will represent starting handle positions on the sliders
-		var leftNodes = preset.beats.left,
-			rightNodes = preset.beats.right;
+		var leftNodes = [],
+			rightNodes = [];
+		for (let i = 0; i < preset.beatPattern.length; i++) {
+			if (i % 2) {
+				rightNodes.push(preset.beatPattern[i].start);
+				leftNodes.push(preset.beatPattern[i].end);
+			} else {
+				leftNodes.push(preset.beatPattern[i].start);
+				rightNodes.push(preset.beatPattern[i].end);
+			}
+		}
 
 		//must destroy old sliders so extra handles get added when necessary
 		$('.slider').slider('destroy');
@@ -487,7 +507,7 @@ $(document).ready(function() {
 			min: 0,
 			max: preset.throwInfo.endTime,
 			values: leftNodes,
-			//i can either add a static handle to the top here, or add a weird element to the beats array
+			//i can either add a static handle to the top here, or add a weird element to the beatPattern array
 			//leftNodes.map(a => a.start).concat(leftNodes.map(a => a.end)).sort().concat([preset.throwInfo.endTime])
 
 			create: function(ev, ui) {
@@ -514,13 +534,17 @@ $(document).ready(function() {
 				$('#leftSlider').find('.ui-state-active')
 					.text($('#leftSlider').slider('values', ui.handleIndex));
 
-				//store current in beats (if it is out of range, it will be set appropriately with stop function. this just moves lines with handles)
-				preset.beats.left[ui.handleIndex] = ui.value;
+				//store current in beatPattern (if it is out of range, it will be set appropriately with stop function. this just moves lines with handles)
+				if (!(ui.handleIndex % 2)) {
+					preset.beatPattern[ui.handleIndex].start = ui.value;
+				} else {
+					preset.beatPattern[ui.handleIndex].end = ui.value;
+				}
 
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 			},
 
-			stop: function(ev, ui) { //when you stop moving the handle, it jumps to valid bounds
+			stop: function(ev, ui) {
 				restrictHandleMovement(preset, ui, $('#leftSlider'), true);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
@@ -534,7 +558,7 @@ $(document).ready(function() {
 			step: 0.05,
 			min: 0,
 			max: preset.throwInfo.endTime,
-			values: rightNodes,
+			values: rightNodes.slice(0, rightNodes.length - 1),
 
 			create: function(ev, ui) {
 				//disable 0 catches
@@ -556,13 +580,17 @@ $(document).ready(function() {
 				$('#rightSlider').find('.ui-state-active')
 					.text($('#rightSlider').slider('values', ui.handleIndex));
 
-				//store current in beats (if it is out of range, it will be set appropriately with stop function. this is just for lines)
-				preset.beats.right[ui.handleIndex] = ui.value;
+				//store current in beatPattern (if it is out of range, it will be set appropriately with stop function. this is just for lines)
+				if (ui.handleIndex % 2) {
+					preset.beatPattern[ui.handleIndex].start = ui.value;
+				} else {
+					preset.beatPattern[ui.handleIndex].end = ui.value;
+				}
 
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 			},
 
-			stop: function(ev, ui) { //when you stop moving the handle, it jumps to valid bounds
+			stop: function(ev, ui) {
 				restrictHandleMovement(preset, ui, $('#rightSlider'), false);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
@@ -573,7 +601,7 @@ $(document).ready(function() {
 		document.querySelectorAll('.ui-slider-handle').forEach(function(a) {
 			a.onclick = function(e) {
 				e.preventDefault();
-				//console.log(this);
+				console.log(this);
 			}
 		});
 		//</editor-fold> SLIDER STUFF ********************************************

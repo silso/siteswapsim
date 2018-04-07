@@ -2,8 +2,6 @@
 'use strict';
 
 //TODO: expand siteswap in loops to standardize the output: eg siteswap 3 produces loops 3,3,3 instead of 3
-//TODO: set uppercase letters to lowercase
-//TODO: remove 0's from multiplexes
 
 var siteswapTranslator = function(site) {
 	/**
@@ -460,7 +458,7 @@ var loopTimeFinder = function(loops) {
 
 var propCount = function(site) {
 	var sum = 0;
-	for (let i = 0; i < site.length; i++) {
+	for (var i = 0; i < site.length; i++) {
 		if (site[i] instanceof Array) {
       	for (var j = 0; j < site[i].length; j++) {
       		sum += site[i][j];

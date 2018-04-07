@@ -10,7 +10,7 @@ body {
 }
 
 #userEntryWrapper {
-	/* overflow: hidden; *//*I commented this so the resizable handle worked outside the div */
+	overflow: hidden;
 	/* width: 310px; */
 	min-height: 500px;
 	margin-right: 8px;
@@ -86,7 +86,6 @@ body {
 
 .ui-resizable-e {
 	width: 15px;
-	right: -5px;
 }
 
 #ladderTab {
