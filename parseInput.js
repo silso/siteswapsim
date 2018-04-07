@@ -40,7 +40,7 @@ $(document).ready(function() {
 			this.beats.right.push(i - syncDiff); //right hand throw time
 		}
 
-		console.log(this.beats);
+		// console.log(this.beats);
 	}
 	Preset.prototype.makeThrowInfo = function(repeats) {
 		this.throwInfo = site.printThrowInfo(repeats);
