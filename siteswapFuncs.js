@@ -369,54 +369,6 @@ var loopFinder = function(site) {
 		i++;
 	}
 
-	// var timesToTest = Array.apply(null, Array(siteLen)).map(Number.prototype.valueOf, 0); //how many throws on this beat must be tested
-	// var timesTested = Array.apply(null, Array(siteLen)).map(Number.prototype.valueOf, 0); //how many throws on this beat have already been tested
-	//
-	//
-	// for (let i = 0; i < siteLen; i++) {
-	// 	if (site[i] instanceof Array) {
-	// 		timesToTest[i] = site[i].length; //multiplex throw
-	// 	} else {
-	// 		timesToTest[i] = 1; //vanilla throw
-	// 	}
-	// }
-	//
-	// var i = 0;
-	// while (i < siteLen) {
-	// 	if (timesToTest[i] != timesTested[i] && site[i]) {
-	// 		var curTest = i;
-	// 		while (true) {
-	// 			if (timesTested[curTest] == timesToTest[curTest]) {
-	// 				loopNum += 1;
-	// 				loops.push([]);
-	// 				//i -= 1; //this makes sure we stay at the same spot
-	// 				break;
-	// 			} else {
-	// 				//add num to the loop
-	// 				if (site[i] instanceof Array) {
-	// 					// console.log(site[curTest]);
-	// 					// console.log(site[curTest][timesTested[curTest]]);
-	// 					if (site[curTest] instanceof Array) {
-	// 						loops[loopNum].push(site[curTest][timesTested[curTest]]);
-	// 						timesTested[curTest] += 1;
-	// 						curTest = (curTest + site[curTest][timesTested[curTest] - 1]) % siteLen;
-	// 					} else {
-	// 						loops[loopNum].push(site[curTest]);
-	// 						timesTested[curTest] += 1;
-	// 						curTest = (curTest + site[curTest]) % siteLen;
-	// 					}
-	// 				} else {
-	// 					loops[loopNum].push(site[curTest]);
-	// 					timesTested[curTest] += 1;
-	// 					curTest = (curTest + site[curTest]) % siteLen;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	//
-	// 	i += 1;
-	// }
-
 	return loops.slice(0, loops.length - 1);
 }
 

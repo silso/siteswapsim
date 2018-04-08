@@ -7,7 +7,6 @@ var Siteswap = function(siteswapString){
 	this.loops = null;
 	this.numOfLoops = null;
 	this.loopTime = null;
-	this.beatPattern = null;
 	this.multiplex = false;
 	this.sync = false;
 

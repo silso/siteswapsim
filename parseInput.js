@@ -7,24 +7,36 @@
 //temporary global to figure out animation stuff
 var preset;
 var animationInstance;
+var presetArr = [];
+
 
 $(document).ready(function() {
-	//misc initializations
-	var site,
-		siteswapForm = document.getElementById('siteswapForm');
+	//DOM objects
+	var siteswapForm = document.getElementById('siteswapForm');
+	var siteswapInput = document.getElementById('siteswapInput');
+	var throwTime = document.getElementById('throwTime');
+	var dwellLimit = document.getElementById('dwellLimit');
+	var throwLimit = document.getElementById('throwLimit');
+	var speedLimit = document.getElementById('speedLimit');
+	var repeatCount = document.getElementById('repeatCount');
 
 	//<editor-fold> PRESET DEFINITION *******************************************
-	var Preset = function(site) {
+	var Preset = function(site, params = [1, 1, 1, 1, 1]) {
 		//this class holds the config of the siteswap, including rhythm.
-		var repeats = document.getElementById('repeatCount').value; //get # of repeats from spinner
 
 		this.site = site; //siteswap object
-		this.throwInfo = site.printThrowInfo(repeats); //such terrible names, idk. this has info about where lines go
+		this.name = site.siteStr;
+		this.repeats = params[0]; //get # of repeats from spinner
+		this.throwInfo; //this has info about where lines go
 		this.beats = {left: [], right: []}; //rhythm of this instance of a siteswap
-		this.throwTime = 0.7; //starting value for dwell (in slider length units)
-		this.dwellLimit = .4; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
-		this.throwLimit = .25; //smallest allowed value to throw one ball then catch a different ball in the same hand
-		this.speedLimit = .4; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		this.throwTime = params[1]; //starting value for time between any throw and catch (in slider length units)
+		this.dwellLimit = params[2]; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
+		this.throwLimit = params[3]; //smallest allowed value to throw one ball then catch a different ball in the same hand
+		this.speedLimit = params[4]; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+	}
+	Preset.prototype.init = function(a) {
+		if (a) this.getAttributes();
+		else this.throwInfo = this.site.printThrowInfo(this.repeats);
 		this.makeBeats();
 		this.makeColors();
 	}
@@ -39,36 +51,104 @@ $(document).ready(function() {
 			this.beats.right.push(i - syncDiff - 1 + this.throwTime); //right hand catch time
 			this.beats.right.push(i - syncDiff); //right hand throw time
 		}
-
-		console.log(this.beats);
 	}
 	Preset.prototype.makeThrowInfo = function(repeats) {
-		this.throwInfo = site.printThrowInfo(repeats);
+		this.throwInfo = this.site.printThrowInfo(repeats);
 	}
 	Preset.prototype.makeColors = function() {
 		this.colors = [];
 		for (let i = 0; i < this.site.loops.length; i++) {
-			this.colors.push("rgb(" + Math.floor(Math.random()*192 + 32) + "," + Math.floor(Math.random()*192 + 32) + "," + Math.floor(Math.random()*192 + 32) + ")");
+			this.colors.push("rgb(" +
+				Math.floor(Math.random()*192 + 32) + "," +
+				Math.floor(Math.random()*192 + 32) + "," +
+				Math.floor(Math.random()*192 + 32) + ")");
 		}
 	}
+	Preset.prototype.setForms = function() {
+		//take attributes and put them into input forms
+		siteswapInput.value = this.site.siteStr;
+		throwTime.value = this.throwTime;
+		dwellLimit.value = this.dwellLimit;
+		throwLimit.value = this.throwLimit;
+		speedLimit.value = this.speedLimit;
+		repeatCount.value = this.repeats;
+	}
+	Preset.prototype.getAttributes = function() {
+		//take attributes from forms and put into preset
+		this.throwTime = parseFloat(throwTime.value);
+		this.dwellLimit = parseFloat(dwellLimit.value);
+		this.throwLimit = parseFloat(throwLimit.value);
+		this.speedLimit = parseFloat(speedLimit.value);
+		this.repeats = parseFloat(repeatCount.value);
+		this.throwInfo = this.site.printThrowInfo(this.repeats);
+	}
+	Preset.prototype.printInfo = function() {
+		console.log('siteswap array:', this.site.printArray());
+		console.table({
+			'valid': this.site.isValid(),
+			'siteswap': this.site.printSite(),
+			'loops': this.site.printLoops(),
+			'looptime': this.site.printLoopTime()
+		});
+		console.log('throwInfo: ', this.throwInfo);
+		console.log('beats: ', this.beats);
+		console.log('timings: ', [
+			['throwTime', this.throwTime],
+			['dwellLimit', this.dwellLimit],
+			['throwLimit', this.throwLimit],
+			['speedLimit', this.speedLimit],
+			['repeatCount', this.repeats]
+		]);
+	}
 	//</editor-fold> PRESET DEFINITION ******************************************
+
+	var a = new Preset(new Siteswap('3'), [2, 0.1, 0.4, 0.25, 0.4]);
+	a.init(false);
+	presetArr.push(a);
+
+	//<editor-fold> PRESET OPTIONS **********************************************
+	var loadPreset = function(i) {
+		preset = presetArr[i];
+		preset.setForms();
+		resetLadder();
+	}
+
+	var savePreset = function() {
+		console.log('saved preset index:', presetArr.length);
+		presetArr.push(preset);
+	}
+
+	document.getElementById('loadPreset').onclick = function() {
+		loadPreset(0);
+	}
+	//</editor-fold> PRESET OPTIONS *********************************************
 
 	//<editor-fold> INPUT *******************************************************
 	siteswapForm.onsubmit = function(e) {
 		e.preventDefault();
-		parseInput();
+		parseInput(siteswapInput.value);
 
       animationInstance = undefined;
-      animationInstance = new AnimationScript();
-      animationInstance.init(preset, false);
+      //animationInstance = new AnimationScript();
+      //animationInstance.init(preset, false);
+	}
+
+	var loadPreset = function(i) {
+		preset = presetArr[i];
+		preset.setForms();
+		resetLadder();
+	}
+
+	var savePreset = function() {
+		console.log('saved preset index:', presetArr.length);
+		presetArr.push(preset);
 	}
 
 	//create siteswap and preset objects from entry
-	var parseInput = function() {
+	var parseInput = function(input) {
+		var siteString = input.toLowerCase();
 		//SYNTAX CHECKER
 		//Modified (stolen) from gunswap.co
-		var input = document.getElementById('siteswapInput');
-		var siteString = input.value.toLowerCase();
 		var TOSS = '(\\d|[a-w])';
 		var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
 		var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
@@ -81,7 +161,7 @@ $(document).ready(function() {
 			error.classList.add('siteswapEntryErrorInvalid');
 		}
 		else {
-			site = new Siteswap(String(siteString));
+			var site = new Siteswap(String(siteString));
 			if (!site.valid) {
 				error.innerHTML = 'Invalid pattern';
 				error.classList.add('siteswapEntryErrorInvalid');
@@ -93,47 +173,75 @@ $(document).ready(function() {
 			else { //if pattern valid
 				error.innerHTML = '';
 				error.classList.remove('siteswapEntryErrorInvalid');
+
 				preset = new Preset(site);
-
-				console.log('siteswap array:', site.printArray());
-				console.table({
-					'valid': site.isValid(),
-					'siteswap': site.printSite(),
-					'loops': site.printLoops(),
-					'looptime': site.printLoopTime()
-				});
-				console.log('throwInfo: ', preset.throwInfo);
-				console.log('beats: ', preset.beats);
-
+				preset.init(true);
+				preset.printInfo();
 				resetLadder();
 			}
 		}
 	}
 	//</editor-fold> SITESWAP ENTRY *********************************************
 
-	//intialize tabs
-	$('#tabs').tabs();
-	//disable ladder tab until preset is entered
-	$('#tabs').tabs('disable', '#ladderDiagram');
 	//allow resizing of user entry
 	$('#userEntryWrapper').resizable({
 		handles: 'e',
 		minWidth: 310
 	});
+	//intialize tabs
+	$('#tabs').tabs();
+	//disable ladder tab until preset is entered
+	$('#tabs').tabs('disable', '#ladderDiagram');
+
+	//<editor-fold> SITESWAP OPTIONS ********************************************
+	//default values for beat timings
+	var THROWTIME = 0.5;
+	var DWELLLIMIT = 0.4;
+	var THROWLIMIT = 0.25;
+	var SPEEDLIMIT = 0.4;
+	var REPEATS = 1;
+
+	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
+	var fillWhenEmpty = function(val, id) {
+		if (document.getElementById(id).value == '') {
+			document.getElementById(id).value = val;
+		}
+	}
+
+	//initialize spinners, and make them default to specified values
+	$('#throwTime').spinner(spinnerConfig);
+	$('#throwTime').blur(function() {fillWhenEmpty(THROWTIME, 'throwTime')});
+	$('#dwellLimit').spinner(spinnerConfig);
+	$('#dwellLimit').blur(function() {fillWhenEmpty(DWELLLIMIT, 'dwellLimit')});
+	$('#throwLimit').spinner(spinnerConfig);
+	$('#throwLimit').blur(function() {fillWhenEmpty(THROWLIMIT, 'throwLimit')});
+	$('#speedLimit').spinner(spinnerConfig);
+	$('#speedLimit').blur(function() {fillWhenEmpty(SPEEDLIMIT, 'speedLimit')});
+
+	document.getElementById('restoreDefaults').onclick = function() {
+		throwTime.value = THROWTIME;
+		dwellLimit.value = DWELLLIMIT;
+		throwLimit.value = THROWLIMIT;
+		speedLimit.value = SPEEDLIMIT;
+		repeatCount.value = REPEATS;
+	}
+	//</editor-fold> SITESWAP OPTIONS *******************************************
 
 	//<editor-fold> LADDER DIAGRAM **********************************************
 	//initialize repeat count selector
 	$('#repeatCount').spinner();
+	$('#repeatCount').blur(function() {fillWhenEmpty(REPEATS, 'repeatCount')});
 
 	//initialize reset button
 	$('#resetLadder').click(function() {
 		try {
-			var repeats = document.getElementById('repeatCount').value;
+			var repeats = repeatCount.value;
 			preset.makeThrowInfo(repeats);
 			preset.makeBeats();
 			resetLadder();
 		}
 		catch(e) {
+			console.log(e);
 			console.log('no preset');
 		}
 	});
@@ -468,11 +576,9 @@ $(document).ready(function() {
 	//</editor-fold> CANVAS FUNCS ***********************************************
 
 	var resetLadder = function() {
-
 		$('#tabs').tabs('enable', '#ladderDiagram');
 
 		//<editor-fold> SLIDER STUFF *********************************************
-		preset.makeBeats();
 		//create arrays of values which will represent starting handle positions on the sliders
 		var leftNodes = preset.beats.left,
 			rightNodes = preset.beats.right;
@@ -524,7 +630,7 @@ $(document).ready(function() {
 				restrictHandleMovement(preset, ui, $('#leftSlider'), true);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
-				animationInstance.generateMovements(preset, false);
+				//animationInstance.generateMovements(preset, false);
 			}
 		});
 
@@ -566,7 +672,7 @@ $(document).ready(function() {
 				restrictHandleMovement(preset, ui, $('#rightSlider'), false);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
-				animationInstance.generateMovements(preset, false);
+				//animationInstance.generateMovements(preset, false);
 			}
 		});
 
@@ -592,7 +698,7 @@ $(document).ready(function() {
 		}
 		window.onresize = updateCanvasSize; //change canvas size when height changes
 		updateCanvasSize(); //this updates sizeRatio and transforms canvas context
-		if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
+		//if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
 		//</editor-fold> CANVAS STUFF ********************************************
 	};
 

@@ -106,6 +106,12 @@ body {
 	/* width: calc(100%); */
 }
 
+ /*turns off html spinner arrows, we use jquery ui arrows*/
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
 /*<editor-fold> LADDER DIAGRAM ************************************************/
 /*<editor-fold> LADDER INPUT **************************************************/
@@ -118,10 +124,10 @@ body {
 	display: inline-block;
 	margin: 6px;
 }
-.ui-spinner-button {
+#ladderDiagram .ui-spinner-button {
 	height: 11px;
 }
-.ui-spinner-input {
+#ladderDiagram .ui-spinner-input {
 	padding-top: 3px;
 	padding-bottom: 3px;
 	margin-top: 3px;
