@@ -21,7 +21,7 @@ $(document).ready(function() {
 		this.site = site; //siteswap object
 		this.throwInfo = site.printThrowInfo(repeats); //such terrible names, idk. this has info about where lines go
 		this.beats = {left: [], right: []}; //rhythm of this instance of a siteswap
-		this.throwTime = 0.7; //starting value for dwell (in slider length units)
+		this.throwTime = 0.5; //starting value for dwell (in slider length units)
 		this.dwellLimit = .4; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
 		this.throwLimit = .25; //smallest allowed value to throw one ball then catch a different ball in the same hand
 		this.speedLimit = .4; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
