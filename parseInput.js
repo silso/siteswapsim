@@ -1,13 +1,15 @@
 'use strict';
 
 //TODO: (maybe) instead of destroying sliders in resetLadder, delete handles. this way functions aren't redefined each time ladder is reset
-//TODO: make slider handle value not on slider (by appending an element)
+//TODO: make slider handle value not on top of slider (by appending an element)
 //TODO: give ladder lines colors based on the loop they are in
+//TODO: when bottom handle on right slider is brought to very bottom, allow to then be dragged down from the top (wrap around)
 
 //temporary global to figure out animation stuff
 var preset;
 var animationInstance;
-var presetArr = [];
+var examplePresetArr = [];
+var customPresetArr = [];
 
 
 $(document).ready(function() {
@@ -20,22 +22,33 @@ $(document).ready(function() {
 	var speedLimit = document.getElementById('speedLimit');
 	var repeatCount = document.getElementById('repeatCount');
 
+	//allow resizing of user entry
+	$('#userEntryWrapper').resizable({
+		handles: 'e',
+		minWidth: 310
+	});
+	//intialize tabs
+	$('#tabs').tabs();
+	//disable ladder tab until preset is entered
+	$('#tabs').tabs('disable', '#ladderDiagram');
+
 	//<editor-fold> PRESET DEFINITION *******************************************
-	var Preset = function(site, params = [1, 1, 1, 1, 1]) {
+	var Preset = function(site, params = ['a', 'b', 1, 1, 1, 1, 1]) {
 		//this class holds the config of the siteswap, including rhythm.
 
 		this.site = site; //siteswap object
-		this.name = site.siteStr;
-		this.repeats = params[0]; //get # of repeats from spinner
+		this.name = params[0];
+		this.description = params[1];
+		this.repeats = params[2]; //get # of repeats from spinner
 		this.throwInfo; //this has info about where lines go
 		this.beats = {left: [], right: []}; //rhythm of this instance of a siteswap
-		this.throwTime = params[1]; //starting value for time between any throw and catch (in slider length units)
-		this.dwellLimit = params[2]; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
-		this.throwLimit = params[3]; //smallest allowed value to throw one ball then catch a different ball in the same hand
-		this.speedLimit = params[4]; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		this.throwTime = params[3]; //starting value for time between any throw and catch (in slider length units)
+		this.dwellLimit = params[4]; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
+		this.throwLimit = params[5]; //smallest allowed value to throw one ball then catch a different ball in the same hand
+		this.speedLimit = params[6]; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
 	}
-	Preset.prototype.init = function(a) {
-		if (a) this.getAttributes();
+	Preset.prototype.init = function(isNew) {
+		if (isNew) this.getAttributes();
 		else this.throwInfo = this.site.printThrowInfo(this.repeats);
 		this.makeBeats();
 		this.makeColors();
@@ -102,13 +115,9 @@ $(document).ready(function() {
 	}
 	//</editor-fold> PRESET DEFINITION ******************************************
 
-	var a = new Preset(new Siteswap('3'), [2, 0.1, 0.4, 0.25, 0.4]);
-	a.init(false);
-	presetArr.push(a);
-
 	//<editor-fold> PRESET OPTIONS **********************************************
-	var loadPreset = function(i) {
-		preset = presetArr[i];
+	var loadPreset = function(pr) {
+		preset = pr;
 		preset.setForms();
 		resetLadder();
 	}
@@ -118,9 +127,97 @@ $(document).ready(function() {
 		presetArr.push(preset);
 	}
 
-	document.getElementById('loadPreset').onclick = function() {
-		loadPreset(0);
+	var updateCurrentPreset = function(presetCard) {
+		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
+		var current = document.getElementById('currentPreset');
+		var newNode = presetCard.cloneNode(true);
+		newNode.id = 'currentPreset';
+
+		currentPresetWrapper.removeChild(current);
+		currentPresetWrapper.appendChild(newNode);
+
+		// current.replaceWith(newNode);
+		// newNode.id = 'currentPreset';
 	}
+
+	//fill example preset array
+	var pr;
+	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.1, 0.4, 0.25, 0.4]);
+	pr.init(false);
+	examplePresetArr.push(pr);
+	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, 0.5, 0.4, 0.25, 0.4]);
+	pr.init(false);
+	examplePresetArr.push(pr);
+
+	//push into example presets dialog
+	var makeCards = function(arr, container) {
+		container = document.getElementById(container);
+		for (let i = 0; i < arr.length; i++) {
+			let card, p, strong, text, hr;
+			card = document.createElement('DIV');
+			card.classList.add('presetCard');
+			p = document.createElement('P');
+			p.classList.add('presetTitle');
+			strong = document.createElement('STRONG');
+			text = document.createTextNode(arr[i].name);
+			strong.appendChild(text);
+			p.appendChild(strong);
+			card.appendChild(p); //title
+			hr = document.createElement('HR');
+			card.appendChild(hr); //horizontal line
+			p = document.createElement('P');
+			p.classList.add('presetSiteswap');
+			text = document.createTextNode(arr[i].site.siteStr);
+			p.appendChild(text);
+			card.appendChild(p); //siteswap
+			p = document.createElement('P');
+			p.classList.add('presetDescription');
+			text = document.createTextNode(arr[i].description);
+			p.appendChild(text);
+			card.appendChild(p); //description
+
+			card.onclick = function() {
+				loadPreset(arr[i]);
+				updateCurrentPreset(card);
+				examplePresets.dialog('close');
+			}
+
+			container.appendChild(card);
+		}
+	}
+
+	makeCards(examplePresetArr, 'examplePresets');
+
+	document.getElementById('loadPresetBasic').onclick = function() {
+		loadPreset(examplePresetArr[0]);
+	}
+
+	var examplePresets = $('#examplePresets');
+	examplePresets.dialog({
+		autoOpen: false,
+		show: {
+			effect: 'fade',
+			duration: 100
+		},
+		hide: {
+			effect: 'fade',
+			duration: 100
+		},
+		resizable: false,
+		draggable: false,
+		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
+		height: $('#tabs').height() - $('#tabNames').height() - 14,
+		width: $('#tabs').width() - 20
+	});
+
+
+	document.getElementById('loadPreset').onclick = function() {
+		examplePresets.dialog('open');
+	}
+	$('#tabs').tabs({
+		activate: function() {
+		examplePresets.dialog('close');
+	}});
 	//</editor-fold> PRESET OPTIONS *********************************************
 
 	//<editor-fold> INPUT *******************************************************
@@ -131,17 +228,6 @@ $(document).ready(function() {
       animationInstance = undefined;
       //animationInstance = new AnimationScript();
       //animationInstance.init(preset, false);
-	}
-
-	var loadPreset = function(i) {
-		preset = presetArr[i];
-		preset.setForms();
-		resetLadder();
-	}
-
-	var savePreset = function() {
-		console.log('saved preset index:', presetArr.length);
-		presetArr.push(preset);
 	}
 
 	//create siteswap and preset objects from entry
@@ -182,16 +268,6 @@ $(document).ready(function() {
 		}
 	}
 	//</editor-fold> SITESWAP ENTRY *********************************************
-
-	//allow resizing of user entry
-	$('#userEntryWrapper').resizable({
-		handles: 'e',
-		minWidth: 310
-	});
-	//intialize tabs
-	$('#tabs').tabs();
-	//disable ladder tab until preset is entered
-	$('#tabs').tabs('disable', '#ladderDiagram');
 
 	//<editor-fold> SITESWAP OPTIONS ********************************************
 	//default values for beat timings
@@ -424,6 +500,23 @@ $(document).ready(function() {
 	var marginTop = parseInt($('#leftSlider').css('marginTop')) + 1; //+1 for border
 	var marginSide = parseInt($('#leftSlider').css('marginLeft')) + 4; //+4 for border and inside width
 
+	var sizeRatio;
+	var windowResize = function() {
+		c.height = $('#tabs').height() - $('#tabNames').height() - 50;
+		c.width = $('#tabs').width();
+		sizeRatio = c.height / preset.throwInfo.endTime;
+
+		ctx.resetTransform();
+		ctx.transform(1, 0, 0, -1, marginSide, c.height - marginTop);
+
+		updateCanvasLines(preset, c, marginSide, sizeRatio);
+
+		examplePresets.dialog('option', 'height', $('#tabs').height() - $('#tabNames').height() - 14);
+		examplePresets.dialog('option', 'width', $('#tabs').width() - 20);
+	}
+	window.onresize = windowResize; //change element sizes when height changes
+	//if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
+
 	//fills canvasLines array with start and end points on the canvas
 	var updateCanvasLines = function(preset, canvas, marginSide, sizeRatio) {
 		var endTime = preset.throwInfo.endTime;
@@ -577,6 +670,7 @@ $(document).ready(function() {
 
 	var resetLadder = function() {
 		$('#tabs').tabs('enable', '#ladderDiagram');
+		windowResize(); //make canvas actually have stuff
 
 		//<editor-fold> SLIDER STUFF *********************************************
 		//create arrays of values which will represent starting handle positions on the sliders
@@ -683,24 +777,9 @@ $(document).ready(function() {
 			}
 		});
 		//</editor-fold> SLIDER STUFF ********************************************
-
-		//<editor-fold> CANVAS STUFF *********************************************
-		var sizeRatio;
-		var updateCanvasSize = function() {
-			c.height = $('#tabs').height() - $('#tabNames').height() - 50;
-			c.width = $('#tabs').width();
-			sizeRatio = c.height / preset.throwInfo.endTime;
-
-			ctx.resetTransform();
-			ctx.transform(1, 0, 0, -1, marginSide, c.height - marginTop);
-
-			updateCanvasLines(preset, c, marginSide, sizeRatio);
-		}
-		window.onresize = updateCanvasSize; //change canvas size when height changes
-		updateCanvasSize(); //this updates sizeRatio and transforms canvas context
-		//if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
-		//</editor-fold> CANVAS STUFF ********************************************
 	};
+
+	loadPreset(examplePresetArr[0]);
 
 	//</editor-fold> LADDER DIAGRAM *********************************************
 	//</editor-fold> INPUT ******************************************************
