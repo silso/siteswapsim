@@ -4,6 +4,10 @@
 //TODO: make slider handle value not on top of slider (by appending an element)
 //TODO: give ladder lines colors based on the loop they are in
 //TODO: when bottom handle on right slider is brought to very bottom, allow to then be dragged down from the top (wrap around)
+//TODO BAD SITESWAPS:
+	//5505051
+	//61305
+	//63051
 
 //temporary global to figure out animation stuff
 var preset;
@@ -142,7 +146,7 @@ $(document).ready(function() {
 
 	//fill example preset array
 	var pr;
-	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.1, 0.4, 0.25, 0.4]);
+	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.5, 0.4, 0.25, 0.4]);
 	pr.init(false);
 	examplePresetArr.push(pr);
 	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, 0.5, 0.4, 0.25, 0.4]);
@@ -502,11 +506,12 @@ $(document).ready(function() {
 
 	var sizeRatio;
 	var windowResize = function() {
+		ctx.transform(-1, 0, 0, 1, -marginSide, -(c.height - marginTop));
 		c.height = $('#tabs').height() - $('#tabNames').height() - 50;
 		c.width = $('#tabs').width();
 		sizeRatio = c.height / preset.throwInfo.endTime;
 
-		ctx.resetTransform();
+		// ctx.resetTransform(); //not compatible with edge
 		ctx.transform(1, 0, 0, -1, marginSide, c.height - marginTop);
 
 		updateCanvasLines(preset, c, marginSide, sizeRatio);
