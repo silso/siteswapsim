@@ -124,6 +124,10 @@ $(document).ready(function() {
 		preset = pr;
 		preset.setForms();
 		resetLadder();
+
+      animationInstance = undefined;
+      animationInstance = new AnimationScript();
+      animationInstance.init(preset, false);
 	}
 
 	var savePreset = function() {
@@ -230,13 +234,13 @@ $(document).ready(function() {
 		parseInput(siteswapInput.value);
 
       animationInstance = undefined;
-      //animationInstance = new AnimationScript();
-      //animationInstance.init(preset, false);
+      animationInstance = new AnimationScript();
+      animationInstance.init(preset, false);
 	}
 
 	//create siteswap and preset objects from entry
 	var parseInput = function(input) {
-		var siteString = input.toLowerCase();
+		var siteString = String(input).toLowerCase();
 		//SYNTAX CHECKER
 		//Modified (stolen) from gunswap.co
 		var TOSS = '(\\d|[a-w])';
@@ -251,7 +255,7 @@ $(document).ready(function() {
 			error.classList.add('siteswapEntryErrorInvalid');
 		}
 		else {
-			var site = new Siteswap(String(siteString));
+			var site = new Siteswap(siteString);
 			if (!site.valid) {
 				error.innerHTML = 'Invalid pattern';
 				error.classList.add('siteswapEntryErrorInvalid');
@@ -264,7 +268,7 @@ $(document).ready(function() {
 				error.innerHTML = '';
 				error.classList.remove('siteswapEntryErrorInvalid');
 
-				preset = new Preset(site);
+				preset = new Preset(new Siteswap(siteString)); //pass by value
 				preset.init(true);
 				preset.printInfo();
 				resetLadder();
@@ -520,7 +524,7 @@ $(document).ready(function() {
 		examplePresets.dialog('option', 'width', $('#tabs').width() - 20);
 	}
 	window.onresize = windowResize; //change element sizes when height changes
-	//if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
+	if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
 
 	//fills canvasLines array with start and end points on the canvas
 	var updateCanvasLines = function(preset, canvas, marginSide, sizeRatio) {
@@ -729,7 +733,7 @@ $(document).ready(function() {
 				restrictHandleMovement(preset, ui, $('#leftSlider'), true);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
-				//animationInstance.generateMovements(preset, false);
+				animationInstance.generateMovements(preset, false);
 			}
 		});
 
@@ -771,7 +775,7 @@ $(document).ready(function() {
 				restrictHandleMovement(preset, ui, $('#rightSlider'), false);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
-				//animationInstance.generateMovements(preset, false);
+				animationInstance.generateMovements(preset, false);
 			}
 		});
 
@@ -785,6 +789,7 @@ $(document).ready(function() {
 	};
 
 	loadPreset(examplePresetArr[0]);
+	updateCurrentPreset(document.getElementsByClassName('presetCard')[1]);
 
 	//</editor-fold> LADDER DIAGRAM *********************************************
 	//</editor-fold> INPUT ******************************************************

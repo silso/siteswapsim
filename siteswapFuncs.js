@@ -245,47 +245,61 @@ var loopFinder = function(site) {
 	var i = 0;
 	//console.log('current pattern:', site);
 	while (i < siteLen) {
-		//console.log('new i =', i, 'site[i] =', site[i]);
-		//console.log('tested:', JSON.stringify(tested));
+		console.log('new i =', i, 'site[i] =', site[i]);
+		console.log('tested:', JSON.stringify(tested));
 		if (site[i] instanceof Array) {
-			//console.log('site[',i,'] is an array');
+			console.log('site[',i,'] is an array');
 			var isTestedi = true; //wish there were for elses
+			var start = 0; //index which we started on and must end on
 			//var j = 0; //j moves to first untested index in array
 			for (let j = 0; j < site[i].length; j++) { //check throws in array
 
 				if (!tested[i][j]) { //if throw in array is untested, do stuff
-					//console.log('j = ',j,' is untested');
+					console.log('j = ',j,' is untested');
 					isTestedi = false;
+					start = i;
 					break;
 				}
 			}
 			if (isTestedi) { //if none are untested, move to next index in siteswap
-				//console.log('multiplex at i = ',i, ' is fully tested, incrementing');
+				console.log('multiplex at i = ',i, ' is fully tested, incrementing');
 				i++;
 				continue;
 			}
 
 			var k = i; //we change k as we jump around the siteswap
 			while (true) {
-				//console.log('looping');
+				console.log('looping');
 				if (site[k] instanceof Array) { //if k is at a multiplex
-					//console.log('site[',k,'] is an array');
-					var l = 0;
-					var isTestedk = true;
-					for (; l < site[k].length; l++) { //increment j to untested index
-						if (!tested[i][l]) {
-							//console.log('l = ',l,' is untested');
-							isTestedk = false;
-							break;
-						}
-					}
-					if (isTestedk) { //if none untested, assume loop is done since site is valid
-						//console.log('all of site[',k,'] is tested, loop is done')
+					console.log('site[',k,'] is an array');
+
+					if (k == i && loops[loopNum][0] != undefined) {
+						i = -1;
 						loopNum++;
 						loops.push([]);
 						break;
 					}
-					//console.log('adding throw',site[k][l]);
+					var l = 0;
+					var isTestedk = true;
+					console.log(JSON.stringify(tested));
+					for (; l < site[k].length; l++) { //increment j to untested index
+						if (!tested[k][l]) {
+							console.log('l = ',l,' is untested');
+							isTestedk = false;
+							break;
+						}
+						else {
+							console.log('this was tested');
+						}
+					}
+					// if (isTestedk) { //if none untested, assume loop is done since site is valid
+					// 	//console.log('all of site[',k,'] is tested, loop is done')
+					// 	i = 0;
+					// 	loopNum++;
+					// 	loops.push([]);
+					// 	break;
+					// }
+					console.log('adding throw',site[k][l]);
 					//at this point we should be at an untested throw, so we add to loops
 					loops[loopNum].push({
 						n: site[k][l],
@@ -293,10 +307,11 @@ var loopFinder = function(site) {
 					});
 					tested[k][l] = 1;
 					k = (k + site[k][l]) % siteLen;
+
 				}
 				else { //if k is at a normal throw
 					if (!tested[k]) { //if k is at an untested throw
-						//console.log('adding throw',site[k]);
+						console.log('adding throw',site[k]);
 						loops[loopNum].push({
 							n: site[k],
 							i: k
@@ -305,6 +320,8 @@ var loopFinder = function(site) {
 						k = (k + site[k]) % siteLen;
 					}
 					else { //if k is at a tested throw
+						console.log('should not be here');
+						i = -1;
 						loopNum++;
 						loops.push([]);
 						break; //loop is done
@@ -316,7 +333,7 @@ var loopFinder = function(site) {
 			if (!tested[i]) {
 				var k = i; //we change k as we jump around the siteswap
 				while (true) {
-					//console.log('tested:', JSON.stringify(tested));
+					console.log('tested:', JSON.stringify(tested));
 					if (site[k] instanceof Array) { //if k is at a multiplex
 						var j = 0;
 						var isTestedk = true;
@@ -329,6 +346,7 @@ var loopFinder = function(site) {
 						}
 						//console.log(j);
 						if (isTestedk) { //if none untested, assume loop is done since site is valid
+							i = 0;
 							loopNum++;
 							loops.push([]);
 							break;
@@ -353,6 +371,7 @@ var loopFinder = function(site) {
 							k = (k + site[k]) % siteLen;
 						}
 						else { //if k is at a tested throw
+							i = 0;
 							loopNum++;
 							loops.push([]);
 							break; //loop is done
