@@ -3,7 +3,8 @@
 //takes in a juggling pattern and ladder timing information and creates a mostly physically accurate juggling animation.
 //handles interactions with the canvas such as panning and zooming
 //
-//TO DO:
+//TODO:
+//make balls follow multiple repeats correctly
 //make hands and balls completely time-dependant - no matter how you change time
 //(forward, backwards, jumping) the positions will all be correct after one call of draw
 //create settings menu:
@@ -440,17 +441,18 @@ let AnimationScript = function() {
 					loopSum += loop[j].n;
 				}
 
+				let endIndex = inputPreset.throwInfo.endTime;
+				let endTime = endIndex/PACE;
+
 				//number of balls to be created
 				let loopPropCount = loopSum / site.length;
 				//length of loop when accounting for ball landing in original hand
-				let realLength = loop.length * (loopSum % 2 + 1);
+				let realLength = (endIndex / loopSum) * loop.length * (loopSum % 2 + 1);
 
 				for (let j = 0; j < loopPropCount; j++) {
 					let bM = [];
 
 					let sitePos = j * (site.length / loopPropCount);
-					let endIndex = inputPreset.throwInfo.endTime;
-					let endTime = endIndex/PACE
 
 					//this function is needed to incorporate the new structure of Preset.beats
 					function getBeatTime(index, start) {
@@ -472,7 +474,7 @@ let AnimationScript = function() {
 					let curThrow = loop[loopIndex];
 
 					//index of current throw in beatPattern (and throwInfo)
-					let throwIndex = j * (endIndex / loopPropCount) + curThrow.i % endIndex;
+					let throwIndex = j * (endIndex / loopPropCount) / (endIndex / loopSum) + curThrow.i % endIndex;
 					//index of next throw in beatPattern
 					let nextThrowIndex = (throwIndex + curThrow.n) % endIndex;
 					//index of current catch in beatPattern (where current throw is landing) (nextThrowIndex - 1)
@@ -539,7 +541,7 @@ let AnimationScript = function() {
 			}
 		})();
 
-		if (print) {
+		if (true) {
 			console.log(balls);
 			console.log(hands);
 		}
@@ -551,7 +553,7 @@ let AnimationScript = function() {
 
 	this.init = function(inputPreset) {
 		let TRANSX = 0,
-			TRANSY = 200;
+			TRANSY = 300;
 
 		wrapper = document.getElementById("animationWrapper");
 		HEIGHT = wrapper.clientHeight;
