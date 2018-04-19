@@ -176,9 +176,10 @@ $(document).ready(function() {
 		card.appendChild(p); //description
 
 		card.onclick = function() {
-			loadPreset(arr[i]);
+			loadPreset(preset);
 			updateCurrentPreset(card);
 			examplePresets.dialog('close');
+			customPresets.dialog('close');
 		}
 
 		return card;
