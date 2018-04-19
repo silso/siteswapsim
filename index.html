@@ -19,16 +19,17 @@
 
 	<link rel='stylesheet' href='jquery-ui-1.12.1/jquery-ui.css'>
 	<link rel='stylesheet' href='stylesheet.css'>
+	<title>SiteswapSim</title>
 </head>
 
 <body>
 	<div id='flexContainer'>
-		<div id='userEntryWrapper'>
+		<div id='userEntryWrapper' style='width:350px'>
 			<div id='siteswapEntry'>
 				<form id='siteswapForm'>
 					<input type='text' id='siteswapInput' placeholder='siteswap' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off'></input>
 				</form>
-				<p id='siteswapEntryError' class='ui-widget ui-corner-all'></p>
+				<div id='siteswapEntryError' class='ui-widget ui-widget-content ui-corner-all'></div>
 			</div>
 			<div id='tabs'>
 				<ul id='tabNames'>
@@ -56,38 +57,53 @@
 				</div>
 				<div id='siteswapOptions'>
 					<p>siteswap options</p>
-					<button id='restoreDefaults' class='ui-button ui-widget ui-corner-all'>Restore Defaults</button>
-					<div id='throwTimeOuter'>
-						<label for='throwTime' class='ui-widget'>throw time:</label>
-						<input id='throwTime' name='value' type='number' min='0' value='0.5'>
-					</div>
-					<div id='dwellLimitOuter'>
-						<label for='dwellLimit' class='ui-widget'>dwell limit:</label>
-						<input id='dwellLimit' name='value' type='number' min='0' value='0.4'>
-					</div>
-					<div id='throwLimitOuter'>
-						<label for='throwLimit' class='ui-widget'>throw limit:</label>
-						<input id='throwLimit' name='value' type='number' min='0' value='0.25'>
-					</div>
-					<div id='speedLimitOuter'>
-						<label for='speedLimit' class='ui-widget'>speed limit:</label>
-						<input id='speedLimit' name='value' type='number' min='0' value='0.4'>
-					</div>
+					<button id='restoreDefaults' class='ui-button ui-widget ui-corner-all' title='Reset settings to recommended, realistic values'>Restore Defaults</button>
+					<form id='siteswapOptionsForm'>
+						<div id='throwTimeContainer' class='spinnerContainer' title='Default time spent without a ball in hand'>
+							<label for='throwTime' class='ui-widget'>throw time:</label>
+							<input id='throwTime' name='value' type='number' min='0' step='0.05'>
+						</div>
+						<div id='dwellLimitContainer' class='spinnerContainer' title='Limits how soon you can throw a ball after catching it'>
+							<label for='dwellLimit' class='ui-widget'>dwell limit:</label>
+							<input id='dwellLimit' name='value' type='number' min='0' step='0.05'>
+						</div>
+						<div id='throwLimitContainer' class='spinnerContainer' title='Limits how soon you can catch a ball after throwing one'>
+							<label for='throwLimit' class='ui-widget'>throw limit:</label>
+							<input id='throwLimit' name='value' type='number' min='0' step='0.05'>
+						</div>
+						<div id='speedLimitContainer' class='spinnerContainer' title='Limits how fast a ball can be thrown then caught'>
+							<label for='speedLimit' class='ui-widget'>speed limit:</label>
+							<input id='speedLimit' name='value' type='number' min='0' step='0.05'>
+						</div>
+						<input type='submit' value='Apply changes' class='ui-button ui-widget ui-corner-all'>
+					</form>
+					<input type='color'>
 				</div>
 				<div id='presetOptions'>
 					<h2 id='asdf'>Current preset:</h2>
 					<div id='currentPresetWrapper'>
 						<div id='currentPreset' class='presetCard'>
-							<p class='presetTitle'><strong>name</strong></p>
+							<p class='presetName'><strong>name</strong></p>
 							<hr>
 							<p class='presetSiteswap'>534abcd</p>
 							<p class='presetDescription'>hey this is a description</p>
 						</div>
 					</div>
-					<button id='loadPresetBasic' class='ui-button ui-widget ui-corner-all'>load preset basic</button>
-					<button id='loadPreset' class='ui-button ui-widget ui-corner-all'>load preset</button>
-					<div id='examplePresets' title='Example Presets'>
+					<div id='presetMenusWrapper'>
+						<button id='examplePresetButton' class='ui-button ui-widget ui-corner-all'>example presets</button>
+						<div id='examplePresets' title='Example Presets'></div>
+						<button id='customPresetButton' class='ui-button ui-widget ui-corner-all'>custom presets</button>
+						<div id='customPresets' title='Custom Presets'></div>
 					</div>
+					<div id='presetInfoWrapper'>
+						<form id='presetInfoForm'>
+							<input id='presetName' placeholder='preset name' required='required' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off'>
+							<textarea id='presetDescription' placeholder='preset description' class='ui-widget-content ui-widget ui-corner-all'></textarea>
+							<input type='submit' value='save preset' class='ui-button ui-widget ui-corner-all'>
+							<!-- <input id='updatePreset' type='button' value='update preset' class='ui-button ui-widget ui-corner-all'> -->
+						</form>
+					</div>
+					<p>ha theres no help for you here, figure it out on your own</p>
 				</div>
 			</div>
 		</div>

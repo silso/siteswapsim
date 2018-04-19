@@ -41,34 +41,33 @@ body {
 	cursor: -webkit-grabbing;
 }
 
+.pointer {
+	cursor: pointer;
+}
+
 #siteswapEntry {
-	display: flex;
-	align-items: center;
+	width: 100%;
+	margin-bottom: 5px;
 }
 
 #siteswapForm {
-	padding-top: 2px;
-	margin: 0 2px 6px 6px;
-	height: 24px;
 	display: inline-block;
+	width: calc(100% - 115px);
+}
+
+#siteswapInput {
+	width: calc(100% - 2px);
 }
 
 #siteswapEntryError {
-	width: 102px;
-	font-size: 13px;
-	line-height: 24px;
-	margin: 0 0 6px 2px;
+	width: 105px;
 	height: 20px;
 	display: inline-block;
-	border-width: 1px;
-	border-style: solid;
-	border-color: white;
+	float: right;
 	text-align: center;
-}
-
-.siteswapEntryErrorInvalid {
-	border-color: red !important;
-	background-color: pink !important;
+	border-color: red;
+	background-color: pink;
+	visibility: hidden;
 }
 
 /*increase size of user entry resizing handle*/
@@ -109,6 +108,10 @@ body {
 	height: 10px;
 }
 
+#currentPresetWrapper {
+	width: 100%;
+}
+
 .presetCard {
 	border-width: 1px;
 	border-style: solid;
@@ -124,19 +127,48 @@ body {
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
 }
 
-.presetTitle {
+.presetName {
 	font-size: 25px;
 	margin: 0;
 }
 
 .presetSiteswap {
 	color: #007fff;
-	margin-top: 0;
+	margin: 3px 0 3px 0;
+	word-wrap: break-word;
 }
 
 .presetDescription {
+	width: 100%;
 	font-size: 15px;
-	margin-bottom: 0;
+	margin: 3px 0 3px 0;
+	word-wrap: break-word;
+}
+
+#presetMenusWrapper {
+	overflow: auto;
+	margin-bottom: 10px;
+}
+
+#examplePresetButton {
+	float: left;
+}
+
+#customPresetButton {
+	float: right;
+	margin-right: 0;
+}
+
+#presetName {
+	display: block;
+	width: calc(100% - 2px);
+	margin-bottom: 5px;
+}
+
+#presetDescription {
+	display: block;
+	width: calc(100% - 6px);
+	resize: vertical;
 }
 
 /*</editor-fold> PRESET OPTIONS ***********************************************/
@@ -148,6 +180,31 @@ input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+#siteswapOptions form {
+	display: table;
+	width: 100%;
+	border-spacing: 0 7px;
+}
+
+.spinnerContainer {
+	display: table-row;
+	width: 100%;
+	margin: 10px 5px 10px 5px !important;
+}
+
+#siteswapOptions label {
+	/* text-align: center; */
+	vertical-align: middle;
+	display: table-cell;
+}
+
+#siteswapOptions span {
+	width: 100px;
+	float: right;
+	display: table-cell;
+}
+
 /*</editor-fold> SITESWAP OPTIONS *********************************************/
 
 /*<editor-fold> LADDER DIAGRAM ************************************************/
@@ -214,6 +271,8 @@ input[type=number]::-webkit-outer-spin-button {
 #ladderLines {
 	border-left: 0 !important;
 	border-right: 0 !important;
+	border-top: 0 !important;
+	border-bottom: 0 !important;
 }
 
 #sliders {

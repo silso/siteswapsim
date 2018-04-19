@@ -4,6 +4,7 @@
 //TODO: make slider handle value not on top of slider (by appending an element)
 //TODO: give ladder lines colors based on the loop they are in
 //TODO: when bottom handle on right slider is brought to very bottom, allow to then be dragged down from the top (wrap around)
+//TODO: remove 0's from multiplexes
 //TODO BAD SITESWAPS:
 	//5505051
 	//61305
@@ -50,6 +51,7 @@ $(document).ready(function() {
 		this.dwellLimit = params[4]; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
 		this.throwLimit = params[5]; //smallest allowed value to throw one ball then catch a different ball in the same hand
 		this.speedLimit = params[6]; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		this.index; //index in custom preset array (for editing existing presets)
 	}
 	Preset.prototype.init = function(isNew) {
 		if (isNew) this.getAttributes();
@@ -92,12 +94,13 @@ $(document).ready(function() {
 	}
 	Preset.prototype.getAttributes = function() {
 		//take attributes from forms and put into preset
-		this.throwTime = parseFloat(throwTime.value);
+		this.throwTime = parseFloat($('#throwTime').val());
 		this.dwellLimit = parseFloat(dwellLimit.value);
 		this.throwLimit = parseFloat(throwLimit.value);
 		this.speedLimit = parseFloat(speedLimit.value);
 		this.repeats = parseFloat(repeatCount.value);
 		this.throwInfo = this.site.printThrowInfo(this.repeats);
+		console.log(throwTime.value);
 	}
 	Preset.prototype.printInfo = function() {
 		console.log('siteswap array:', this.site.printArray());
@@ -125,15 +128,13 @@ $(document).ready(function() {
 		preset.setForms();
 		resetLadder();
 
+		document.getElementById('siteswapEntryError').style.visibility = 'hidden';
+
       animationInstance = undefined;
       animationInstance = new AnimationScript();
       animationInstance.init(preset, false);
 	}
 
-	var savePreset = function() {
-		console.log('saved preset index:', presetArr.length);
-		presetArr.push(preset);
-	}
 
 	var updateCurrentPreset = function(presetCard) {
 		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
@@ -148,6 +149,51 @@ $(document).ready(function() {
 		// newNode.id = 'currentPreset';
 	}
 
+	//takes in preset object, returns card element
+	var makeCardElement = function(preset) {
+		let card, p, strong, text, hr;
+		card = document.createElement('DIV');
+		card.classList.add('presetCard');
+		card.classList.add('pointer');
+		p = document.createElement('P');
+		p.classList.add('presetName');
+		strong = document.createElement('STRONG');
+		text = document.createTextNode(preset.name);
+		strong.appendChild(text);
+		p.appendChild(strong);
+		card.appendChild(p); //name
+		hr = document.createElement('HR');
+		card.appendChild(hr); //horizontal line
+		p = document.createElement('P');
+		p.classList.add('presetSiteswap');
+		text = document.createTextNode(preset.site.siteStr);
+		p.appendChild(text);
+		card.appendChild(p); //siteswap
+		p = document.createElement('P');
+		p.classList.add('presetDescription');
+		text = document.createTextNode(preset.description);
+		p.appendChild(text);
+		card.appendChild(p); //description
+
+		card.onclick = function() {
+			loadPreset(arr[i]);
+			updateCurrentPreset(card);
+			examplePresets.dialog('close');
+		}
+
+		return card;
+	}
+
+	//push into example presets dialog
+	var makeCards = function(arr, container) {
+		container = document.getElementById(container);
+		for (let i = 0; i < arr.length; i++) {
+			let card = makeCardElement(arr[i]);
+
+			container.appendChild(card);
+		}
+	}
+
 	//fill example preset array
 	var pr;
 	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.5, 0.4, 0.25, 0.4]);
@@ -157,48 +203,8 @@ $(document).ready(function() {
 	pr.init(false);
 	examplePresetArr.push(pr);
 
-	//push into example presets dialog
-	var makeCards = function(arr, container) {
-		container = document.getElementById(container);
-		for (let i = 0; i < arr.length; i++) {
-			let card, p, strong, text, hr;
-			card = document.createElement('DIV');
-			card.classList.add('presetCard');
-			p = document.createElement('P');
-			p.classList.add('presetTitle');
-			strong = document.createElement('STRONG');
-			text = document.createTextNode(arr[i].name);
-			strong.appendChild(text);
-			p.appendChild(strong);
-			card.appendChild(p); //title
-			hr = document.createElement('HR');
-			card.appendChild(hr); //horizontal line
-			p = document.createElement('P');
-			p.classList.add('presetSiteswap');
-			text = document.createTextNode(arr[i].site.siteStr);
-			p.appendChild(text);
-			card.appendChild(p); //siteswap
-			p = document.createElement('P');
-			p.classList.add('presetDescription');
-			text = document.createTextNode(arr[i].description);
-			p.appendChild(text);
-			card.appendChild(p); //description
-
-			card.onclick = function() {
-				loadPreset(arr[i]);
-				updateCurrentPreset(card);
-				examplePresets.dialog('close');
-			}
-
-			container.appendChild(card);
-		}
-	}
-
 	makeCards(examplePresetArr, 'examplePresets');
-
-	document.getElementById('loadPresetBasic').onclick = function() {
-		loadPreset(examplePresetArr[0]);
-	}
+	makeCards(customPresetArr, 'customPresets');
 
 	var examplePresets = $('#examplePresets');
 	examplePresets.dialog({
@@ -218,17 +224,74 @@ $(document).ready(function() {
 		width: $('#tabs').width() - 20
 	});
 
+	var customPresets = $('#customPresets');
+	customPresets.dialog({
+		autoOpen: false,
+		show: {
+			effect: 'fade',
+			duration: 100
+		},
+		hide: {
+			effect: 'fade',
+			duration: 100
+		},
+		resizable: false,
+		draggable: false,
+		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
+		height: $('#tabs').height() - $('#tabNames').height() - 14,
+		width: $('#tabs').width() - 20
+	});
 
-	document.getElementById('loadPreset').onclick = function() {
+	document.getElementById('examplePresetButton').onclick = function() {
 		examplePresets.dialog('open');
 	}
+
+	document.getElementById('customPresetButton').onclick = function() {
+		customPresets.dialog('open');
+	}
+
+	//close dialog when another tab is selected
 	$('#tabs').tabs({
 		activate: function() {
 		examplePresets.dialog('close');
+		customPresets.dialog('close');
 	}});
+
+	document.getElementById('presetInfoForm').onsubmit = function(e) {
+		e.preventDefault();
+
+		preset.name = document.getElementById('presetName').value;
+		preset.description = document.getElementById('presetDescription').value;
+		preset.index = customPresetArr.length;
+		let card = makeCardElement(preset);
+		document.getElementById('customPresets').appendChild(card); //add card to custom presets
+		updateCurrentPreset(card);
+
+		customPresetArr.push(JSON.parse(JSON.stringify(preset))); //add to custom preset array by value
+	}
+
+	// document.getElementById('updatePreset').onclick = function() {
+	// 	preset.name = document.getElementById('presetName').value;
+	// 	preset.description = document.getElementById('presetDescription').value;
+	// 	let card = makeCardElement(preset);
+	//
+	// 	var customPresets = document.getElementById('customPresets');
+	// 	var current = $('#customPresets').children().eq(preset.index)[0];
+	// 	var newNode = presetCard.cloneNode(true);
+	//
+	// 	customPresets.removeChild(current);
+	// 	customPresets.appendChild(newNode);
+	//
+	// 	$('#customPresets').children().eq(preset.index) = card;
+	// 	updateCurrentPreset(card);
+	//
+	// 	customPresetArr[preset.index] = JSON.parse(JSON.stringify(preset));
+	// }
+
 	//</editor-fold> PRESET OPTIONS *********************************************
 
 	//<editor-fold> INPUT *******************************************************
+	//<editor-fold> SITESWAP ENTRY **********************************************
 	siteswapForm.onsubmit = function(e) {
 		e.preventDefault();
 		parseInput(siteswapInput.value);
@@ -252,21 +315,24 @@ $(document).ready(function() {
 		var error = document.getElementById('siteswapEntryError');
 		if(!PATTERN.test(siteString)) {
 			error.innerHTML = 'Invalid syntax';
-			error.classList.add('siteswapEntryErrorInvalid');
+			error.style.visibility = 'visible';
+			error.title = 'You may be using some incorrect characters. See the preset tab for a guide';
 		}
 		else {
 			var site = new Siteswap(siteString);
 			if (!site.valid) {
 				error.innerHTML = 'Invalid pattern';
-				error.classList.add('siteswapEntryErrorInvalid');
+				error.style.visibility = 'visible';
+				error.title = 'Throws are colliding in your pattern. See the preset tab for a guide';
 			}
 			else if (!site.site[0]) {
-				error.innerHTML = '0 at start=bad';
-				error.classList.add('siteswapEntryErrorInvalid');
+				error.innerHTML = '0 at start';
+				error.style.visibility = 'visible';
+				error.title = 'Ladder diagram needs a throw on the first beat, cycle your pattern one beat';
 			}
 			else { //if pattern valid
-				error.innerHTML = '';
-				error.classList.remove('siteswapEntryErrorInvalid');
+				error.style.visibility = 'hidden';
+				error.title = '';
 
 				preset = new Preset(new Siteswap(siteString)); //pass by value
 				preset.init(true);
@@ -301,6 +367,16 @@ $(document).ready(function() {
 	$('#throwLimit').blur(function() {fillWhenEmpty(THROWLIMIT, 'throwLimit')});
 	$('#speedLimit').spinner(spinnerConfig);
 	$('#speedLimit').blur(function() {fillWhenEmpty(SPEEDLIMIT, 'speedLimit')});
+
+	document.getElementById('siteswapOptionsForm').onsubmit = function(e) {
+		e.preventDefault();
+		preset.getAttributes();
+		preset.makeThrowInfo(repeatCount.value);
+		preset.makeBeats();
+		resetLadder();
+
+		animationInstance.generateMovements(preset, false);
+	};
 
 	document.getElementById('restoreDefaults').onclick = function() {
 		throwTime.value = THROWTIME;
@@ -511,7 +587,7 @@ $(document).ready(function() {
 	var sizeRatio;
 	var windowResize = function() {
 		ctx.transform(-1, 0, 0, 1, -marginSide, -(c.height - marginTop));
-		c.height = $('#tabs').height() - $('#tabNames').height() - 50;
+		c.height = $('#tabs').height() - $('#tabNames').height() - 48;
 		c.width = $('#tabs').width();
 		sizeRatio = c.height / preset.throwInfo.endTime;
 
@@ -715,13 +791,19 @@ $(document).ready(function() {
 						}
                }
             }
-				//console.log($('#leftSlider').slider('values'));
+
+				//set title of each handle to its starting value
+				var arr = document.getElementById('leftSlider').children;
+				for (let i = 0; i < arr.length; i++) {
+					arr[i].title = leftNodes[i];
+				}
 			},
 
 			slide: function(ev, ui) {
-				//show slider value when sliding
-				$('#leftSlider').find('.ui-state-active')
-					.text($('#leftSlider').slider('values', ui.handleIndex));
+
+				// //show slider value when sliding
+				// $('#leftSlider').find('.ui-state-active')
+				// 	.text($('#leftSlider').slider('values', ui.handleIndex));
 
 				//store current in beats (if it is out of range, it will be set appropriately with stop function. this just moves lines with handles)
 				preset.beats.left[ui.handleIndex] = ui.value;
@@ -732,6 +814,14 @@ $(document).ready(function() {
 			stop: function(ev, ui) { //when you stop moving the handle, it jumps to valid bounds
 				restrictHandleMovement(preset, ui, $('#leftSlider'), true);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
+
+				if (ui.value == 0) {
+
+				}
+
+				//set title of handle to its resulting value
+				var i = ui.handleIndex;
+				document.getElementById('leftSlider').children[i].title = preset.beats.left[i];
 
 				animationInstance.generateMovements(preset, false);
 			}
@@ -758,12 +848,18 @@ $(document).ready(function() {
 						}
 					}
 				}
+
+				//set title of each handle to its starting value
+				var arr = document.getElementById('rightSlider').children;
+				for (let i = 0; i < arr.length; i++) {
+					arr[i].title = rightNodes[i];
+				}
 			},
 
 			slide: function(ev, ui) {
-				//show slider value when sliding
-				$('#rightSlider').find('.ui-state-active')
-					.text($('#rightSlider').slider('values', ui.handleIndex));
+				// //show slider value when sliding
+				// $('#rightSlider').find('.ui-state-active')
+				// 	.text($('#rightSlider').slider('values', ui.handleIndex));
 
 				//store current in beats (if it is out of range, it will be set appropriately with stop function. this is just for lines)
 				preset.beats.right[ui.handleIndex] = ui.value;
@@ -774,6 +870,10 @@ $(document).ready(function() {
 			stop: function(ev, ui) { //when you stop moving the handle, it jumps to valid bounds
 				restrictHandleMovement(preset, ui, $('#rightSlider'), false);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
+
+				//set title of handle to its resulting value
+				var i = ui.handleIndex;
+				document.getElementById('rightSlider').children[i].title = preset.beats.right[i];
 
 				animationInstance.generateMovements(preset, false);
 			}
