@@ -108,7 +108,7 @@ body {
 	margin: 0 !important;
 }
 
-#examplePresets {
+#examplePresets, #customPresets {
 	width: 10px;
 	height: 10px;
 }

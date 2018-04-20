@@ -272,6 +272,10 @@ $(document).ready(function() {
 		examplePresets.dialog('open');
 	}
 
+	document.getElementById('currentPresetWrapper').onclick = function() {
+		examplePresets.dialog('open');
+	}
+
 	document.getElementById('customPresetButton').onclick = function() {
 		customPresets.dialog('open');
 	}
@@ -305,12 +309,13 @@ $(document).ready(function() {
 		preset.description = document.getElementById('presetDescription').value;
 		let newCard = makeCardElement(Object.assign({}, preset));
 
+		//replace card in custom cards
 		var customPresets = document.getElementById('customPresets');
 		var oldCard = customPresets.childNodes[preset.index];
-
 		customPresets.removeChild(oldCard);
 		customPresets.insertBefore(newCard, customPresets.childNodes[preset.index]);
 
+		//update current preset card
 		updateCurrentPreset(newCard);
 
 		customPresetArr[preset.index] = Object.assign({}, preset);
@@ -362,7 +367,9 @@ $(document).ready(function() {
 				error.style.visibility = 'hidden';
 				error.title = '';
 
-				preset = new Preset(new Siteswap(siteString)); //pass by value
+				var index = preset.index;
+				preset = new Preset(new Siteswap(siteString)); //new Siteswap to pass by value and keep methods
+				preset.index = index;
 				preset.init(true);
 				printInfo(preset);
 				resetLadder();
@@ -624,8 +631,11 @@ $(document).ready(function() {
 
 		updateCanvasLines(preset, c, marginSide, sizeRatio);
 
+		//update preset dialog sizes
 		examplePresets.dialog('option', 'height', $('#tabs').height() - $('#tabNames').height() - 14);
 		examplePresets.dialog('option', 'width', $('#tabs').width() - 20);
+		customPresets.dialog('option', 'height', $('#tabs').height() - $('#tabNames').height() - 14);
+		customPresets.dialog('option', 'width', $('#tabs').width() - 20);
 	}
 	window.onresize = windowResize; //change element sizes when height changes
 	if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
