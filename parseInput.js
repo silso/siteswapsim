@@ -18,6 +18,17 @@ var customPresetArr = [];
 
 
 $(document).ready(function() {
+	function clone(obj){
+   	if (obj == null || typeof(obj) != 'object')
+       	return obj;
+
+   	var temp = new obj.constructor();
+   	for (var key in obj)
+      	temp[key] = clone(obj[key]);
+
+   	return temp;
+	}
+
 	//DOM objects
 	var siteswapForm = document.getElementById('siteswapForm');
 	var siteswapInput = document.getElementById('siteswapInput');
@@ -38,7 +49,7 @@ $(document).ready(function() {
 	$('#tabs').tabs('disable', '#ladderDiagram');
 
 	//<editor-fold> PRESET DEFINITION *******************************************
-	var Preset = function(site, params = ['a', 'b', 1, 1, 1, 1, 1]) {
+	var Preset = function(site, params = ['a', 'b', 1, 1, 1, 1, 1, true]) {
 		//this class holds the config of the siteswap, including rhythm.
 
 		this.site = site; //siteswap object
@@ -52,81 +63,95 @@ $(document).ready(function() {
 		this.throwLimit = params[5]; //smallest allowed value to throw one ball then catch a different ball in the same hand
 		this.speedLimit = params[6]; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
 		this.index; //index in custom preset array (for editing existing presets)
-	}
-	Preset.prototype.init = function(isNew) {
-		if (isNew) this.getAttributes();
-		else this.throwInfo = this.site.printThrowInfo(this.repeats);
-		this.makeBeats();
-		this.makeColors();
-	}
-	Preset.prototype.makeBeats = function() {
-		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
-		this.beats = {left: [], right: []};
-		this.beats.left.push(0);
-		var syncDiff = !this.site.sync; //make right hand throws 1 beat out of sync with left hand when pattern isn't sync
-		for (let i = 2; i <= this.throwInfo.endTime; i += 2) {
-			this.beats.left.push(i - 1 + this.throwTime); //left hand catch time
-			this.beats.left.push(i); //left hand throw time
-			this.beats.right.push(i - syncDiff - 1 + this.throwTime); //right hand catch time
-			this.beats.right.push(i - syncDiff); //right hand throw time
+		this.custom = params[7]; //if it is not custom, we will disable update preset
+
+		this.init = function(isNew) {
+			if (isNew) getAttributes(preset); //user entered
+			else this.throwInfo = this.site.printThrowInfo(this.repeats); //example preset
+			makeBeats(this);
+			makeColors(this);
 		}
 	}
-	Preset.prototype.makeThrowInfo = function(repeats) {
-		this.throwInfo = this.site.printThrowInfo(repeats);
+	var makeBeats = function(preset) {
+		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
+		preset.beats = {left: [], right: []};
+		preset.beats.left.push(0);
+		var syncDiff = !preset.site.sync; //make right hand throws 1 beat out of sync with left hand when pattern isn't sync
+		for (let i = 2; i <= preset.throwInfo.endTime; i += 2) {
+			preset.beats.left.push(i - 1 + preset.throwTime); //left hand catch time
+			preset.beats.left.push(i); //left hand throw time
+			preset.beats.right.push(i - syncDiff - 1 + preset.throwTime); //right hand catch time
+			preset.beats.right.push(i - syncDiff); //right hand throw time
+		}
 	}
-	Preset.prototype.makeColors = function() {
-		this.colors = [];
-		for (let i = 0; i < this.site.loops.length; i++) {
-			this.colors.push("rgb(" +
+	var makeThrowInfo = function(preset, repeats) {
+		preset.throwInfo = preset.site.printThrowInfo(repeats);
+	}
+	var makeColors = function(preset) {
+		preset.colors = [];
+		for (let i = 0; i < preset.site.loops.length; i++) {
+			preset.colors.push("rgb(" +
 				Math.floor(Math.random()*192 + 32) + "," +
 				Math.floor(Math.random()*192 + 32) + "," +
 				Math.floor(Math.random()*192 + 32) + ")");
 		}
 	}
-	Preset.prototype.setForms = function() {
+	var setForms = function(preset) {
 		//take attributes and put them into input forms
-		siteswapInput.value = this.site.siteStr;
-		throwTime.value = this.throwTime;
-		dwellLimit.value = this.dwellLimit;
-		throwLimit.value = this.throwLimit;
-		speedLimit.value = this.speedLimit;
-		repeatCount.value = this.repeats;
+		siteswapInput.value = preset.site.siteStr;
+		throwTime.value = preset.throwTime;
+		dwellLimit.value = preset.dwellLimit;
+		throwLimit.value = preset.throwLimit;
+		speedLimit.value = preset.speedLimit;
+		repeatCount.value = preset.repeats;
 	}
-	Preset.prototype.getAttributes = function() {
+	var getAttributes = function(preset) {
 		//take attributes from forms and put into preset
-		this.throwTime = parseFloat($('#throwTime').val());
-		this.dwellLimit = parseFloat(dwellLimit.value);
-		this.throwLimit = parseFloat(throwLimit.value);
-		this.speedLimit = parseFloat(speedLimit.value);
-		this.repeats = parseFloat(repeatCount.value);
-		this.throwInfo = this.site.printThrowInfo(this.repeats);
+		preset.throwTime = parseFloat($('#throwTime').val());
+		preset.dwellLimit = parseFloat(dwellLimit.value);
+		preset.throwLimit = parseFloat(throwLimit.value);
+		preset.speedLimit = parseFloat(speedLimit.value);
+		preset.repeats = parseFloat(repeatCount.value);
+		preset.throwInfo = preset.site.printThrowInfo(preset.repeats);
 		console.log(throwTime.value);
 	}
-	Preset.prototype.printInfo = function() {
-		console.log('siteswap array:', this.site.printArray());
+	var printInfo = function(preset) {
+		console.log('siteswap array:', preset.site.printArray());
 		console.table({
-			'valid': this.site.isValid(),
-			'siteswap': this.site.printSite(),
-			'loops': this.site.printLoops(),
-			'looptime': this.site.printLoopTime()
+			'valid': preset.site.isValid(),
+			'siteswap': preset.site.printSite(),
+			'loops': preset.site.printLoops(),
+			'looptime': preset.site.printLoopTime()
 		});
-		console.log('throwInfo: ', this.throwInfo);
-		console.log('beats: ', this.beats);
+		console.log('throwInfo: ', preset.throwInfo);
+		console.log('beats: ', preset.beats);
 		console.log('timings: ', [
-			['throwTime', this.throwTime],
-			['dwellLimit', this.dwellLimit],
-			['throwLimit', this.throwLimit],
-			['speedLimit', this.speedLimit],
-			['repeatCount', this.repeats]
+			['throwTime', preset.throwTime],
+			['dwellLimit', preset.dwellLimit],
+			['throwLimit', preset.throwLimit],
+			['speedLimit', preset.speedLimit],
+			['repeatCount', preset.repeats]
 		]);
 	}
 	//</editor-fold> PRESET DEFINITION ******************************************
 
 	//<editor-fold> PRESET OPTIONS **********************************************
 	var loadPreset = function(pr) {
-		preset = pr;
-		preset.setForms();
+		preset = Object.assign({}, pr);
+		preset.index = pr.index;
+		setForms(preset);
 		resetLadder();
+
+
+		var updatePreset = document.getElementById('updatePreset');
+		if (preset.custom) {
+			updatePreset.disabled = false;
+			updatePreset.title = 'change the name, description or siteswap of your preset';
+		}
+		else {
+			updatePreset.disabled = true;
+			updatePreset.title = 'cannot change information of example presets (press save preset first)';
+		}
 
 		document.getElementById('siteswapEntryError').style.visibility = 'hidden';
 
@@ -135,7 +160,7 @@ $(document).ready(function() {
       animationInstance.init(preset, false);
 	}
 
-
+	//set the "current preset" to a given card
 	var updateCurrentPreset = function(presetCard) {
 		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
 		var current = document.getElementById('currentPreset');
@@ -189,7 +214,7 @@ $(document).ready(function() {
 	var makeCards = function(arr, container) {
 		container = document.getElementById(container);
 		for (let i = 0; i < arr.length; i++) {
-			let card = makeCardElement(arr[i]);
+			let card = makeCardElement(Object.assign({}, arr[i]));
 
 			container.appendChild(card);
 		}
@@ -197,10 +222,10 @@ $(document).ready(function() {
 
 	//fill example preset array
 	var pr;
-	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.5, 0.4, 0.25, 0.4]);
+	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.5, 0.4, 0.25, 0.4, false]);
 	pr.init(false);
 	examplePresetArr.push(pr);
-	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, 0.5, 0.4, 0.25, 0.4]);
+	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, 0.5, 0.4, 0.25, 0.4, false]);
 	pr.init(false);
 	examplePresetArr.push(pr);
 
@@ -264,30 +289,32 @@ $(document).ready(function() {
 		preset.name = document.getElementById('presetName').value;
 		preset.description = document.getElementById('presetDescription').value;
 		preset.index = customPresetArr.length;
-		let card = makeCardElement(preset);
+		preset.custom = true;
+		let card = makeCardElement(Object.assign({}, preset));
 		document.getElementById('customPresets').appendChild(card); //add card to custom presets
 		updateCurrentPreset(card);
 
-		customPresetArr.push(JSON.parse(JSON.stringify(preset))); //add to custom preset array by value
+		customPresetArr.push(preset); //add to custom preset array by value
+
+		document.getElementById('updatePreset').disabled = false;
+		updatePreset.title = 'change the name, description or siteswap of your preset';
 	}
 
-	// document.getElementById('updatePreset').onclick = function() {
-	// 	preset.name = document.getElementById('presetName').value;
-	// 	preset.description = document.getElementById('presetDescription').value;
-	// 	let card = makeCardElement(preset);
-	//
-	// 	var customPresets = document.getElementById('customPresets');
-	// 	var current = $('#customPresets').children().eq(preset.index)[0];
-	// 	var newNode = presetCard.cloneNode(true);
-	//
-	// 	customPresets.removeChild(current);
-	// 	customPresets.appendChild(newNode);
-	//
-	// 	$('#customPresets').children().eq(preset.index) = card;
-	// 	updateCurrentPreset(card);
-	//
-	// 	customPresetArr[preset.index] = JSON.parse(JSON.stringify(preset));
-	// }
+	document.getElementById('updatePreset').onclick = function() {
+		preset.name = document.getElementById('presetName').value;
+		preset.description = document.getElementById('presetDescription').value;
+		let newCard = makeCardElement(Object.assign({}, preset));
+
+		var customPresets = document.getElementById('customPresets');
+		var oldCard = customPresets.childNodes[preset.index];
+
+		customPresets.removeChild(oldCard);
+		customPresets.insertBefore(newCard, customPresets.childNodes[preset.index]);
+
+		updateCurrentPreset(newCard);
+
+		customPresetArr[preset.index] = Object.assign({}, preset);
+	}
 
 	//</editor-fold> PRESET OPTIONS *********************************************
 
@@ -337,7 +364,7 @@ $(document).ready(function() {
 
 				preset = new Preset(new Siteswap(siteString)); //pass by value
 				preset.init(true);
-				preset.printInfo();
+				printInfo(preset);
 				resetLadder();
 			}
 		}
@@ -371,9 +398,9 @@ $(document).ready(function() {
 
 	document.getElementById('siteswapOptionsForm').onsubmit = function(e) {
 		e.preventDefault();
-		preset.getAttributes();
-		preset.makeThrowInfo(repeatCount.value);
-		preset.makeBeats();
+		getAttributes(preset);
+		makeThrowInfo(preset, repeatCount.value);
+		makeBeats(preset);
 		resetLadder();
 
 		animationInstance.generateMovements(preset, false);
@@ -397,8 +424,8 @@ $(document).ready(function() {
 	$('#resetLadder').click(function() {
 		try {
 			var repeats = repeatCount.value;
-			preset.makeThrowInfo(repeats);
-			preset.makeBeats();
+			makeThrowInfo(preset, repeats);
+			makeBeats(preset);
 			resetLadder();
 		}
 		catch(e) {

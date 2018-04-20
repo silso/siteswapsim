@@ -97,10 +97,12 @@
 					</div>
 					<div id='presetInfoWrapper'>
 						<form id='presetInfoForm'>
-							<input id='presetName' placeholder='preset name' required='required' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off'>
-							<textarea id='presetDescription' placeholder='preset description' class='ui-widget-content ui-widget ui-corner-all'></textarea>
-							<input type='submit' value='save preset' class='ui-button ui-widget ui-corner-all'>
-							<!-- <input id='updatePreset' type='button' value='update preset' class='ui-button ui-widget ui-corner-all'> -->
+							<input id='presetName' placeholder='preset name' required='required' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off' maxlength='30'>
+							<textarea id='presetDescription' placeholder='preset description' class='ui-widget-content ui-widget ui-corner-all' maxlength='140'></textarea>
+							<div id='presetInfoButtonsWrapper'>
+								<input id='savePreset' type='submit' value='save preset' class='ui-button ui-widget ui-corner-all' title='create new preset, stored under "custom presets"'>
+								<input id='updatePreset' type='button' value='update preset' class='ui-button ui-widget ui-corner-all'>
+							</div>
 						</form>
 					</div>
 					<p>ha theres no help for you here, figure it out on your own</p>

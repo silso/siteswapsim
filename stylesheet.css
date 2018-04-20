@@ -12,7 +12,7 @@ body {
 #userEntryWrapper {
 	/* overflow: hidden; *//*I commented this so the resizable handle worked outside the div */
 	/* width: 310px; */
-	min-height: 500px;
+	min-height: 315px;
 	margin-right: 8px;
 	/* min-width: 310px; */
 }
@@ -99,6 +99,11 @@ body {
 
 /*<editor-fold> PRESET OPTIONS ************************************************/
 
+#presetOptions {
+	height: calc(100% - 60px);
+	overflow: auto;
+}
+
 #presetOptions h2 {
 	margin: 0 !important;
 }
@@ -130,6 +135,7 @@ body {
 .presetName {
 	font-size: 25px;
 	margin: 0;
+	word-wrap: break-word;
 }
 
 .presetSiteswap {
@@ -152,23 +158,53 @@ body {
 
 #examplePresetButton {
 	float: left;
+	width: calc(50% - 2px);
 }
 
 #customPresetButton {
 	float: right;
 	margin-right: 0;
+	padding-left: 20.5px; /*added padding so it wraps at the same time as example presets button*/
+	padding-right: 20.5px;
+	width: calc(50% - 2px);
 }
 
 #presetName {
 	display: block;
-	width: calc(100% - 2px);
+	width: calc(100% - 3px);
 	margin-bottom: 5px;
 }
 
 #presetDescription {
 	display: block;
 	width: calc(100% - 6px);
+	height: 30px;
+	max-height: calc(100vh - 500px); /*vh is viewport percentage, for some reason i have to use this*/
 	resize: vertical;
+	margin-bottom: 5px;
+}
+
+#presetInfoButtonsWrapper {
+	overflow: auto;
+}
+
+#savePreset {
+	float: left;
+	width: calc(50% - 2px);
+}
+
+#updatePreset {
+	float: right;
+	margin-right: 0;
+	width: calc(50% - 2px);
+}
+
+/*make button grey when disabled*/
+input[type=button]:disabled {
+	border: 1px solid #cccccc !important;
+	background: #ededed !important;
+	font-weight: normal !important;
+	color: #2b2b2b !important;
 }
 
 /*</editor-fold> PRESET OPTIONS ***********************************************/
@@ -179,6 +215,11 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+#siteswapOptions {
+	height: calc(100% - 60px);
+	overflow: auto;
 }
 
 #siteswapOptions form {
@@ -247,6 +288,7 @@ input[type=number]::-webkit-outer-spin-button {
 	position: relative;
 	height: calc(100% - 28px);
 	padding: 0;
+	/* overflow: auto; */
 }
 
 #outer {
