@@ -16,6 +16,7 @@ var animationInstance;
 var examplePresetArr = [];
 var customPresetArr = [];
 
+var optInputs;
 
 $(document).ready(function() {
 	function clone(obj){
@@ -32,11 +33,46 @@ $(document).ready(function() {
 	//DOM objects
 	var siteswapForm = document.getElementById('siteswapForm');
 	var siteswapInput = document.getElementById('siteswapInput');
-	var throwTime = document.getElementById('throwTime');
-	var dwellLimit = document.getElementById('dwellLimit');
-	var throwLimit = document.getElementById('throwLimit');
-	var speedLimit = document.getElementById('speedLimit');
 	var repeatCount = document.getElementById('repeatCount');
+
+	//adding input options automatically
+	var siteswapOptionsForm = document.getElementById('siteswapOptionsForm');
+	optInputs = [
+		//starting value for time between any throw and catch (in slider length units)
+		{
+			id: 'throwTime',
+			entryName: 'throw time:',
+			description: 'Default time spent without a ball in hand',
+			defaultValue: 0.5,
+			logSpin: false,
+			step: 0.05
+		},
+		//smallest allowed value for dwell time (default dwell time is 1 - throwTime)
+		{id:'dwellLimit',entryName:'dwell limit:',description:'Limits how soon you can throw a ball after catching it',defaultValue:0.4,logSpin:false,step:0.05},
+		//smallest allowed value to throw one ball then catch a different ball in the same hand
+		{id:'throwLimit',entryName:'throw limit:',description:'Limits how soon you can catch a ball after throwing one',defaultValue:0.25,logSpin:false,step:0.05},
+		//smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		{id:'speedLimit',entryName:'speed limit:',description:'Limits how fast a ball can be thrown then caught',defaultValue:0.4,logSpin:false,step:0.05},
+		//multiplier for how fast time goes
+		{id:'speedMultiplier',entryName:'speed multiplier:',description:'Changes how fast time moves',defaultValue:1,logSpin:true,step:0.0000000000001},
+		//adjusts rhythm to juggle faster without affecting apparent gravity
+		{id:'paceMultiplier',entryName:'pace multiplier:',description:'Changes how fast the juggler tries to juggle',defaultValue:1,logSpin:true,step:0.0000000000001}
+	];
+	//append each option to the siteswap tab along with their spinners
+	for (let i = 0; i < optInputs.length; i++) {
+		siteswapOptionsForm.innerHTML += "																										\
+			<div id='"+optInputs[i].id+"Container' class='spinnerContainer' title='"+optInputs[i].description+"'>			\
+				<label for='"+optInputs[i].id+"' class='ui-widget'>"+optInputs[i].entryName+"</label>							\
+				<input id='"+optInputs[i].id+"' name='value' type='number' step='"+optInputs[i].step+"'> 						\
+			</div>";
+	}
+	//submit button at the end
+	siteswapOptionsForm.innerHTML += "<input type='submit' value='Apply changes' class='ui-button ui-widget ui-corner-all'>";
+	//need to set element pointers after dom editing otherwise the pointers lose track
+	for (let i = 0; i < optInputs.length; i++) {
+		optInputs[i].element = document.getElementById(optInputs[i].id);
+	}
+
 
 	//allow resizing of user entry
 	$('#userEntryWrapper').resizable({
@@ -49,7 +85,7 @@ $(document).ready(function() {
 	$('#tabs').tabs('disable', '#ladderDiagram');
 
 	//<editor-fold> PRESET DEFINITION *******************************************
-	var Preset = function(site, params = ['a', 'b', 1, 1, 1, 1, 1, true]) {
+	var Preset = function(site, params = ['a', 'b', 1, true], options = [1, 1, 1, 1, 1, 1, 1, 1]) {
 		//this class holds the config of the siteswap, including rhythm.
 
 		this.site = site; //siteswap object
@@ -58,15 +94,15 @@ $(document).ready(function() {
 		this.repeats = params[2]; //get # of repeats from spinner
 		this.throwInfo; //this has info about where lines go
 		this.beats = {left: [], right: []}; //rhythm of this instance of a siteswap
-		this.throwTime = params[3]; //starting value for time between any throw and catch (in slider length units)
-		this.dwellLimit = params[4]; //smallest allowed value for dwell time (default dwell time is 1 - throwTime)
-		this.throwLimit = params[5]; //smallest allowed value to throw one ball then catch a different ball in the same hand
-		this.speedLimit = params[6]; //smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		this.options = {}; //numerical options for mostly timing described above at optInputs filled in below
+		for (let i = 0; i < optInputs.length; i++) {
+			this.options[optInputs[i].id] = options[i];
+		}
 		this.index; //index in custom preset array (for editing existing presets)
-		this.custom = params[7]; //if it is not custom, we will disable update preset
+		this.custom = params[3]; //if it is not custom, we will disable update preset
 
 		this.init = function(isNew) {
-			if (isNew) getAttributes(preset); //user entered
+			if (isNew) getAttributes(this); //user entered
 			else this.throwInfo = this.site.printThrowInfo(this.repeats); //example preset
 			makeBeats(this);
 			makeColors(this);
@@ -78,9 +114,9 @@ $(document).ready(function() {
 		preset.beats.left.push(0);
 		var syncDiff = !preset.site.sync; //make right hand throws 1 beat out of sync with left hand when pattern isn't sync
 		for (let i = 2; i <= preset.throwInfo.endTime; i += 2) {
-			preset.beats.left.push(i - 1 + preset.throwTime); //left hand catch time
+			preset.beats.left.push(i - 1 + preset.options.throwTime); //left hand catch time
 			preset.beats.left.push(i); //left hand throw time
-			preset.beats.right.push(i - syncDiff - 1 + preset.throwTime); //right hand catch time
+			preset.beats.right.push(i - syncDiff - 1 + preset.options.throwTime); //right hand catch time
 			preset.beats.right.push(i - syncDiff); //right hand throw time
 		}
 	}
@@ -99,21 +135,20 @@ $(document).ready(function() {
 	var setForms = function(preset) {
 		//take attributes and put them into input forms
 		siteswapInput.value = preset.site.siteStr;
-		throwTime.value = preset.throwTime;
-		dwellLimit.value = preset.dwellLimit;
-		throwLimit.value = preset.throwLimit;
-		speedLimit.value = preset.speedLimit;
+		//options attributes
+		for (let i = 0; i < optInputs.length; i++) {
+			optInputs[i].element.value = preset.options[optInputs[i].id];
+		}
 		repeatCount.value = preset.repeats;
 	}
 	var getAttributes = function(preset) {
 		//take attributes from forms and put into preset
-		preset.throwTime = parseFloat($('#throwTime').val());
-		preset.dwellLimit = parseFloat(dwellLimit.value);
-		preset.throwLimit = parseFloat(throwLimit.value);
-		preset.speedLimit = parseFloat(speedLimit.value);
+		//options attributes
+		for (let i = 0; i < optInputs.length; i++) {
+			preset.options[optInputs[i].id] = parseFloat(optInputs[i].element.value);
+		}
 		preset.repeats = parseFloat(repeatCount.value);
 		preset.throwInfo = preset.site.printThrowInfo(preset.repeats);
-		console.log(throwTime.value);
 	}
 	var printInfo = function(preset) {
 		console.log('siteswap array:', preset.site.printArray());
@@ -126,10 +161,7 @@ $(document).ready(function() {
 		console.log('throwInfo: ', preset.throwInfo);
 		console.log('beats: ', preset.beats);
 		console.log('timings: ', [
-			['throwTime', preset.throwTime],
-			['dwellLimit', preset.dwellLimit],
-			['throwLimit', preset.throwLimit],
-			['speedLimit', preset.speedLimit],
+			preset.options,
 			['repeatCount', preset.repeats]
 		]);
 	}
@@ -222,10 +254,10 @@ $(document).ready(function() {
 
 	//fill example preset array
 	var pr;
-	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, 0.5, 0.4, 0.25, 0.4, false]);
+	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
 	pr.init(false);
 	examplePresetArr.push(pr);
-	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, 0.5, 0.4, 0.25, 0.4, false]);
+	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
 	pr.init(false);
 	examplePresetArr.push(pr);
 
@@ -380,10 +412,11 @@ $(document).ready(function() {
 
 	//<editor-fold> SITESWAP OPTIONS ********************************************
 	//default values for beat timings
-	var THROWTIME = 0.5;
-	var DWELLLIMIT = 0.4;
-	var THROWLIMIT = 0.25;
-	var SPEEDLIMIT = 0.4;
+	// var THROWTIME = 0.5;
+	// var DWELLLIMIT = 0.4;
+	// var THROWLIMIT = 0.25;
+	// var SPEEDLIMIT = 0.4;
+	// var SPEEDMULTIPLIER = 1;
 	var REPEATS = 1;
 
 	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
@@ -392,16 +425,54 @@ $(document).ready(function() {
 			document.getElementById(id).value = val;
 		}
 	}
+	var logSpinnerConfig = {
+		step: 0.0001,
+		spin: function(event, ui) {
+			event.preventDefault();
+			//multiplier - how much it will multiply or divide when you click up or down respectively
+			let m = 1.2;
+			let spinner = $(this);
+			let curVal = spinner.spinner('value');
+			//set the upper limit (when clicking) to 12 clicks up
+			if($(event.currentTarget).hasClass('ui-spinner-up')) {
+				if (curVal*m <= Math.pow(m, 12)) {
+					spinner.spinner('value', curVal*m);
+				}
+			}
+			//set the lower limit similarly
+			else {
+				if (curVal/m >= Math.pow(m, -12)) {
+					spinner.spinner('value', curVal/m);
+				}
+			}
+			let newVal = spinner.spinner('value');
+			//if the new value is close enough to 1 just round it to it
+			if (newVal < 1.001 && newVal > 0.999) {
+				spinner.spinner('value', 1);
+			}
+		},
+		numberFormat: 'n',
+		min: 0,
+		max: 100
+	};
 
 	//initialize spinners, and make them default to specified values
-	$('#throwTime').spinner(spinnerConfig);
-	$('#throwTime').blur(function() {fillWhenEmpty(THROWTIME, 'throwTime')});
-	$('#dwellLimit').spinner(spinnerConfig);
-	$('#dwellLimit').blur(function() {fillWhenEmpty(DWELLLIMIT, 'dwellLimit')});
-	$('#throwLimit').spinner(spinnerConfig);
-	$('#throwLimit').blur(function() {fillWhenEmpty(THROWLIMIT, 'throwLimit')});
-	$('#speedLimit').spinner(spinnerConfig);
-	$('#speedLimit').blur(function() {fillWhenEmpty(SPEEDLIMIT, 'speedLimit')});
+	for (let i = 0; i < optInputs.length; i++) {
+		$('#' + optInputs[i].id).spinner(optInputs[i].logSpin ? logSpinnerConfig : spinnerConfig);
+		$('#' + optInputs[i].id).blur(function() {fillWhenEmpty(optInputs[i].defaultValue, optInputs[i].id)});
+	}
+	// $('#throwTime').spinner(spinnerConfig);
+	// $('#throwTime').blur(function() {fillWhenEmpty(THROWTIME, 'throwTime')});
+	// $('#dwellLimit').spinner(spinnerConfig);
+	// $('#dwellLimit').blur(function() {fillWhenEmpty(DWELLLIMIT, 'dwellLimit')});
+	// $('#throwLimit').spinner(spinnerConfig);
+	// $('#throwLimit').blur(function() {fillWhenEmpty(THROWLIMIT, 'throwLimit')});
+	// $('#speedLimit').spinner(spinnerConfig);
+	// $('#speedLimit').blur(function() {fillWhenEmpty(SPEEDLIMIT, 'speedLimit')});
+	// $('#speedMultiplier').spinner(logSpinnerConfig);
+	// $('#speedMultiplier').blur(function() {fillWhenEmpty(SPEEDMULTIPLIER, 'speedMultiplier')});
+	// $('#' + optInputs[0].id).spinner(optInputs[0].logSpin ? logSpinnerConfig : spinnerConfig);
+	// $('#' + optInputs[0].id).blur(function() {fillWhenEmpty(optInputs[0].defaultValue, optInputs[0].id)});
 
 	document.getElementById('siteswapOptionsForm').onsubmit = function(e) {
 		e.preventDefault();
@@ -414,10 +485,15 @@ $(document).ready(function() {
 	};
 
 	document.getElementById('restoreDefaults').onclick = function() {
-		throwTime.value = THROWTIME;
-		dwellLimit.value = DWELLLIMIT;
-		throwLimit.value = THROWLIMIT;
-		speedLimit.value = SPEEDLIMIT;
+		for (let i = 0; i < optInputs.length; i++) {
+			optInputs[i].element.value = optInputs[i].defaultValue;
+		}
+		// throwTime.value = THROWTIME;
+		// dwellLimit.value = DWELLLIMIT;
+		// throwLimit.value = THROWLIMIT;
+		// speedLimit.value = SPEEDLIMIT;
+		// speedMultiplier.value = SPEEDMULTIPLIER;
+		// optInputs[0].element.value = optInputs[0].defaultValue;
 		repeatCount.value = REPEATS;
 	}
 	//</editor-fold> SITESWAP OPTIONS *******************************************
@@ -450,9 +526,9 @@ $(document).ready(function() {
 			beats = isLeft ? preset.beats.left : preset.beats.right,
 			otherBeats = isLeft ? preset.beats.right : preset.beats.left,
 			throwArray = preset.throwInfo.throws,
-			dwellLimit = preset.dwellLimit, //shortest time you can hold the ball for
-			throwLimit = preset.throwLimit, //shortest time you can throw a ball then catch another
-			speedLimit = preset.speedLimit, //shortest time you can throw a ball to the other hand
+			dwellLimit = preset.options.dwellLimit, //shortest time you can hold the ball for
+			throwLimit = preset.options.throwLimit, //shortest time you can throw a ball then catch another
+			speedLimit = preset.options.speedLimit, //shortest time you can throw a ball to the other hand
 			lowerLimit = 0,
 			upperLimit = preset.throwInfo.endTime,
 			endTime = preset.throwInfo.endTime,

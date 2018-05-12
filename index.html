@@ -2,13 +2,11 @@
 <html>
 
 <head>
-	<!--FAVICON-->
-	<!-- <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+	<!---
 	<link rel="manifest" href="site.webmanifest">
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff"> -->
+	<link rel="icon" href="favicon.ico">
 
 	<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 	<script src='jquery-ui-1.12.1/jquery-ui.min.js'></script>
@@ -59,25 +57,8 @@
 					<p>siteswap options</p>
 					<button id='restoreDefaults' class='ui-button ui-widget ui-corner-all' title='Reset settings to recommended, realistic values'>Restore Defaults</button>
 					<form id='siteswapOptionsForm'>
-						<div id='throwTimeContainer' class='spinnerContainer' title='Default time spent without a ball in hand'>
-							<label for='throwTime' class='ui-widget'>throw time:</label>
-							<input id='throwTime' name='value' type='number' min='0' step='0.05'>
-						</div>
-						<div id='dwellLimitContainer' class='spinnerContainer' title='Limits how soon you can throw a ball after catching it'>
-							<label for='dwellLimit' class='ui-widget'>dwell limit:</label>
-							<input id='dwellLimit' name='value' type='number' min='0' step='0.05'>
-						</div>
-						<div id='throwLimitContainer' class='spinnerContainer' title='Limits how soon you can catch a ball after throwing one'>
-							<label for='throwLimit' class='ui-widget'>throw limit:</label>
-							<input id='throwLimit' name='value' type='number' min='0' step='0.05'>
-						</div>
-						<div id='speedLimitContainer' class='spinnerContainer' title='Limits how fast a ball can be thrown then caught'>
-							<label for='speedLimit' class='ui-widget'>speed limit:</label>
-							<input id='speedLimit' name='value' type='number' min='0' step='0.05'>
-						</div>
-						<input type='submit' value='Apply changes' class='ui-button ui-widget ui-corner-all'>
+						<!-- populated by parseInput -->
 					</form>
-					<input type='color'>
 				</div>
 				<div id='presetOptions'>
 					<h2 id='asdf'>Current preset:</h2>
