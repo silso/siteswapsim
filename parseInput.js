@@ -84,6 +84,19 @@ $(document).ready(function() {
 	//disable ladder tab until preset is entered
 	$('#tabs').tabs('disable', '#ladderDiagram');
 
+	//<editor-fold> INFO ********************************************************
+	$('#accordion').accordion({
+		animate: 0,
+		heightStyle: 'content'
+	});
+	// maybe add url navigation?
+	// $('#accordion').accordion({
+	// 	header: 'h3',
+	// 	navigation: true
+	// });
+
+	//</editor-fold> INFO *******************************************************
+
 	//<editor-fold> PRESET DEFINITION *******************************************
 	var Preset = function(site, params = ['a', 'b', 1, true], options = [1, 1, 1, 1, 1, 1, 1, 1]) {
 		//this class holds the config of the siteswap, including rhythm.
@@ -712,6 +725,14 @@ $(document).ready(function() {
 		examplePresets.dialog('option', 'width', $('#tabs').width() - 20);
 		customPresets.dialog('option', 'height', $('#tabs').height() - $('#tabNames').height() - 14);
 		customPresets.dialog('option', 'width', $('#tabs').width() - 20);
+
+
+		// document.getElementById('introVid').style.height = String($('#accordion').width() - 2) + 'px';
+		// $('#introVid').width($('#accordion').width() - 2);
+		// $('#introVid').height($('#accordion').width() * 9 / 16);
+
+		// document.getElementById('info').style.height = String($('#tabs').height() - 20) + 'px';
+		// console.log($('#tabs').height() - 20);
 	}
 	window.onresize = windowResize; //change element sizes when height changes
 	if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
