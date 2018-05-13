@@ -541,7 +541,7 @@ let AnimationScript = function() {
 			}
 		})();
 
-		if (true) {
+		if (print) {
 			console.log(balls);
 			console.log(hands);
 		}
