@@ -17,12 +17,13 @@
 
 	<link rel='stylesheet' href='jquery-ui-1.12.1/jquery-ui.css'>
 	<link rel='stylesheet' href='stylesheet.css'>
+	<!-- <link rel="stylesheet" href="https://stackedit.io/style.css" /> -->
 	<title>SiteswapSim</title>
 </head>
 
-<body>
+<body style='font-family: Lato'>
 	<div id='flexContainer'>
-		<div id='userEntryWrapper' style='width:350px'>
+		<div id='userEntryWrapper' style='width:400px'>
 			<div id='siteswapEntry'>
 				<form id='siteswapForm'>
 					<input type='text' id='siteswapInput' placeholder='siteswap' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off'></input>
@@ -55,7 +56,6 @@
 					</div>
 				</div>
 				<div id='siteswapOptions'>
-					<p>siteswap options</p>
 					<button id='restoreDefaults' class='ui-button ui-widget ui-corner-all' title='Reset settings to recommended, realistic values'>Restore Defaults</button>
 					<form id='siteswapOptionsForm'>
 						<!-- populated by parseInput -->
@@ -93,63 +93,71 @@
 					<div id="accordion">
 						<h3 id='welcome'>Welcome</h3>
 							<div>
-								<div class='videoWrapper'>
-									<iframe id='introVid' width="346" height="195" src="https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+								<h2 id="welcome-to-siteswapsim">Welcome to SiteswapSim!</h2>
+								<p>SiteswapSim is an in-browser tool for visualizing juggling patterns by entering in any siteswap.</p>
+								<p>A siteswap is a string of numbers that describes the path the balls make in the air. The video below by Numberphile is a good introduction to how siteswaps work:</p>
+								<div class="videoWrapper">
+									<iframe id="introVid" width="346" height="195" src="https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0" allowfullscreen=""></iframe>
 								</div>
-								<p>
-								Mauris mauris ante, blandit et, ultrices a, suscipit eget, quam. Integer
-								ut neque. Vivamus nisi metus, molestie vel, gravida in, condimentum sit
-								amet, nunc. Nam a nibh. Donec suscipit eros. Nam mi. Proin viverra leo ut
-								odio. Curabitur malesuada. Vestibulum a velit eu ante scelerisque vulputate.
-								</p>
+								<p>SiteswapSim allows you to enter in your own siteswaps in the <strong>siteswap input</strong> at the top left of the page, or choose from example siteswaps in the <strong>preset tab</strong> (directly below <strong>siteswap input</strong>). Next, you can edit the timings of this pattern by changing the values on the <strong>siteswap tab</strong>, or by dragging the <em>handles</em> on the <strong>ladder tab</strong>.</p>
 							</div>
 							<h3>Preset</h3>
 							<div>
-								<p>
-								Sed non urna. Donec et ante. Phasellus eu ligula. Vestibulum sit amet
-								purus. Vivamus hendrerit, dolor at aliquet laoreet, mauris turpis porttitor
-								velit, faucibus interdum tellus libero ac justo. Vivamus non quam. In
-								suscipit faucibus urna.
-								</p>
+								<h2>Overview</h2>
+								<p>The <strong>preset tab</strong> allows you to manage presets. A preset stores the siteswap, the siteswap timings entered in on the <strong>siteswap tab</strong>, and the rhythm pattern created on the <strong>ladder tab</strong>. Loading a preset will overwrite anything that is currently unsaved.</p>
+								<h2>Functionality</h2>
+								<p>Each preset is represented by a card. The card displays the name of the preset, the siteswap, and a brief description. The cards are separated into two categories: <em>example presets</em>, which are presets given by us to help you understand the capabilities of the website, and <em>custom presets</em>, which are where your presets are stored.</p>
+								<p>A preset can be saved by giving it a name, and a description if you want, then pressing <em>save preset</em>. This preset will now appear in the <em>custom presets</em> menu. You can modify the currently selected preset (as long as it isn’t an example preset) by pressing <em>update preset</em>.</p>
+								<p>As of 5/13/18, presets will go away if you refresh the page. This is set to change (likely by storing presets in your cookies).</p>
 							</div>
 							<h3>Siteswap</h3>
 							<div>
-								<p>
-								Nam enim risus, molestie et, porta ac, aliquam ac, risus. Quisque lobortis.
-								Phasellus pellentesque purus in massa. Aenean in pede. Phasellus ac libero
-								ac tellus pellentesque semper. Sed ac felis. Sed commodo, magna quis
-								lacinia ornare, quam ante aliquam nisi, eu iaculis leo purus venenatis dui.
-								</p>
+								<h2>Overview</h2>
+								<p>The <strong>siteswap tab</strong> allows you to change the rhythm with which throws and catches happen. This tab includes the following options:</p>
 								<ul>
-									<li>List item one</li>
-									<li>List item two</li>
-									<li>List item three</li>
+								<li><em>Throw time</em> sets the default time between a throw and the next catch in that hand (this is unintuitive, and will be changed in the future).</li>
+								<li><em>Dwell limit</em>, <em>throw limit</em>, and <em>speed limit</em> control the minimum spacing between any two events (throw or catch).</li>
+								<li><em>Speed multiplier</em> changes how fast the pattern plays in the animation.</li>
+								<li><em>Pace multiplier</em> changes how fast the juggler tries to juggle (faster pace means lower throws).</li>
 								</ul>
+								<p>The <em>restore defaults</em> button fills the timing inputs with suggested, realistic values, while the <em>apply changes</em> button will update the <strong>ladder tab</strong> and the animation with the new values.</p>
 							</div>
 							<h3>Ladder</h3>
 							<div>
-								<p>
-								Cras dictum. Pellentesque habitant morbi tristique senectus et netus
-								et malesuada fames ac turpis egestas. Vestibulum ante ipsum primis in
-								faucibus orci luctus et ultrices posuere cubilia Curae; Aenean lacinia
-								mauris vel est.
-								</p>
-								<p>
-								Suspendisse eu nisl. Nullam ut libero. Integer dignissim consequat lectus.
-								Class aptent taciti sociosqu ad litora torquent per conubia nostra, per
-								inceptos himenaeos.
-								</p>
+								<h2>Overview</h2>
+								<p>The <strong>ladder tab</strong> lets you easily visualize the rhythm of the pattern.</p>
+								<p>On this tab, <em>handles</em> (circles) are displayed on two adjacent <em>sliders</em> (vertical lines). The <em>handles</em> represent a catch or a throw, and the sliders represent the two hands of the juggler.</p>
+								<p>Balls follow the lines upward through time, travelling between the hands/<em>sliders</em>. A <em>handle</em> at the bottom of a solid vertical line is a catch, while a handle at the top of a solid vertical line is a throw.</p>
+								<h2>Beats</h2>
+								<p>There are two disabled <em>handles</em> on the left <em>slider</em> (one at the top and one at the bottom). These represent beat 0 of the pattern. By default, a throw will happen on every beat. You can hover over the <em>handles</em> to see what beat value each handle has.</p>
+								<p>The timing values entered on the <strong>siteswap tab</strong> are apparent on this tab. The <em>throw time</em> value will set how far apart each <em>throw handle</em> is from the <em>catch handle</em> directly above. The limit values will set the movement restrictions for any given <em>handle</em>. When a <em>handle</em> is dragged out of the acceptable range, it will snap back into place when released.</p>
 							</div>
 							<h3>Animation</h3>
 							<div>
-
+								<p>Animation is pretty boring, to be honest</p>
 							</div>
 							<h3>Errors</h3>
 							<div>
-
+								<h3>Invalid syntax</h3>
+								<p>This means that the siteswap you entered has characters in it that cannot be parsed as a siteswap. Siteswaps can include numbers 0-9 and letters a-w. SiteswapSim is also compatible with sync and multiplex patterns. An example sync pattern is (6x,4)*, and an example multiplex pattern is [53]121.</p>
+								<h3>Invalid pattern</h3>
+								<p>This means that the siteswap you entered is not valid. It is not actually possible to juggle this pattern. Check out the video in the <em>Welcome</em> section of this tab, and see <a href="http://jugglesensei.net/SiteswapFun1.htm">this webpage</a> for a large list of valid siteswaps (ignore the patterns with parentheses without commas to separate the numbers, we don't follow that notation).</p>
+								<h3>0 at start</h3>
+								<p>This means that there is a 0 at the start of your juggling pattern. This is a limitation of the ladder diagram: since there is a <em>handle</em> anchored on beat 0, that means there also must be a throw on beat 0. Simply cycle your pattern by moving the 0 to the end of the pattern.</p>
 							</div>
-							<h3>Contact</h3>
+							<h3>About</h3>
 							<div>
+								<h2>Resources used</h2>
+								<ul>
+								<li><a href="https://jqueryui.com/">jQuery UI</a> for much of the UI</li>
+								<li><a href="https://stackedit.io">StackEdit.io</a> to format this information tab</li>
+								<li><a href="https://pages.github.com/">Github Pages</a> to host this website</li>
+								<li><a href="http://vanilla-js.com/">Vanilla-JS</a> for everything</li>
+								</ul>
+								<p><a href="https://github.com/silso/siteswapsim/tree/ladder">Here is a link to the Github repository</a></p>
+								<h2>Contact</h2>
+								<p>Email: <a href="mailto:SiteswapSim@gmail.com">SiteswapSim@gmail.com</a></p>
+
 
 							</div>
 						</div>
