@@ -16,8 +16,6 @@ var animationInstance;
 var examplePresetArr = [];
 var customPresetArr = [];
 
-var optInputs;
-
 $(document).ready(function() {
 	function clone(obj){
    	if (obj == null || typeof(obj) != 'object')
@@ -30,6 +28,22 @@ $(document).ready(function() {
    	return temp;
 	}
 
+	function getParameterByName(name, url) {
+		if (!url) url = window.location.href;
+			name = name.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+			results = regex.exec(url);
+		if (!results) return null;
+		if (!results[2]) return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
+
+	function setShareLinkCopyText() {
+		let copyText = document.getElementById('presetShareCopyText');
+		let encodeText = encode(encodePreset(preset));
+		copyText.value = window.location.href.replace(/[?&]p=.+?(?=&|$)/, '') + "?p=" + encodeText;
+	}
+
 	//DOM objects
 	var siteswapForm = document.getElementById('siteswapForm');
 	var siteswapInput = document.getElementById('siteswapInput');
@@ -37,7 +51,7 @@ $(document).ready(function() {
 
 	//adding input options automatically
 	var siteswapOptionsForm = document.getElementById('siteswapOptionsForm');
-	optInputs = [
+	var optInputs = [
 		//starting value for time between any throw and catch (in slider length units)
 		{
 			id: 'throwTime',
@@ -106,7 +120,7 @@ $(document).ready(function() {
 		this.description = params[1];
 		this.repeats = params[2]; //get # of repeats from spinner
 		this.throwInfo; //this has info about where lines go
-		this.beats = {left: [], right: []}; //rhythm of this instance of a siteswap
+		this.beats = {left: [], right: [], custom:false}; //rhythm of this instance of a siteswap
 		this.options = {}; //numerical options for mostly timing described above at optInputs filled in below
 		for (let i = 0; i < optInputs.length; i++) {
 			this.options[optInputs[i].id] = options[i];
@@ -114,12 +128,18 @@ $(document).ready(function() {
 		this.index; //index in custom preset array (for editing existing presets)
 		this.custom = params[3]; //if it is not custom, we will disable update preset
 
-		this.init = function(isNew) {
-			if (isNew) getAttributes(this); //user entered
-			else this.throwInfo = this.site.printThrowInfo(this.repeats); //example preset
-			makeBeats(this);
-			makeColors(this);
-		}
+		// this.init = function(isNew) {
+		// 	if (isNew) getAttributes(this); //user entered
+		// 	else this.throwInfo = this.site.printThrowInfo(this.repeats); //example preset
+		// 	makeBeats(this);
+		// 	makeColors(this);
+		// }
+	}
+	var initPreset = function(preset, isNew) {
+		if (isNew) getAttributes(preset); //user entered
+		else preset.throwInfo = preset.site.printThrowInfo(preset.repeats); //example preset
+		makeBeats(preset);
+		if (preset.colors === undefined) makeColors(preset);
 	}
 	var makeBeats = function(preset) {
 		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
@@ -200,8 +220,12 @@ $(document).ready(function() {
 
 		document.getElementById('siteswapEntryError').style.visibility = 'hidden';
 
-      animationInstance = undefined;
-      animationInstance = new AnimationScript();
+		setShareLinkCopyText();
+
+		//unsure if this is needed
+      // animationInstance = undefined;
+      // animationInstance = new AnimationScript();
+		if (animationInstance === undefined) animationInstance = new AnimationScript();
       animationInstance.init(preset, false);
 	}
 
@@ -268,10 +292,10 @@ $(document).ready(function() {
 	//fill example preset array
 	var pr;
 	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
-	pr.init(false);
+	initPreset(pr, false);
 	examplePresetArr.push(pr);
 	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
-	pr.init(false);
+	initPreset(pr, false);
 	examplePresetArr.push(pr);
 
 	makeCards(examplePresetArr, 'examplePresets');
@@ -327,10 +351,18 @@ $(document).ready(function() {
 
 	//close dialog when another tab is selected
 	$('#tabs').tabs({
-		activate: function() {
-		examplePresets.dialog('close');
-		customPresets.dialog('close');
-	}});
+		activate: function(event, ui) {
+			examplePresets.dialog('close');
+			customPresets.dialog('close');
+			//use Array.prototype.indexOf.call to find the index of the active tab among all of the tabs
+			//this strange usage of indexOf is because what we're searching is a NodeList, not an array
+			//subtract 1 and divide by 2 because of random text elements between its siblings
+			let index = (Array.prototype.indexOf.call(ui.newTab[0].parentNode.childNodes, ui.newTab[0]) - 1) / 2;
+			if (index === 1) {
+				setShareLinkCopyText();
+			}
+		}
+	});
 
 	document.getElementById('presetInfoForm').onsubmit = function(e) {
 		e.preventDefault();
@@ -364,6 +396,31 @@ $(document).ready(function() {
 		updateCurrentPreset(newCard);
 
 		customPresetArr[preset.index] = Object.assign({}, preset);
+	}
+
+	//share link
+	document.getElementById('presetShareCopyButton').onclick = function() {
+		let copyText = document.getElementById('presetShareCopyText');
+
+		//append p variable value to current url (minus previous p)
+		//does not quite work for multiple parameters yet
+		setShareLinkCopyText();
+		copyText.focus();
+		copyText.select();
+
+		try {
+			document.execCommand('copy');
+		} catch (e) {
+			console.log('unable to copy share link');
+		}
+	}
+
+	document.getElementById('presetShareLoadWrapper').onsubmit = function(e) {
+		e.preventDefault();
+		//get p url parameter value and ignore others
+		let loadText = getParameterByName('p', document.getElementById('presetShareLoadText').value);
+		let newPreset = decodePreset(decode(loadText));
+		loadPreset(newPreset);
 	}
 
 	//</editor-fold> PRESET OPTIONS *********************************************
@@ -415,7 +472,7 @@ $(document).ready(function() {
 				var index = preset.index;
 				preset = new Preset(new Siteswap(siteString)); //new Siteswap to pass by value and keep methods
 				preset.index = index;
-				preset.init(true);
+				initPreset(preset, true);
 				printInfo(preset);
 				resetLadder();
 			}
@@ -424,12 +481,6 @@ $(document).ready(function() {
 	//</editor-fold> SITESWAP ENTRY *********************************************
 
 	//<editor-fold> SITESWAP OPTIONS ********************************************
-	//default values for beat timings
-	// var THROWTIME = 0.5;
-	// var DWELLLIMIT = 0.4;
-	// var THROWLIMIT = 0.25;
-	// var SPEEDLIMIT = 0.4;
-	// var SPEEDMULTIPLIER = 1;
 	var REPEATS = 1;
 
 	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
@@ -474,18 +525,6 @@ $(document).ready(function() {
 		$('#' + optInputs[i].id).spinner(optInputs[i].logSpin ? logSpinnerConfig : spinnerConfig);
 		$('#' + optInputs[i].id).blur(function() {fillWhenEmpty(optInputs[i].defaultValue, optInputs[i].id)});
 	}
-	// $('#throwTime').spinner(spinnerConfig);
-	// $('#throwTime').blur(function() {fillWhenEmpty(THROWTIME, 'throwTime')});
-	// $('#dwellLimit').spinner(spinnerConfig);
-	// $('#dwellLimit').blur(function() {fillWhenEmpty(DWELLLIMIT, 'dwellLimit')});
-	// $('#throwLimit').spinner(spinnerConfig);
-	// $('#throwLimit').blur(function() {fillWhenEmpty(THROWLIMIT, 'throwLimit')});
-	// $('#speedLimit').spinner(spinnerConfig);
-	// $('#speedLimit').blur(function() {fillWhenEmpty(SPEEDLIMIT, 'speedLimit')});
-	// $('#speedMultiplier').spinner(logSpinnerConfig);
-	// $('#speedMultiplier').blur(function() {fillWhenEmpty(SPEEDMULTIPLIER, 'speedMultiplier')});
-	// $('#' + optInputs[0].id).spinner(optInputs[0].logSpin ? logSpinnerConfig : spinnerConfig);
-	// $('#' + optInputs[0].id).blur(function() {fillWhenEmpty(optInputs[0].defaultValue, optInputs[0].id)});
 
 	document.getElementById('siteswapOptionsForm').onsubmit = function(e) {
 		e.preventDefault();
@@ -501,12 +540,6 @@ $(document).ready(function() {
 		for (let i = 0; i < optInputs.length; i++) {
 			optInputs[i].element.value = optInputs[i].defaultValue;
 		}
-		// throwTime.value = THROWTIME;
-		// dwellLimit.value = DWELLLIMIT;
-		// throwLimit.value = THROWLIMIT;
-		// speedLimit.value = SPEEDLIMIT;
-		// speedMultiplier.value = SPEEDMULTIPLIER;
-		// optInputs[0].element.value = optInputs[0].defaultValue;
 		repeatCount.value = REPEATS;
 	}
 	//</editor-fold> SITESWAP OPTIONS *******************************************
@@ -892,6 +925,8 @@ $(document).ready(function() {
 		$('#tabs').tabs('enable', '#ladderDiagram');
 		windowResize(); //make canvas actually have stuff
 
+		preset.beats.custom = false;
+
 		//<editor-fold> SLIDER STUFF *********************************************
 		//create arrays of values which will represent starting handle positions on the sliders
 		var leftNodes = preset.beats.left,
@@ -958,6 +993,8 @@ $(document).ready(function() {
 				var i = ui.handleIndex;
 				document.getElementById('leftSlider').children[i].title = preset.beats.left[i];
 
+				preset.beats.custom = true;
+
 				animationInstance.generateMovements(preset, false);
 			}
 		});
@@ -1010,6 +1047,8 @@ $(document).ready(function() {
 				var i = ui.handleIndex;
 				document.getElementById('rightSlider').children[i].title = preset.beats.right[i];
 
+				preset.beats.custom = true;
+
 				animationInstance.generateMovements(preset, false);
 			}
 		});
@@ -1023,7 +1062,9 @@ $(document).ready(function() {
 		//</editor-fold> SLIDER STUFF ********************************************
 	};
 
-	loadPreset(examplePresetArr[0]);
+	let p = getParameterByName('p');
+	if (p === null) loadPreset(examplePresetArr[0]);
+	else loadPreset(decodePreset(decode(p)));
 	updateCurrentPreset(document.getElementsByClassName('presetCard')[1]);
 
 	//</editor-fold> LADDER DIAGRAM *********************************************

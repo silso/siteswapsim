@@ -14,6 +14,7 @@
 	<script src='siteswapClass.js'></script>
 	<script src='parseInput.js'></script>
 	<script src='animation/script2.js'></script>
+	<script src='presetEncoding.js'></script>
 
 	<link rel='stylesheet' href='jquery-ui-1.12.1/jquery-ui.css'>
 	<link rel='stylesheet' href='stylesheet.css'>
@@ -87,7 +88,17 @@
 							</div>
 						</form>
 					</div>
-					<p>ha theres no help for you here, figure it out on your own</p>
+					<h2>Share link:</h2>
+					<div id='presetShareWrapper'>
+						<div id='presetShareCopyWrapper'>
+							<input id='presetShareCopyText' class='ui-widget-content ui-widget ui-corner-all'>
+							<button id='presetShareCopyButton' title='copy share link' class='ui-button ui-widget ui-corner-all'><span class='ui-icon ui-icon-copy'></span></button>
+						</div>
+							<form id='presetShareLoadWrapper'>
+								<input id='presetShareLoadText' class='ui-widget-content ui-widget ui-corner-all' autocomplete='off'>
+								<input id='presetShareLoadButton' type='submit' value='load from link' title='load preset using share link' class='ui-button ui-widget ui-corner-all'></input>
+							</form>
+					</div>
 				</div>
 				<div id='info'>
 					<div id="accordion">
