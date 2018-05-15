@@ -371,8 +371,10 @@ $(document).ready(function() {
 			}
 
 			//stop video from playing when changing tabs
-			document.getElementById('introVid').src = '/default.asp';
-			document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			if (index != 0) {
+				document.getElementById('introVid').src = '/default.asp';
+				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			}
 		}
 	});
 
