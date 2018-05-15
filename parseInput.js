@@ -87,7 +87,15 @@ $(document).ready(function() {
 	//<editor-fold> INFO ********************************************************
 	$('#accordion').accordion({
 		animate: 0,
-		heightStyle: 'content'
+		heightStyle: 'content',
+		activate: function(event, ui) {
+			//stop video from playing when changing header
+			if (ui.newHeader[0].id != 'welcome') {
+				document.getElementById('introVid').src = '/default.asp';
+				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			}
+
+		}
 	});
 	// maybe add url navigation?
 	// $('#accordion').accordion({
@@ -330,6 +338,10 @@ $(document).ready(function() {
 		activate: function() {
 		examplePresets.dialog('close');
 		customPresets.dialog('close');
+
+		//stop video from playing when changing tabs
+		document.getElementById('introVid').src = '/default.asp';
+		document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
 	}});
 
 	document.getElementById('presetInfoForm').onsubmit = function(e) {

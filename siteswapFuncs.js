@@ -361,7 +361,6 @@ var siteswapTranslator = function(site) {
 
 				var tempVals = parseMultiplex(tempString);
 				var tempArr = [];
-				console.log(tempVals);
 				for (let j = 0; j < tempVals.length; j++) {
 					if (tempVals[j].cross) {
 						if (side == 'left') {
@@ -481,8 +480,6 @@ var siteswapTranslator = function(site) {
 	}
 
 	siteArr = parseSiteswap(site);
-
-	console.log(siteArr);
 
 	if (sync) { //this rotates everything in the pattern so we can make the 1 throws go from the left hand, specifically so sync works on ladder diagram
 		var newSiteArr = new Object();
