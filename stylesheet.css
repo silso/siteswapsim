@@ -221,16 +221,22 @@ body {
 	width: calc(50% - 2px);
 }
 
+#presetInfoWrapper {
+	margin-bottom: 10px;
+}
+
 #presetName {
 	display: block;
-	width: calc(100% - 3px);
+	width: calc(100% - 2px);
 	margin-bottom: 5px;
+	padding-left: 2px;
 }
 
 #presetDescription {
 	display: block;
 	width: calc(100% - 6px);
 	height: 30px;
+	min-height: 30px;
 	max-height: calc(100vh - 500px); /*vh is viewport percentage, for some reason i have to use this*/
 	resize: vertical;
 	margin-bottom: 5px;
@@ -249,6 +255,40 @@ body {
 	float: right;
 	margin-right: 0;
 	width: calc(50% - 2px);
+}
+
+#presetShareWrapper {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+#presetShareCopyWrapper {
+	margin-bottom: 5px;
+}
+#presetShareCopyText {
+	margin-bottom: 0px;
+	height: 28.79px;
+	width: calc(100% - 56px);
+	direction: rtl;
+}
+#presetShareCopyUpdate {
+	margin-right: 4px;
+	float: right;
+	display: inline-block;
+}
+#presetShareCopyButton {
+	margin-right: 0px;
+	display: inline-block;
+	float: right;
+}
+#presetShareLoadText {
+	margin-bottom: 0px;
+	height: 28.79px;
+	width: calc(100% - 135.16px);
+}
+#presetShareLoadButton {
+	margin-right: 0px;
+	display: inline-block;
+	float: right;
 }
 
 /*make button grey when disabled*/
