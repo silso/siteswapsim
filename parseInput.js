@@ -114,7 +114,15 @@ $(document).ready(function() {
 	//<editor-fold> INFO ********************************************************
 	$('#accordion').accordion({
 		animate: 0,
-		heightStyle: 'content'
+		heightStyle: 'content',
+		activate: function(event, ui) {
+			//stop video from playing when changing header
+			if (ui.newHeader[0].id != 'welcome') {
+				document.getElementById('introVid').src = '/default.asp';
+				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			}
+
+		}
 	});
 	// maybe add url navigation?
 	// $('#accordion').accordion({
@@ -384,6 +392,12 @@ $(document).ready(function() {
 			if (index === 1) {
 				setShareLinkCopyText();
 			}
+
+			//stop video from playing when changing tabs
+			if (index != 0) {
+				document.getElementById('introVid').src = '/default.asp';
+				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			}
 		}
 	});
 
@@ -457,19 +471,31 @@ $(document).ready(function() {
 	//create siteswap and preset objects from entry
 	var parseInput = function(input) {
 		var siteString = String(input).toLowerCase();
+		siteString = siteString.replace(/\s/g, ''); //remove spaces
 		//SYNTAX CHECKER
 		//Modified (stolen) from gunswap.co
-		var TOSS = '(\\d|[a-w])';
-		var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
-		var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
+		var SIMPLETOSS = '(\\d|[a-w])';
+		var CUSTOMTOSS = '(\\{\\d+\\})';
+		var TOSS = '(' + SIMPLETOSS + '|' + CUSTOMTOSS + ')';
+		var MULTIPLEX = '(\\[' + TOSS + '+\\])';
+		var SYNCMULTIPLEX = '(\\[(' + TOSS + 'x?)+\\])';
 		var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
-		var PATTERN = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$');
+		var PATTERN = new RegExp('(^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$)|🤹');
 
 		var error = document.getElementById('siteswapEntryError');
 		if(!PATTERN.test(siteString)) {
 			error.innerHTML = 'Invalid syntax';
 			error.style.visibility = 'visible';
 			error.title = 'You may be using some incorrect characters. See the preset tab for a guide';
+		}
+		else if (siteString == '🤹') {
+			var index = preset.index;
+			preset = new Preset(new Siteswap('3'));
+			preset.index = index;
+			preset.site.siteStr = '🤹';
+			initPreset(preset, true);
+			printInfo(preset);
+			resetLadder();
 		}
 		else {
 			var site = new Siteswap(siteString);
