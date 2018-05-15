@@ -462,13 +462,22 @@ $(document).ready(function() {
 		var MULTIPLEX = '(\\[' + TOSS + '+\\])';
 		var SYNCMULTIPLEX = '(\\[(' + TOSS + 'x?)+\\])';
 		var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
-		var PATTERN = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$');
+		var PATTERN = new RegExp('(^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$)|🤹');
 
 		var error = document.getElementById('siteswapEntryError');
 		if(!PATTERN.test(siteString)) {
 			error.innerHTML = 'Invalid syntax';
 			error.style.visibility = 'visible';
 			error.title = 'You may be using some incorrect characters. See the preset tab for a guide';
+		}
+		else if (siteString == '🤹') {
+			var index = preset.index;
+			preset = new Preset(new Siteswap('3'));
+			preset.index = index;
+			preset.site.siteStr = '🤹';
+			initPreset(preset, true);
+			printInfo(preset);
+			resetLadder();
 		}
 		else {
 			var site = new Siteswap(siteString);
