@@ -382,11 +382,14 @@ $(document).ready(function() {
 	//create siteswap and preset objects from entry
 	var parseInput = function(input) {
 		var siteString = String(input).toLowerCase();
+		siteString = siteString.replace(/\s/g, ''); //remove spaces
 		//SYNTAX CHECKER
 		//Modified (stolen) from gunswap.co
-		var TOSS = '(\\d|[a-w])';
-		var MULTIPLEX = '(\\[(\\d|[a-w])+\\])';
-		var SYNCMULTIPLEX = '(\\[((\\d|[a-w])x?)+\\])';
+		var SIMPLETOSS = '(\\d|[a-w])';
+		var CUSTOMTOSS = '(\\{\\d+\\})';
+		var TOSS = '(' + SIMPLETOSS + '|' + CUSTOMTOSS + ')';
+		var MULTIPLEX = '(\\[' + TOSS + '+\\])';
+		var SYNCMULTIPLEX = '(\\[(' + TOSS + 'x?)+\\])';
 		var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
 		var PATTERN = new RegExp('^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$');
 
