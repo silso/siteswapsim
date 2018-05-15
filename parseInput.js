@@ -44,6 +44,19 @@ $(document).ready(function() {
 		copyText.value = window.location.href.replace(/[?&]p=.+?(?=&|$)/, '') + "?p=" + encodeText;
 	}
 
+	function addCustomPresetCard(preset, imported) {
+		preset.index = customPresetArr.length;
+		preset.custom = true;
+		let card = makeCardElement(Object.assign({}, preset), imported);
+		document.getElementById('customPresets').appendChild(card); //add card to custom presets
+		updateCurrentPreset(card);
+
+		customPresetArr.push(preset); //add to custom preset array by value
+
+		document.getElementById('updatePreset').disabled = false;
+		updatePreset.title = 'change the name, description or siteswap of your preset';
+	}
+
 	//DOM objects
 	var siteswapForm = document.getElementById('siteswapForm');
 	var siteswapInput = document.getElementById('siteswapInput');
@@ -244,7 +257,7 @@ $(document).ready(function() {
 	}
 
 	//takes in preset object, returns card element
-	var makeCardElement = function(preset) {
+	var makeCardElement = function(preset, imported) {
 		let card, p, strong, text, hr;
 		card = document.createElement('DIV');
 		card.classList.add('presetCard');
@@ -252,8 +265,13 @@ $(document).ready(function() {
 		p = document.createElement('P');
 		p.classList.add('presetName');
 		strong = document.createElement('STRONG');
-		text = document.createTextNode(preset.name);
-		strong.appendChild(text);
+		if (imported) {
+			strong.innerHTML = '<em>' + preset.name + '</em>';
+		}
+		else {
+			text = document.createTextNode(preset.name);
+			strong.appendChild(text);
+		}
 		p.appendChild(strong);
 		card.appendChild(p); //name
 		hr = document.createElement('HR');
@@ -283,7 +301,7 @@ $(document).ready(function() {
 	var makeCards = function(arr, container) {
 		container = document.getElementById(container);
 		for (let i = 0; i < arr.length; i++) {
-			let card = makeCardElement(Object.assign({}, arr[i]));
+			let card = makeCardElement(Object.assign({}, arr[i]), false);
 
 			container.appendChild(card);
 		}
@@ -342,7 +360,12 @@ $(document).ready(function() {
 	}
 
 	document.getElementById('currentPresetWrapper').onclick = function() {
-		examplePresets.dialog('open');
+		if (preset.custom) {
+			customPresets.dialog('open');
+		}
+		else {
+			examplePresets.dialog('open');
+		}
 	}
 
 	document.getElementById('customPresetButton').onclick = function() {
@@ -369,22 +392,13 @@ $(document).ready(function() {
 
 		preset.name = document.getElementById('presetName').value;
 		preset.description = document.getElementById('presetDescription').value;
-		preset.index = customPresetArr.length;
-		preset.custom = true;
-		let card = makeCardElement(Object.assign({}, preset));
-		document.getElementById('customPresets').appendChild(card); //add card to custom presets
-		updateCurrentPreset(card);
-
-		customPresetArr.push(preset); //add to custom preset array by value
-
-		document.getElementById('updatePreset').disabled = false;
-		updatePreset.title = 'change the name, description or siteswap of your preset';
+		addCustomPresetCard(preset, false);
 	}
 
 	document.getElementById('updatePreset').onclick = function() {
 		preset.name = document.getElementById('presetName').value;
 		preset.description = document.getElementById('presetDescription').value;
-		let newCard = makeCardElement(Object.assign({}, preset));
+		let newCard = makeCardElement(Object.assign({}, preset), false);
 
 		//replace card in custom cards
 		var customPresets = document.getElementById('customPresets');
@@ -421,6 +435,10 @@ $(document).ready(function() {
 		let loadText = getParameterByName('p', document.getElementById('presetShareLoadText').value);
 		let newPreset = decodePreset(decode(loadText));
 		loadPreset(newPreset);
+		preset.index = customPresetArr.length;
+		preset.name = "imported " + (preset.index + 1);
+		preset.description = "imported " + (new Date).toLocaleString();
+		addCustomPresetCard(preset, true);
 	}
 
 	//</editor-fold> PRESET OPTIONS *********************************************
@@ -1063,9 +1081,17 @@ $(document).ready(function() {
 	};
 
 	let p = getParameterByName('p');
-	if (p === null) loadPreset(examplePresetArr[0]);
-	else loadPreset(decodePreset(decode(p)));
-	updateCurrentPreset(document.getElementsByClassName('presetCard')[1]);
+	if (p === null) {
+		loadPreset(examplePresetArr[0]);
+		updateCurrentPreset(document.getElementsByClassName('presetCard')[1]);
+	}
+	else {
+		loadPreset(decodePreset(decode(p)));
+		preset.index = customPresetArr.length;
+		preset.name = "imported " + (preset.index + 1);
+		preset.description = "imported " + (new Date).toLocaleString();
+		addCustomPresetCard(preset, true);
+	}
 
 	//</editor-fold> LADDER DIAGRAM *********************************************
 	//</editor-fold> INPUT ******************************************************

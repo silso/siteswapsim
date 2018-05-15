@@ -37,11 +37,11 @@ function encodePreset(pre) {
    if (pre.beats.custom) {
       result[0] = [];
       for (i in pre.beats.left) {
-         result[0][i] = pre.beats.left[i]*BEATFACTOR;
+         result[0][i] = Math.floor(pre.beats.left[i]*BEATFACTOR);
       }
       result[1] = [];
       for (i in pre.beats.right) {
-         result[1][i] = pre.beats.right[i]*BEATFACTOR;
+         result[1][i] = Math.floor(pre.beats.right[i]*BEATFACTOR);
       }
    }
    else {

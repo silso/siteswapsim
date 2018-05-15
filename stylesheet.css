@@ -227,7 +227,7 @@ body {
 
 #presetName {
 	display: block;
-	width: calc(100% - 2px);
+	width: calc(100% - 4px);
 	margin-bottom: 5px;
 	padding-left: 2px;
 }
