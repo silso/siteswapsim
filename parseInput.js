@@ -17,6 +17,37 @@ var examplePresetArr = [];
 var customPresetArr = [];
 
 $(document).ready(function() {
+
+// //*/
+// a();
+// /*/
+// b();
+// //*/
+
+	Function.prototype.clone = function() {
+		var that = this;
+		var temp = function temporary() { return that.apply(this, arguments); };
+		for (let key in this ) {
+			temp[key] = this[key];
+		}
+		return temp;
+	};
+	function copyObject(obj, newObj) {
+		for (let prop in obj) {
+			if (obj[prop] instanceof Array) {
+				newObj[prop] = obj[prop].slice(0);
+			}
+			else if (typeof obj[prop] != "function" && obj[prop] instanceof Object) {
+				newObj[prop] = {};
+				copyObject(obj[prop], newObj[prop]);
+			} else if (typeof obj[prop] == "function") {
+				newObj[prop] = obj[prop].clone();
+			} else {
+				newObj[prop] = JSON.parse(JSON.stringify(obj[prop]));
+			}
+		}
+	}
+
 	//local storage
 	if (typeof(Storage) !== 'undefined') {
 		var storage = localStorage.getItem('customPresetArr');
@@ -73,8 +104,10 @@ $(document).ready(function() {
 		document.getElementById('customPresets').appendChild(card); //add card to custom presets
 		updateCurrentPreset(card, true);
 
-		console.log(preset);
-		customPresetArr.push(preset); //add to custom preset array by value
+		var newPreset = {};
+		copyObject(preset, newPreset);
+		newPreset.site = new Siteswap(newPreset.site.siteStr);
+		customPresetArr.push(newPreset); //add to custom preset array by value
 
 		document.getElementById('updatePreset').disabled = false;
 		updatePreset.title = 'change the name, description or siteswap of your preset';
@@ -296,16 +329,19 @@ $(document).ready(function() {
 	}
 
 	//takes in preset object, returns card element
-	var makeCardElement = function(preset, imported) {
+	var makeCardElement = function(presetParam, imported) {
 		let customPresetsH = document.getElementById('customPresets');
 		let card, p, strong, b, sp, text, hr;
 		card = document.createElement('DIV');
+		var newPreset = {};
+		copyObject(presetParam, newPreset);
+		card.preset = newPreset;
 		card.index = customPresetsH.childNodes.length;
 		card.classList.add('presetCard');
 		card.classList.add('pointer');
 
 		//add delete preset button if it is a custom preset
-		if (preset.custom) {
+		if (presetParam.custom) {
 			b = document.createElement('BUTTON');
 			sp = document.createElement('SPAN');
 			sp.classList.add('ui-icon');
@@ -318,18 +354,13 @@ $(document).ready(function() {
 
 				//update the indexes of presets that follow the deleted preset
 				var i = Array.prototype.indexOf.call(e.currentTarget.parentNode.parentNode.childNodes, e.currentTarget.parentNode);
-				console.log(i);
-				console.log(preset.index);
-				// if (preset.index > i) {
-				// 	preset.index -= 1;
-				// }
+				if (preset.index > i) {
+					preset.index -= 1;
+				}
 				customPresetArr = customPresetArr.slice(0, i).concat(customPresetArr.slice(i + 1));
-				console.log(customPresetArr);
 				customPresetsH.removeChild(card);
 				for (; i < customPresetArr.length; i++) {
 					customPresetArr[i].index = i;
-					console.log(customPresetsH.childNodes[i].index);
-					//customPresetsH.childNodes[i].index = i;
 				}
 
 
@@ -342,10 +373,10 @@ $(document).ready(function() {
 		p.classList.add('presetName');
 		strong = document.createElement('STRONG');
 		if (imported) {
-			strong.innerHTML = '<em>' + preset.name + '</em>';
+			strong.innerHTML = '<em>' + presetParam.name + '</em>';
 		}
 		else {
-			text = document.createTextNode(preset.name);
+			text = document.createTextNode(presetParam.name);
 			strong.appendChild(text);
 		}
 		p.appendChild(strong);
@@ -354,19 +385,18 @@ $(document).ready(function() {
 		card.appendChild(hr); //horizontal line
 		p = document.createElement('P');
 		p.classList.add('presetSiteswap');
-		text = document.createTextNode(preset.site.siteStr);
+		text = document.createTextNode(presetParam.site.siteStr);
 		p.appendChild(text);
 		card.appendChild(p); //siteswap
 		p = document.createElement('P');
 		p.classList.add('presetDescription');
-		text = document.createTextNode(preset.description);
+		text = document.createTextNode(presetParam.description);
 		p.appendChild(text);
 		card.appendChild(p); //description
 
 		card.onclick = function() {
-			loadPreset(preset);
-			console.log(preset.custom);
-			updateCurrentPreset(card, preset.custom);
+			loadPreset(card.preset);
+			updateCurrentPreset(card, card.preset.custom);
 			examplePresets.dialog('close');
 			customPresets.dialog('close');
 		}
@@ -483,11 +513,16 @@ $(document).ready(function() {
 		preset.description = document.getElementById('presetDescription').value;
 		let newCard = makeCardElement(Object.assign({}, preset), false);
 
-		//replace card in custom cards
 		var customPresets = document.getElementById('customPresets');
-		var oldCard = customPresets.childNodes[preset.index];
-		customPresets.removeChild(oldCard);
-		customPresets.insertBefore(newCard, customPresets.childNodes[preset.index]);
+		if (preset.index > customPresetArr.length) {
+			//replace card in custom cards
+			var oldCard = customPresets.childNodes[preset.index];
+			customPresets.removeChild(oldCard);
+			customPresets.insertBefore(newCard, customPresets.childNodes[preset.index]);
+		}
+		else {
+			addCustomPresetCard(preset, false);
+		}
 
 		//update current preset card
 		updateCurrentPreset(newCard, preset.custom);
