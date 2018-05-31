@@ -17,26 +17,27 @@ var examplePresetArr = [];
 var customPresetArr = [];
 
 $(document).ready(function() {
-	//cookies
-	function bakeCookie(name, value) {
-		var cookie = [name, '=', JSON.stringify(value), '; domain=.', window.location.host.toString(), '; path=/;'].join('');
-		console.log(cookie);
-		document.cookie = cookie;
+	//local storage
+	if (typeof(Storage) !== 'undefined') {
+		var storage = localStorage.getItem('customPresetArr');
+		if (storage) {
+			customPresetArr = JSON.parse(storage);
+		}
 	}
-	function readCookie(name) {
-		var result = document.cookie.match(new RegExp(name + '=([^;]+)'));
-		result && (result = JSON.parse(result[1]));
-		return result;
-	}
-	function deleteCookie(name) {
-		document.cookie = [name, '=; expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/; domain=.', window.location.host.toString()].join('');
+	else {
+		console.log('no local storage support!');
 	}
 
-	var customPresetCookie = readCookie(customPresetArr);
-	if (customPresetCookie) {
-		console.log('here');
-		customPresetArr = customPresetCookie;
+	function updateLocalStorage() {
+		//refresh local storage
+		localStorage.setItem('customPresetArr', JSON.stringify(customPresetArr));
 	}
+
+	$('.deleteCard').button( {
+		// label: $( "<a>" ).text( this.options.closeText ).html(),
+		icon: "ui-icon-closethick",
+		showLabel: false
+	} );
 
 	function clone(obj){
    	if (obj == null || typeof(obj) != 'object')
@@ -70,14 +71,15 @@ $(document).ready(function() {
 		preset.custom = true;
 		let card = makeCardElement(Object.assign({}, preset), imported);
 		document.getElementById('customPresets').appendChild(card); //add card to custom presets
-		updateCurrentPreset(card);
+		updateCurrentPreset(card, true);
 
+		console.log(preset);
 		customPresetArr.push(preset); //add to custom preset array by value
 
 		document.getElementById('updatePreset').disabled = false;
 		updatePreset.title = 'change the name, description or siteswap of your preset';
 
-		bakeCookie('customPresetArr', customPresetArr);
+		updateLocalStorage();
 	}
 
 	//DOM objects
@@ -274,11 +276,17 @@ $(document).ready(function() {
 	}
 
 	//set the "current preset" to a given card
-	var updateCurrentPreset = function(presetCard) {
+	var updateCurrentPreset = function(presetCard, custom) {
 		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
 		var current = document.getElementById('currentPreset');
 		var newNode = presetCard.cloneNode(true);
 		newNode.id = 'currentPreset';
+
+		//remove delete button if it is a custom preset card
+		if (custom) {
+			var closeButton = newNode.childNodes[0];
+			newNode.removeChild(closeButton);
+		}
 
 		currentPresetWrapper.removeChild(current);
 		currentPresetWrapper.appendChild(newNode);
@@ -289,10 +297,47 @@ $(document).ready(function() {
 
 	//takes in preset object, returns card element
 	var makeCardElement = function(preset, imported) {
-		let card, p, strong, text, hr;
+		let customPresetsH = document.getElementById('customPresets');
+		let card, p, strong, b, sp, text, hr;
 		card = document.createElement('DIV');
+		card.index = customPresetsH.childNodes.length;
 		card.classList.add('presetCard');
 		card.classList.add('pointer');
+
+		//add delete preset button if it is a custom preset
+		if (preset.custom) {
+			b = document.createElement('BUTTON');
+			sp = document.createElement('SPAN');
+			sp.classList.add('ui-icon');
+			sp.classList.add('ui-icon-trash');
+			b.appendChild(sp);
+			b.title = 'delete preset';
+			b.className += 'ui-button ui-corner-all ui-widget ui-button-icon-only deleteButton';
+			b.onclick = function(e) {
+				e.stopPropagation(); //stop the click from selecting this preset
+
+				//update the indexes of presets that follow the deleted preset
+				var i = Array.prototype.indexOf.call(e.currentTarget.parentNode.parentNode.childNodes, e.currentTarget.parentNode);
+				console.log(i);
+				console.log(preset.index);
+				// if (preset.index > i) {
+				// 	preset.index -= 1;
+				// }
+				customPresetArr = customPresetArr.slice(0, i).concat(customPresetArr.slice(i + 1));
+				console.log(customPresetArr);
+				customPresetsH.removeChild(card);
+				for (; i < customPresetArr.length; i++) {
+					customPresetArr[i].index = i;
+					console.log(customPresetsH.childNodes[i].index);
+					//customPresetsH.childNodes[i].index = i;
+				}
+
+
+				updateLocalStorage();
+			}
+			card.appendChild(b);
+		}
+
 		p = document.createElement('P');
 		p.classList.add('presetName');
 		strong = document.createElement('STRONG');
@@ -320,7 +365,8 @@ $(document).ready(function() {
 
 		card.onclick = function() {
 			loadPreset(preset);
-			updateCurrentPreset(card);
+			console.log(preset.custom);
+			updateCurrentPreset(card, preset.custom);
 			examplePresets.dialog('close');
 			customPresets.dialog('close');
 		}
@@ -444,7 +490,7 @@ $(document).ready(function() {
 		customPresets.insertBefore(newCard, customPresets.childNodes[preset.index]);
 
 		//update current preset card
-		updateCurrentPreset(newCard);
+		updateCurrentPreset(newCard, preset.custom);
 
 		customPresetArr[preset.index] = Object.assign({}, preset);
 	}

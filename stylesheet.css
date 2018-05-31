@@ -190,6 +190,23 @@ body {
 	word-wrap: break-word;
 }
 
+.deleteButton {
+	float: right;
+	height: 25px !important;
+	width: 25px !important;
+	/* padding: 0 !important; */
+	margin-top: -10px;
+	margin-right: -10px;
+	background-color: white;
+	border: 0;
+
+
+}
+
+.deleteButton:focus, .deleteButton:hover {
+	border: 0;
+}
+
 .presetSiteswap {
 	color: #007fff;
 	margin: 3px 0 3px 0;
