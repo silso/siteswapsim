@@ -18,12 +18,14 @@ var customPresetArr = [];
 
 $(document).ready(function() {
 
-// //*/
-// a();
-// /*/
-// b();
-// //*/
+	//DOM objects
+	var siteswapForm = document.getElementById('siteswapForm');
+	var siteswapInput = document.getElementById('siteswapInput');
+	var siteswapOptionsForm = document.getElementById('siteswapOptionsForm');
+	var repeatCount = document.getElementById('repeatCount');
 
+//<editor-fold> FUNCTIONS ***************************************************
+	//copy object functions
 	Function.prototype.clone = function() {
 		var that = this;
 		var temp = function temporary() { return that.apply(this, arguments); };
@@ -48,150 +50,75 @@ $(document).ready(function() {
 		}
 	}
 
-	//local storage
-	if (typeof(Storage) !== 'undefined') {
-		var storage = localStorage.getItem('customPresetArr');
-		if (storage) {
-			customPresetArr = JSON.parse(storage);
+	//<editor-fold> SITESWAP ENTRY **********************************************
+	//create siteswap and preset objects from entry
+	function parseInput(input) {
+		var siteString = String(input).toLowerCase();
+		siteString = siteString.replace(/\s/g, ''); //remove spaces
+		//SYNTAX CHECKER
+		//Modified (stolen) from gunswap.co
+		var SIMPLETOSS = '(\\d|[a-w])';
+		var CUSTOMTOSS = '(\\{\\d+\\})';
+		var TOSS = '(' + SIMPLETOSS + '|' + CUSTOMTOSS + ')';
+		var MULTIPLEX = '(\\[' + TOSS + '+\\])';
+		var SYNCMULTIPLEX = '(\\[(' + TOSS + 'x?)+\\])';
+		var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
+		var PATTERN = new RegExp('(^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$)|🤹');
+
+		var error = document.getElementById('siteswapEntryError');
+		if(!PATTERN.test(siteString)) {
+			error.innerHTML = 'Invalid syntax';
+			error.style.visibility = 'visible';
+			error.title = 'You may be using some incorrect characters. See the preset tab for a guide';
 		}
-	}
-	else {
-		console.log('no local storage support!');
-	}
-
-	function updateLocalStorage() {
-		//refresh local storage
-		localStorage.setItem('customPresetArr', JSON.stringify(customPresetArr));
-	}
-
-	$('.deleteCard').button( {
-		// label: $( "<a>" ).text( this.options.closeText ).html(),
-		icon: "ui-icon-closethick",
-		showLabel: false
-	} );
-
-	function clone(obj){
-   	if (obj == null || typeof(obj) != 'object')
-       	return obj;
-
-   	var temp = new obj.constructor();
-   	for (var key in obj)
-      	temp[key] = clone(obj[key]);
-
-   	return temp;
-	}
-
-	function getParameterByName(name, url) {
-		if (!url) url = window.location.href;
-			name = name.replace(/[\[\]]/g, "\\$&");
-		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-			results = regex.exec(url);
-		if (!results) return null;
-		if (!results[2]) return '';
-		return decodeURIComponent(results[2].replace(/\+/g, " "));
-	}
-
-	function setShareLinkCopyText() {
-		let copyText = document.getElementById('presetShareCopyText');
-		let encodeText = encode(encodePreset(preset));
-		copyText.value = window.location.href.replace(/[?&]p=.+?(?=&|$)/, '') + "?p=" + encodeText;
-	}
-
-	function addCustomPresetCard(preset, imported) {
-		preset.index = customPresetArr.length;
-		preset.custom = true;
-		let card = makeCardElement(Object.assign({}, preset), imported);
-		document.getElementById('customPresets').appendChild(card); //add card to custom presets
-		updateCurrentPreset(card, true);
-
-		var newPreset = {};
-		copyObject(preset, newPreset);
-		newPreset.site = new Siteswap(newPreset.site.siteStr);
-		customPresetArr.push(newPreset); //add to custom preset array by value
-
-		document.getElementById('updatePreset').disabled = false;
-		updatePreset.title = 'change the name, description or siteswap of your preset';
-
-		updateLocalStorage();
-	}
-
-	//DOM objects
-	var siteswapForm = document.getElementById('siteswapForm');
-	var siteswapInput = document.getElementById('siteswapInput');
-	var repeatCount = document.getElementById('repeatCount');
-
-	//adding input options automatically
-	var siteswapOptionsForm = document.getElementById('siteswapOptionsForm');
-	var optInputs = [
-		//starting value for time between any throw and catch (in slider length units)
-		{
-			id: 'throwTime',
-			entryName: 'throw time:',
-			description: 'Default time spent without a ball in hand',
-			defaultValue: 0.5,
-			logSpin: false,
-			step: 0.05
-		},
-		//smallest allowed value for dwell time (default dwell time is 1 - throwTime)
-		{id:'dwellLimit',entryName:'dwell limit:',description:'Limits how soon you can throw a ball after catching it',defaultValue:0.4,logSpin:false,step:0.05},
-		//smallest allowed value to throw one ball then catch a different ball in the same hand
-		{id:'throwLimit',entryName:'throw limit:',description:'Limits how soon you can catch a ball after throwing one',defaultValue:0.25,logSpin:false,step:0.05},
-		//smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
-		{id:'speedLimit',entryName:'speed limit:',description:'Limits how fast a ball can be thrown then caught',defaultValue:0.4,logSpin:false,step:0.05},
-		//multiplier for how fast time goes
-		{id:'speedMultiplier',entryName:'speed multiplier:',description:'Changes how fast time moves',defaultValue:1,logSpin:true,step:0.0000000000001},
-		//adjusts rhythm to juggle faster without affecting apparent gravity
-		{id:'paceMultiplier',entryName:'pace multiplier:',description:'Changes how fast the juggler tries to juggle',defaultValue:1,logSpin:true,step:0.0000000000001}
-	];
-	//append each option to the siteswap tab along with their spinners
-	for (let i = 0; i < optInputs.length; i++) {
-		siteswapOptionsForm.innerHTML += "																										\
-			<div id='"+optInputs[i].id+"Container' class='spinnerContainer' title='"+optInputs[i].description+"'>			\
-				<label for='"+optInputs[i].id+"' class='ui-widget'>"+optInputs[i].entryName+"</label>							\
-				<input id='"+optInputs[i].id+"' name='value' type='number' step='"+optInputs[i].step+"'> 						\
-			</div>";
-	}
-	//submit button at the end
-	siteswapOptionsForm.innerHTML += "<input type='submit' value='Apply changes' class='ui-button ui-widget ui-corner-all'>";
-	//need to set element pointers after dom editing otherwise the pointers lose track
-	for (let i = 0; i < optInputs.length; i++) {
-		optInputs[i].element = document.getElementById(optInputs[i].id);
-	}
-
-
-	//allow resizing of user entry
-	$('#userEntryWrapper').resizable({
-		handles: 'e',
-		minWidth: 310
-	});
-	//intialize tabs
-	$('#tabs').tabs();
-	//disable ladder tab until preset is entered
-	$('#tabs').tabs('disable', '#ladderDiagram');
-
-	//<editor-fold> INFO ********************************************************
-	$('#accordion').accordion({
-		animate: 0,
-		heightStyle: 'content',
-		activate: function(event, ui) {
-			//stop video from playing when changing header
-			if (ui.newHeader[0].id != 'welcome') {
-				document.getElementById('introVid').src = '/default.asp';
-				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+		else if (siteString == '🤹') {
+			var index = preset.index;
+			preset = new Preset(new Siteswap('3'));
+			preset.index = index;
+			preset.site.siteStr = '🤹';
+			initPreset(preset, true);
+			printInfo(preset);
+			resetLadder();
+		}
+		else {
+			var site = new Siteswap(siteString);
+			if (!site.valid) {
+				error.innerHTML = 'Invalid pattern';
+				error.style.visibility = 'visible';
+				error.title = 'Throws are colliding in your pattern. See the preset tab for a guide';
 			}
+			else if (!site.site[0]) {
+				error.innerHTML = '0 at start';
+				error.style.visibility = 'visible';
+				error.title = 'Ladder diagram needs a throw on the first beat, cycle your pattern one beat';
+			}
+			else { //if pattern valid
+				error.style.visibility = 'hidden';
+				error.title = '';
 
+				var index = preset.index;
+				preset = new Preset(new Siteswap(siteString)); //new Siteswap to pass by value and keep methods
+				preset.index = index;
+				initPreset(preset, true);
+				printInfo(preset);
+				resetLadder();
+			}
 		}
-	});
-	// maybe add url navigation?
-	// $('#accordion').accordion({
-	// 	header: 'h3',
-	// 	navigation: true
-	// });
+	}
 
-	//</editor-fold> INFO *******************************************************
+	siteswapForm.onsubmit = function(e) {
+		e.preventDefault();
+		parseInput(siteswapInput.value);
 
-	//<editor-fold> PRESET DEFINITION *******************************************
-	var Preset = function(site, params = ['a', 'b', 1, true], options = [1, 1, 1, 1, 1, 1, 1, 1]) {
+      animationInstance = undefined;
+      animationInstance = new AnimationScript();
+      animationInstance.init(preset, false);
+	}
+	//</editor-fold> SITESWAP ENTRY *********************************************
+
+	//<editor-fold> PRESET ******************************************************
+		//<editor-fold> PRESET DEFINITION *******************************************
+	function Preset(site, params = ['a', 'b', 1, true], options = [1, 1, 1, 1, 1, 1, 1, 1]) {
 		//this class holds the config of the siteswap, including rhythm.
 
 		this.site = site; //siteswap object
@@ -214,13 +141,13 @@ $(document).ready(function() {
 		// 	makeColors(this);
 		// }
 	}
-	var initPreset = function(preset, isNew) {
+	function initPreset(preset, isNew) {
 		if (isNew) getAttributes(preset); //user entered
 		else preset.throwInfo = preset.site.printThrowInfo(preset.repeats); //example preset
 		makeBeats(preset);
 		if (preset.colors === undefined) makeColors(preset);
 	}
-	var makeBeats = function(preset) {
+	function makeBeats(preset) {
 		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
 		preset.beats = {left: [], right: []};
 		preset.beats.left.push(0);
@@ -232,10 +159,10 @@ $(document).ready(function() {
 			preset.beats.right.push(i - syncDiff); //right hand throw time
 		}
 	}
-	var makeThrowInfo = function(preset, repeats) {
+	function makeThrowInfo(preset, repeats) {
 		preset.throwInfo = preset.site.printThrowInfo(repeats);
 	}
-	var makeColors = function(preset) {
+	function makeColors(preset) {
 		preset.colors = [];
 		for (let i = 0; i < preset.site.loops.length; i++) {
 			preset.colors.push("rgb(" +
@@ -244,7 +171,7 @@ $(document).ready(function() {
 				Math.floor(Math.random()*192 + 32) + ")");
 		}
 	}
-	var setForms = function(preset) {
+	function setForms(preset) {
 		//take attributes and put them into input forms
 		siteswapInput.value = preset.site.siteStr;
 		//options attributes
@@ -253,7 +180,7 @@ $(document).ready(function() {
 		}
 		repeatCount.value = preset.repeats;
 	}
-	var getAttributes = function(preset) {
+	function getAttributes(preset) {
 		//take attributes from forms and put into preset
 		//options attributes
 		for (let i = 0; i < optInputs.length; i++) {
@@ -262,7 +189,7 @@ $(document).ready(function() {
 		preset.repeats = parseFloat(repeatCount.value);
 		preset.throwInfo = preset.site.printThrowInfo(preset.repeats);
 	}
-	var printInfo = function(preset) {
+	function printInfo(preset) {
 		console.log('siteswap array:', preset.site.printArray());
 		console.table({
 			'valid': preset.site.isValid(),
@@ -277,59 +204,12 @@ $(document).ready(function() {
 			['repeatCount', preset.repeats]
 		]);
 	}
-	//</editor-fold> PRESET DEFINITION ******************************************
+		//</editor-fold> PRESET DEFINITION ******************************************
 
-	//<editor-fold> PRESET OPTIONS **********************************************
-	var loadPreset = function(pr) {
-		preset = Object.assign({}, pr);
-		preset.index = pr.index;
-		setForms(preset);
-		resetLadder();
-
-
-		var updatePreset = document.getElementById('updatePreset');
-		if (preset.custom) {
-			updatePreset.disabled = false;
-			updatePreset.title = 'change the name, description or siteswap of your preset';
-		}
-		else {
-			updatePreset.disabled = true;
-			updatePreset.title = 'cannot change information of example presets (press save preset first)';
-		}
-
-		document.getElementById('siteswapEntryError').style.visibility = 'hidden';
-
-		setShareLinkCopyText();
-
-		//unsure if this is needed
-      // animationInstance = undefined;
-      // animationInstance = new AnimationScript();
-		if (animationInstance === undefined) animationInstance = new AnimationScript();
-      animationInstance.init(preset, false);
-	}
-
-	//set the "current preset" to a given card
-	var updateCurrentPreset = function(presetCard, custom) {
-		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
-		var current = document.getElementById('currentPreset');
-		var newNode = presetCard.cloneNode(true);
-		newNode.id = 'currentPreset';
-
-		//remove delete button if it is a custom preset card
-		if (custom) {
-			var closeButton = newNode.childNodes[0];
-			newNode.removeChild(closeButton);
-		}
-
-		currentPresetWrapper.removeChild(current);
-		currentPresetWrapper.appendChild(newNode);
-
-		// current.replaceWith(newNode);
-		// newNode.id = 'currentPreset';
-	}
-
+		//<editor-fold> PRESET OPTIONS **********************************************
+			//<editor-fold> CARDS *******************************************************
 	//takes in preset object, returns card element
-	var makeCardElement = function(presetParam, imported) {
+	function makeCardElement(presetParam, imported) {
 		let customPresetsH = document.getElementById('customPresets');
 		let card, p, strong, b, sp, text, hr;
 		card = document.createElement('DIV');
@@ -404,8 +284,46 @@ $(document).ready(function() {
 		return card;
 	}
 
+	//set the "current preset" to a given card
+	function updateCurrentPreset(presetCard, custom) {
+		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
+		var current = document.getElementById('currentPreset');
+		var newNode = presetCard.cloneNode(true);
+		newNode.id = 'currentPreset';
+
+		//remove delete button if it is a custom preset card
+		if (custom) {
+			var closeButton = newNode.childNodes[0];
+			newNode.removeChild(closeButton);
+		}
+
+		currentPresetWrapper.removeChild(current);
+		currentPresetWrapper.appendChild(newNode);
+
+		// current.replaceWith(newNode);
+		// newNode.id = 'currentPreset';
+	}
+
+	function addCustomPresetCard(preset, imported) {
+		preset.index = customPresetArr.length;
+		preset.custom = true;
+		let card = makeCardElement(Object.assign({}, preset), imported);
+		document.getElementById('customPresets').appendChild(card); //add card to custom presets
+		updateCurrentPreset(card, true);
+
+		var newPreset = {};
+		copyObject(preset, newPreset);
+		newPreset.site = new Siteswap(newPreset.site.siteStr);
+		customPresetArr.push(newPreset); //add to custom preset array by value
+
+		document.getElementById('updatePreset').disabled = false;
+		updatePreset.title = 'change the name, description or siteswap of your preset';
+
+		updateLocalStorage();
+	}
+
 	//push into example presets dialog
-	var makeCards = function(arr, container) {
+	function makeCards(arr, container) {
 		container = document.getElementById(container);
 		for (let i = 0; i < arr.length; i++) {
 			let card = makeCardElement(Object.assign({}, arr[i]), false);
@@ -413,57 +331,65 @@ $(document).ready(function() {
 			container.appendChild(card);
 		}
 	}
+			//</editor-fold> CARDS ******************************************************
 
-	//fill example preset array
-	var pr;
-	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
-	initPreset(pr, false);
-	examplePresetArr.push(pr);
-	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
-	initPreset(pr, false);
-	examplePresetArr.push(pr);
+	//local storage
+	function updateLocalStorage() {
+		//refresh local storage
+		localStorage.setItem('customPresetArr', JSON.stringify(customPresetArr));
+	}
 
-	makeCards(examplePresetArr, 'examplePresets');
-	makeCards(customPresetArr, 'customPresets');
+	//share link functions
+	function getParameterByName(name, url) {
+		if (!url) url = window.location.href;
+			name = name.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+			results = regex.exec(url);
+		if (!results) return null;
+		if (!results[2]) return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
 
-	var examplePresets = $('#examplePresets');
-	examplePresets.dialog({
-		autoOpen: false,
-		show: {
-			effect: 'fade',
-			duration: 100
-		},
-		hide: {
-			effect: 'fade',
-			duration: 100
-		},
-		resizable: false,
-		draggable: false,
-		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
-		height: $('#tabs').height() - $('#tabNames').height() - 14,
-		width: $('#tabs').width() - 20
-	});
+	function setShareLinkCopyText() {
+		let copyText = document.getElementById('presetShareCopyText');
+		let encodeText = encode(encodePreset(preset));
+		copyText.value = window.location.href.replace(/[?&]p=.+?(?=&|$)/, '') + "?p=" + encodeText;
+	}
 
-	var customPresets = $('#customPresets');
-	customPresets.dialog({
-		autoOpen: false,
-		show: {
-			effect: 'fade',
-			duration: 100
-		},
-		hide: {
-			effect: 'fade',
-			duration: 100
-		},
-		resizable: false,
-		draggable: false,
-		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
-		height: $('#tabs').height() - $('#tabNames').height() - 14,
-		width: $('#tabs').width() - 20
-	});
+	//load a preset into forms, set ladder, do other stuff to make preset show
+	function loadPreset(pr) {
+		preset = Object.assign({}, pr);
+		preset.index = pr.index;
+		setForms(preset);
+		resetLadder();
+
+
+		var updatePreset = document.getElementById('updatePreset');
+		if (preset.custom) {
+			updatePreset.disabled = false;
+			updatePreset.title = 'change the name, description or siteswap of your preset';
+		}
+		else {
+			updatePreset.disabled = true;
+			updatePreset.title = 'cannot change information of example presets (press save preset first)';
+		}
+
+		document.getElementById('siteswapEntryError').style.visibility = 'hidden';
+
+		setShareLinkCopyText();
+
+		//unsure if this is needed
+      // animationInstance = undefined;
+      // animationInstance = new AnimationScript();
+		if (animationInstance === undefined) animationInstance = new AnimationScript();
+      animationInstance.init(preset, false);
+	}
 
 	document.getElementById('examplePresetButton').onclick = function() {
 		examplePresets.dialog('open');
+	}
+	document.getElementById('customPresetButton').onclick = function() {
+		customPresets.dialog('open');
 	}
 
 	document.getElementById('currentPresetWrapper').onclick = function() {
@@ -474,31 +400,6 @@ $(document).ready(function() {
 			examplePresets.dialog('open');
 		}
 	}
-
-	document.getElementById('customPresetButton').onclick = function() {
-		customPresets.dialog('open');
-	}
-
-	//close dialog when another tab is selected
-	$('#tabs').tabs({
-		activate: function(event, ui) {
-			examplePresets.dialog('close');
-			customPresets.dialog('close');
-			//use Array.prototype.indexOf.call to find the index of the active tab among all of the tabs
-			//this strange usage of indexOf is because what we're searching is a NodeList, not an array
-			//subtract 1 and divide by 2 because of random text elements between its siblings
-			let index = (Array.prototype.indexOf.call(ui.newTab[0].parentNode.childNodes, ui.newTab[0]) - 1) / 2;
-			if (index === 1) {
-				setShareLinkCopyText();
-			}
-
-			//stop video from playing when changing tabs
-			if (index != 0) {
-				document.getElementById('introVid').src = '/default.asp';
-				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
-			}
-		}
-	});
 
 	document.getElementById('presetInfoForm').onsubmit = function(e) {
 		e.preventDefault();
@@ -558,122 +459,10 @@ $(document).ready(function() {
 		preset.description = "imported " + (new Date).toLocaleString();
 		addCustomPresetCard(preset, true);
 	}
+		//</editor-fold> PRESET OPTIONS *********************************************
+	//</editor-fold> PRESET *****************************************************
 
-	//</editor-fold> PRESET OPTIONS *********************************************
-
-	//<editor-fold> INPUT *******************************************************
-	//<editor-fold> SITESWAP ENTRY **********************************************
-	siteswapForm.onsubmit = function(e) {
-		e.preventDefault();
-		parseInput(siteswapInput.value);
-
-      animationInstance = undefined;
-      animationInstance = new AnimationScript();
-      animationInstance.init(preset, false);
-	}
-
-	//create siteswap and preset objects from entry
-	var parseInput = function(input) {
-		var siteString = String(input).toLowerCase();
-		siteString = siteString.replace(/\s/g, ''); //remove spaces
-		//SYNTAX CHECKER
-		//Modified (stolen) from gunswap.co
-		var SIMPLETOSS = '(\\d|[a-w])';
-		var CUSTOMTOSS = '(\\{\\d+\\})';
-		var TOSS = '(' + SIMPLETOSS + '|' + CUSTOMTOSS + ')';
-		var MULTIPLEX = '(\\[' + TOSS + '+\\])';
-		var SYNCMULTIPLEX = '(\\[(' + TOSS + 'x?)+\\])';
-		var SYNC = '\\(((' + TOSS + 'x?)|' + SYNCMULTIPLEX + '),((' + TOSS + 'x?)|' + SYNCMULTIPLEX + ')\\)';
-		var PATTERN = new RegExp('(^(' + TOSS + '|' + MULTIPLEX + ')+$|^(' + SYNC + ')+\\*?$)|🤹');
-
-		var error = document.getElementById('siteswapEntryError');
-		if(!PATTERN.test(siteString)) {
-			error.innerHTML = 'Invalid syntax';
-			error.style.visibility = 'visible';
-			error.title = 'You may be using some incorrect characters. See the preset tab for a guide';
-		}
-		else if (siteString == '🤹') {
-			var index = preset.index;
-			preset = new Preset(new Siteswap('3'));
-			preset.index = index;
-			preset.site.siteStr = '🤹';
-			initPreset(preset, true);
-			printInfo(preset);
-			resetLadder();
-		}
-		else {
-			var site = new Siteswap(siteString);
-			if (!site.valid) {
-				error.innerHTML = 'Invalid pattern';
-				error.style.visibility = 'visible';
-				error.title = 'Throws are colliding in your pattern. See the preset tab for a guide';
-			}
-			else if (!site.site[0]) {
-				error.innerHTML = '0 at start';
-				error.style.visibility = 'visible';
-				error.title = 'Ladder diagram needs a throw on the first beat, cycle your pattern one beat';
-			}
-			else { //if pattern valid
-				error.style.visibility = 'hidden';
-				error.title = '';
-
-				var index = preset.index;
-				preset = new Preset(new Siteswap(siteString)); //new Siteswap to pass by value and keep methods
-				preset.index = index;
-				initPreset(preset, true);
-				printInfo(preset);
-				resetLadder();
-			}
-		}
-	}
-	//</editor-fold> SITESWAP ENTRY *********************************************
-
-	//<editor-fold> SITESWAP OPTIONS ********************************************
-	var REPEATS = 1;
-
-	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
-	var fillWhenEmpty = function(val, id) {
-		if (document.getElementById(id).value == '') {
-			document.getElementById(id).value = val;
-		}
-	}
-	var logSpinnerConfig = {
-		step: 0.0001,
-		spin: function(event, ui) {
-			event.preventDefault();
-			//multiplier - how much it will multiply or divide when you click up or down respectively
-			let m = 1.2;
-			let spinner = $(this);
-			let curVal = spinner.spinner('value');
-			//set the upper limit (when clicking) to 12 clicks up
-			if($(event.currentTarget).hasClass('ui-spinner-up')) {
-				if (curVal*m <= Math.pow(m, 12)) {
-					spinner.spinner('value', curVal*m);
-				}
-			}
-			//set the lower limit similarly
-			else {
-				if (curVal/m >= Math.pow(m, -12)) {
-					spinner.spinner('value', curVal/m);
-				}
-			}
-			let newVal = spinner.spinner('value');
-			//if the new value is close enough to 1 just round it to it
-			if (newVal < 1.001 && newVal > 0.999) {
-				spinner.spinner('value', 1);
-			}
-		},
-		numberFormat: 'n',
-		min: 0,
-		max: 100
-	};
-
-	//initialize spinners, and make them default to specified values
-	for (let i = 0; i < optInputs.length; i++) {
-		$('#' + optInputs[i].id).spinner(optInputs[i].logSpin ? logSpinnerConfig : spinnerConfig);
-		$('#' + optInputs[i].id).blur(function() {fillWhenEmpty(optInputs[i].defaultValue, optInputs[i].id)});
-	}
-
+	//<editor-fold> SITESWAP ****************************************************
 	document.getElementById('siteswapOptionsForm').onsubmit = function(e) {
 		e.preventDefault();
 		getAttributes(preset);
@@ -690,30 +479,11 @@ $(document).ready(function() {
 		}
 		repeatCount.value = REPEATS;
 	}
-	//</editor-fold> SITESWAP OPTIONS *******************************************
+	//</editor-fold> SITESWAP ***************************************************
 
-	//<editor-fold> LADDER DIAGRAM **********************************************
-	//initialize repeat count selector
-	$('#repeatCount').spinner();
-	$('#repeatCount').blur(function() {fillWhenEmpty(REPEATS, 'repeatCount')});
-
-	//initialize reset button
-	$('#resetLadder').click(function() {
-		try {
-			var repeats = repeatCount.value;
-			makeThrowInfo(preset, repeats);
-			makeBeats(preset);
-			resetLadder();
-		}
-		catch(e) {
-			console.log(e);
-			console.log('no preset');
-		}
-	});
-
-	//<editor-fold> SLIDER FUNCS ************************************************
-	$('.slider').slider({orientation: 'vertical'}); //initialize sliders
-	var restrictHandleMovement = function(preset, ui, slider, isLeft) {
+	//<editor-fold> LADDER ******************************************************
+		//<editor-fold> SLIDERS *****************************************************
+	function restrictHandleMovement(preset, ui, slider, isLeft) {
 		var handleIndex = ui.handleIndex, //handle number, starting with 0 from bottom, index is same in beats
 			value = ui.value,
 			newValue = ui.value,
@@ -878,19 +648,10 @@ $(document).ready(function() {
 			return true;
 		}
 	});
-	//</editor-fold> SLIDER FUNCS ***********************************************
+		//</editor-fold> SLIDERS ****************************************************
 
-	//<editor-fold> CANVAS FUNCS ************************************************
-	//canvas initializations
-	var c = document.getElementById('ladderLines'); //initialize canvas
-	var ctx = c.getContext('2d');
-	c.height = $('#sliders').height() - 2; //same size as sliders, but accounting for border
-	c.width = $('#sliders').width() - 2;
-	var marginTop = parseInt($('#leftSlider').css('marginTop')) + 1; //+1 for border
-	var marginSide = parseInt($('#leftSlider').css('marginLeft')) + 4; //+4 for border and inside width
-
-	var sizeRatio;
-	var windowResize = function() {
+		//<editor-fold> CANVAS ******************************************************
+	function windowResize() {
 		ctx.transform(-1, 0, 0, 1, -marginSide, -(c.height - marginTop));
 		c.height = $('#tabs').height() - $('#tabNames').height() - 48;
 		c.width = $('#tabs').width();
@@ -915,16 +676,14 @@ $(document).ready(function() {
 		// document.getElementById('info').style.height = String($('#tabs').height() - 20) + 'px';
 		// console.log($('#tabs').height() - 20);
 	}
-	window.onresize = windowResize; //change element sizes when height changes
-	if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
 
 	//fills canvasLines array with start and end points on the canvas
-	var updateCanvasLines = function(preset, canvas, marginSide, sizeRatio) {
+	function updateCanvasLines(preset, canvas, marginSide, sizeRatio) {
 		var endTime = preset.throwInfo.endTime;
 		var canvasLines = [];
 		var zeroThrows = new Array(endTime / 2).fill(0);
 		//coordinate conversion, needs to know where y slider is (marginSide) and conversion between canvas pixels and slider values (sizeRatio)
-		var coordinateFinder = function(throwNum, isLeft, marginSide, sizeRatio) { //isThrow should be 1 or 0
+		function coordinateFinder(throwNum, isLeft, marginSide, sizeRatio) { //isThrow should be 1 or 0
 			if (isLeft) {
 				return {
 					x: 0,
@@ -1067,9 +826,9 @@ $(document).ready(function() {
 		})();
 
 	}
-	//</editor-fold> CANVAS FUNCS ***********************************************
+		//</editor-fold> CANVAS *****************************************************
 
-	var resetLadder = function() {
+	function resetLadder() {
 		$('#tabs').tabs('enable', '#ladderDiagram');
 		windowResize(); //make canvas actually have stuff
 
@@ -1208,12 +967,251 @@ $(document).ready(function() {
 			}
 		});
 		//</editor-fold> SLIDER STUFF ********************************************
+	}
+	//</editor-fold> LADDER *****************************************************
+//</editor-fold> FUNCTIONS **************************************************
+
+	//<editor-fold> OTHER *******************************************************
+	//adding input options automatically
+	var optInputs = [
+		//starting value for time between any throw and catch (in slider length units)
+		{
+			id: 'throwTime',
+			entryName: 'throw time:',
+			description: 'Default time spent without a ball in hand',
+			defaultValue: 0.5,
+			logSpin: false,
+			step: 0.05
+		},
+		//smallest allowed value for dwell time (default dwell time is 1 - throwTime)
+		{id:'dwellLimit',entryName:'dwell limit:',description:'Limits how soon you can throw a ball after catching it',defaultValue:0.4,logSpin:false,step:0.05},
+		//smallest allowed value to throw one ball then catch a different ball in the same hand
+		{id:'throwLimit',entryName:'throw limit:',description:'Limits how soon you can catch a ball after throwing one',defaultValue:0.25,logSpin:false,step:0.05},
+		//smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
+		{id:'speedLimit',entryName:'speed limit:',description:'Limits how fast a ball can be thrown then caught',defaultValue:0.4,logSpin:false,step:0.05},
+		//multiplier for how fast time goes
+		{id:'speedMultiplier',entryName:'speed multiplier:',description:'Changes how fast time moves',defaultValue:1,logSpin:true,step:0.0000000000001},
+		//adjusts rhythm to juggle faster without affecting apparent gravity
+		{id:'paceMultiplier',entryName:'pace multiplier:',description:'Changes how fast the juggler tries to juggle',defaultValue:1,logSpin:true,step:0.0000000000001}
+	];
+	//append each option to the siteswap tab along with their spinners
+	for (let i = 0; i < optInputs.length; i++) {
+		siteswapOptionsForm.innerHTML += "																										\
+			<div id='"+optInputs[i].id+"Container' class='spinnerContainer' title='"+optInputs[i].description+"'>			\
+				<label for='"+optInputs[i].id+"' class='ui-widget'>"+optInputs[i].entryName+"</label>							\
+				<input id='"+optInputs[i].id+"' name='value' type='number' step='"+optInputs[i].step+"'> 						\
+			</div>";
+	}
+	//submit button at the end
+	siteswapOptionsForm.innerHTML += "<input type='submit' value='Apply changes' class='ui-button ui-widget ui-corner-all'>";
+	//need to set element pointers after dom editing otherwise the pointers lose track
+	for (let i = 0; i < optInputs.length; i++) {
+		optInputs[i].element = document.getElementById(optInputs[i].id);
+	}
+
+	//fill example preset array
+	var pr;
+	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
+	initPreset(pr, false);
+	examplePresetArr.push(pr);
+	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
+	initPreset(pr, false);
+	examplePresetArr.push(pr);
+
+	//allow resizing of user entry
+	$('#userEntryWrapper').resizable({
+		handles: 'e',
+		minWidth: 310
+	});
+	//intialize tabs
+	$('#tabs').tabs();
+	//disable ladder tab until preset is entered
+	$('#tabs').tabs('disable', '#ladderDiagram');
+	//</editor-fold> OTHER ******************************************************
+
+	//<editor-fold> INFO ********************************************************
+	$('#accordion').accordion({
+		animate: 0,
+		heightStyle: 'content',
+		activate: function(event, ui) {
+			//stop video from playing when changing header
+			if (ui.newHeader[0].id != 'welcome') {
+				document.getElementById('introVid').src = '/default.asp';
+				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			}
+
+		}
+	});
+	// maybe add url navigation?
+	// $('#accordion').accordion({
+	// 	header: 'h3',
+	// 	navigation: true
+	// });
+
+	//</editor-fold> INFO *******************************************************
+
+	//<editor-fold> PRESET ******************************************************
+	//local storage
+	if (typeof(Storage) !== 'undefined') {
+		var storage = localStorage.getItem('customPresetArr');
+		if (storage) {
+			customPresetArr = JSON.parse(storage);
+		}
+	}
+	else {
+		console.log('no local storage support!');
+	}
+
+	//initialize preset dialogs
+	var examplePresets = $('#examplePresets');
+	var customPresets = $('#customPresets');
+	examplePresets.dialog({
+		autoOpen: false,
+		show: {
+			effect: 'fade',
+			duration: 100
+		},
+		hide: {
+			effect: 'fade',
+			duration: 100
+		},
+		resizable: false,
+		draggable: false,
+		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
+		height: $('#tabs').height() - $('#tabNames').height() - 14,
+		width: $('#tabs').width() - 20
+	});
+	customPresets.dialog({
+		autoOpen: false,
+		show: {
+			effect: 'fade',
+			duration: 100
+		},
+		hide: {
+			effect: 'fade',
+			duration: 100
+		},
+		resizable: false,
+		draggable: false,
+		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
+		height: $('#tabs').height() - $('#tabNames').height() - 14,
+		width: $('#tabs').width() - 20
+	});
+
+	//close dialog when another tab is selected
+	$('#tabs').tabs({
+		activate: function(event, ui) {
+			examplePresets.dialog('close');
+			customPresets.dialog('close');
+			//use Array.prototype.indexOf.call to find the index of the active tab among all of the tabs
+			//this strange usage of indexOf is because what we're searching is a NodeList, not an array
+			//subtract 1 and divide by 2 because of random text elements between its siblings
+			let index = (Array.prototype.indexOf.call(ui.newTab[0].parentNode.childNodes, ui.newTab[0]) - 1) / 2;
+			if (index === 1) {
+				setShareLinkCopyText();
+			}
+
+			//stop video from playing when changing tabs
+			if (index != 0) {
+				document.getElementById('introVid').src = '/default.asp';
+				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+			}
+		}
+	});
+
+	//turn the presets in the arrays into cards on the DOM
+	makeCards(examplePresetArr, 'examplePresets');
+	makeCards(customPresetArr, 'customPresets');
+	//</editor-fold> PRESET *****************************************************
+
+	//<editor-fold> SITESWAP ****************************************************
+	var REPEATS = 1;
+
+	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
+	var fillWhenEmpty = function(val, id) {
+		if (document.getElementById(id).value == '') {
+			document.getElementById(id).value = val;
+		}
+	}
+	var logSpinnerConfig = {
+		step: 0.0001,
+		spin: function(event, ui) {
+			event.preventDefault();
+			//multiplier - how much it will multiply or divide when you click up or down respectively
+			let m = 1.2;
+			let spinner = $(this);
+			let curVal = spinner.spinner('value');
+			//set the upper limit (when clicking) to 12 clicks up
+			if($(event.currentTarget).hasClass('ui-spinner-up')) {
+				if (curVal*m <= Math.pow(m, 12)) {
+					spinner.spinner('value', curVal*m);
+				}
+			}
+			//set the lower limit similarly
+			else {
+				if (curVal/m >= Math.pow(m, -12)) {
+					spinner.spinner('value', curVal/m);
+				}
+			}
+			let newVal = spinner.spinner('value');
+			//if the new value is close enough to 1 just round it to it
+			if (newVal < 1.001 && newVal > 0.999) {
+				spinner.spinner('value', 1);
+			}
+		},
+		numberFormat: 'n',
+		min: 0,
+		max: 100
 	};
 
+	//initialize spinners, and make them default to specified values
+	for (let i = 0; i < optInputs.length; i++) {
+		$('#' + optInputs[i].id).spinner(optInputs[i].logSpin ? logSpinnerConfig : spinnerConfig);
+		$('#' + optInputs[i].id).blur(function() {fillWhenEmpty(optInputs[i].defaultValue, optInputs[i].id)});
+	}
+	//</editor-fold> SITESWAP ***************************************************
+
+	//<editor-fold> LADDER ******************************************************
+	//initialize repeat count selector
+	$('#repeatCount').spinner();
+	$('#repeatCount').blur(function() {fillWhenEmpty(REPEATS, 'repeatCount')});
+
+	//initialize reset button
+	$('#resetLadder').click(function() {
+		try {
+			var repeats = repeatCount.value;
+			makeThrowInfo(preset, repeats);
+			makeBeats(preset);
+			resetLadder();
+		}
+		catch(e) {
+			console.log(e);
+			console.log('no preset');
+		}
+	});
+
+	//sliders
+	$('.slider').slider({orientation: 'vertical'}); //initialize sliders
+
+	//canvas
+	var c = document.getElementById('ladderLines'); //initialize canvas
+	var ctx = c.getContext('2d');
+	c.height = $('#sliders').height() - 2; //same size as sliders, but accounting for border
+	c.width = $('#sliders').width() - 2;
+	var marginTop = parseInt($('#leftSlider').css('marginTop')) + 1; //+1 for border
+	var marginSide = parseInt($('#leftSlider').css('marginLeft')) + 4; //+4 for border and inside width
+	var sizeRatio;
+	//</editor-fold> LADDER *****************************************************
+
+	window.onresize = windowResize; //change element sizes when height changes
+
+	if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
+
+	//load starting preset
 	let p = getParameterByName('p');
-	if (p === null) {
-		loadPreset(examplePresetArr[0]);
-		updateCurrentPreset(document.getElementsByClassName('presetCard')[1]);
+	if (p === null) { //if it is not a share url
+		loadPreset(examplePresetArr[0]); //load first example preset
+		updateCurrentPreset(document.getElementsByClassName('presetCard')[1], false);
 	}
 	else {
 		loadPreset(decodePreset(decode(p)));
@@ -1222,7 +1220,4 @@ $(document).ready(function() {
 		preset.description = "imported " + (new Date).toLocaleString();
 		addCustomPresetCard(preset, true);
 	}
-
-	//</editor-fold> LADDER DIAGRAM *********************************************
-	//</editor-fold> INPUT ******************************************************
 });
