@@ -23,13 +23,25 @@ $(document).ready(function() {
 	var siteswapInput = document.getElementById('siteswapInput');
 	var siteswapOptionsForm = document.getElementById('siteswapOptionsForm');
 	var repeatCount = document.getElementById('repeatCount');
+	//jQuery objects
+	var $tabs = $('#tabs');
+	var $tabNames = $('#tabNames');
+	var $examplePresets = $('#examplePresets');
+	var $customPresets = $('#customPresets');
+	var $leftSlider = $('#leftSlider');
+	var $rightSlider = $('#rightSlider');
+	var $sliders = $('#sliders');
+	var $repeatCount = $('#repeatCount');
 
 //<editor-fold> FUNCTIONS ***************************************************
+	//<editor-fold> OTHER *******************************************************
 	//copy object functions
 	Function.prototype.clone = function() {
 		var that = this;
-		var temp = function temporary() { return that.apply(this, arguments); };
-		for (let key in this ) {
+		var temp = function() {
+			return that.apply(this, arguments);
+		};
+		for (let key in this) {
 			temp[key] = this[key];
 		}
 		return temp;
@@ -50,8 +62,41 @@ $(document).ready(function() {
 		}
 	}
 
+	function onTabChange(event, ui) {
+		//use Array.prototype.indexOf.call to find the index of the active tab among all of the tabs
+		//this strange usage of indexOf is because what we're searching is a NodeList, not an array
+		//subtract 1 and divide by 2 because of random text elements between its siblings
+		let index = (Array.prototype.indexOf.call(ui.newTab[0].parentNode.childNodes, ui.newTab[0]) - 1) / 2;
+
+		//INFO
+		//stop video from playing when changing tabs
+		if (index != 0) {
+			document.getElementById('introVid').src = '/default.asp';
+			document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
+		}
+
+		//PRESET
+		//close dialogs on any tab change
+		$examplePresets.dialog('close');
+		$customPresets.dialog('close');
+		//refresh share link when preset tab selected
+		if (index === 1) {
+			setShareLinkCopyText();
+		}
+	}
+	//</editor-fold> OTHER ******************************************************
+
 	//<editor-fold> SITESWAP ENTRY **********************************************
-	//create siteswap and preset objects from entry
+	//process siteswap when entered into siteswap form
+	function siteswapEntryOnSubmit(e) {
+		e.preventDefault();
+		parseInput(siteswapInput.value);
+
+      animationInstance = undefined;
+      animationInstance = new AnimationScript();
+      animationInstance.init(preset, false);
+	}	//create siteswap and preset objects from entry
+
 	function parseInput(input) {
 		var siteString = String(input).toLowerCase();
 		siteString = siteString.replace(/\s/g, ''); //remove spaces
@@ -104,15 +149,6 @@ $(document).ready(function() {
 				resetLadder();
 			}
 		}
-	}
-
-	siteswapForm.onsubmit = function(e) {
-		e.preventDefault();
-		parseInput(siteswapInput.value);
-
-      animationInstance = undefined;
-      animationInstance = new AnimationScript();
-      animationInstance.init(preset, false);
 	}
 	//</editor-fold> SITESWAP ENTRY *********************************************
 
@@ -277,8 +313,8 @@ $(document).ready(function() {
 		card.onclick = function() {
 			loadPreset(card.preset);
 			updateCurrentPreset(card, card.preset.custom);
-			examplePresets.dialog('close');
-			customPresets.dialog('close');
+			$examplePresets.dialog('close');
+			$customPresets.dialog('close');
 		}
 
 		return card;
@@ -352,7 +388,7 @@ $(document).ready(function() {
 
 	function setShareLinkCopyText() {
 		let copyText = document.getElementById('presetShareCopyText');
-		let encodeText = encode(encodePreset(preset));
+		let encodeText = encodePreset(preset);
 		copyText.value = window.location.href.replace(/[?&]p=.+?(?=&|$)/, '') + "?p=" + encodeText;
 	}
 
@@ -385,23 +421,25 @@ $(document).ready(function() {
       animationInstance.init(preset, false);
 	}
 
-	document.getElementById('examplePresetButton').onclick = function() {
-		examplePresets.dialog('open');
-	}
-	document.getElementById('customPresetButton').onclick = function() {
-		customPresets.dialog('open');
-	}
-
-	document.getElementById('currentPresetWrapper').onclick = function() {
-		if (preset.custom) {
-			customPresets.dialog('open');
+	function openDialog(e) {
+		if (e.currentTarget.id === 'examplePresetButton') {
+			$examplePresets.dialog('open');
 		}
 		else {
-			examplePresets.dialog('open');
+			$customPresets.dialog('open');
 		}
 	}
 
-	document.getElementById('presetInfoForm').onsubmit = function(e) {
+	function openDialogPresetOnClick() {
+		if (preset.custom) {
+			$customPresets.dialog('open');
+		}
+		else {
+			$examplePresets.dialog('open');
+		}
+	}
+
+	function savePresetOnSubmit(e) {
 		e.preventDefault();
 
 		preset.name = document.getElementById('presetName').value;
@@ -409,7 +447,7 @@ $(document).ready(function() {
 		addCustomPresetCard(preset, false);
 	}
 
-	document.getElementById('updatePreset').onclick = function() {
+	function updatePresetOnClick() {
 		preset.name = document.getElementById('presetName').value;
 		preset.description = document.getElementById('presetDescription').value;
 		let newCard = makeCardElement(Object.assign({}, preset), false);
@@ -428,11 +466,10 @@ $(document).ready(function() {
 		//update current preset card
 		updateCurrentPreset(newCard, preset.custom);
 
-		customPresetArr[preset.index] = Object.assign({}, preset);
 	}
 
 	//share link
-	document.getElementById('presetShareCopyButton').onclick = function() {
+	function copyShareLink() {
 		let copyText = document.getElementById('presetShareCopyText');
 
 		//append p variable value to current url (minus previous p)
@@ -448,22 +485,31 @@ $(document).ready(function() {
 		}
 	}
 
-	document.getElementById('presetShareLoadWrapper').onsubmit = function(e) {
+	function loadShareLink(e) {
 		e.preventDefault();
 		//get p url parameter value and ignore others
 		let loadText = getParameterByName('p', document.getElementById('presetShareLoadText').value);
-		let newPreset = decodePreset(decode(loadText));
+		let newPreset = decodePreset(loadText);
 		loadPreset(newPreset);
 		preset.index = customPresetArr.length;
 		preset.name = "imported " + (preset.index + 1);
 		preset.description = "imported " + (new Date).toLocaleString();
 		addCustomPresetCard(preset, true);
 	}
+
+	function windowResizeDialog() {
+		console.log('asdf');
+		//update preset dialog sizes
+		$examplePresets.dialog('option', 'height', $tabs.height() - $tabNames.height() - 14);
+		$examplePresets.dialog('option', 'width', $tabs.width() - 20);
+		$customPresets.dialog('option', 'height', $tabs.height() - $tabNames.height() - 14);
+		$customPresets.dialog('option', 'width', $tabs.width() - 20);
+	}
 		//</editor-fold> PRESET OPTIONS *********************************************
 	//</editor-fold> PRESET *****************************************************
 
 	//<editor-fold> SITESWAP ****************************************************
-	document.getElementById('siteswapOptionsForm').onsubmit = function(e) {
+	function siteswapOptionsOnSubmit(e) {
 		e.preventDefault();
 		getAttributes(preset);
 		makeThrowInfo(preset, repeatCount.value);
@@ -473,7 +519,7 @@ $(document).ready(function() {
 		animationInstance.generateMovements(preset, false);
 	};
 
-	document.getElementById('restoreDefaults').onclick = function() {
+	function restoreDefaultsOnClick() {
 		for (let i = 0; i < optInputs.length; i++) {
 			optInputs[i].element.value = optInputs[i].defaultValue;
 		}
@@ -576,85 +622,83 @@ $(document).ready(function() {
 
 	//stolen from here, updated:
 	//https://stackoverflow.com/questions/16152033/jquery-ui-slider-trying-to-disable-individual-handles
-	$.widget("ui.slider", $.ui.slider, {
-		_mouseCapture: function(event) {
-			var position, normValue, distance, closestHandle, index, allowed, offset, mouseOverHandle,
-				that = this,
-				o = this.options;
+	function disableSliderHandles(event) {
+		var position, normValue, distance, closestHandle, index, allowed, offset, mouseOverHandle,
+			that = this,
+			o = this.options;
 
-			if (o.disabled) {
-				return false;
-			}
-
-			this.elementSize = {
-				width: this.element.outerWidth(),
-				height: this.element.outerHeight()
-			};
-			this.elementOffset = this.element.offset();
-
-			position = {
-				x: event.pageX,
-				y: event.pageY
-			};
-			normValue = this._normValueFromMouse(position);
-			distance = this._valueMax() - this._valueMin() + 1;
-			this.handles.each(function(i) {
-				// Added condition to skip closestHandle test if this handle is disabled.
-				// This prevents disabled handles from being moved or selected.
-				if (!$(this).hasClass("ui-slider-handle-disabled")) {
-					var thisDistance = Math.abs(normValue - that.values(i));
-					if ((distance > thisDistance) || (distance === thisDistance && (i === that._lastChangedValue || that.values(i) === o.min))) {
-						distance = thisDistance;
-						closestHandle = $(this);
-						index = i;
-					}
-				}
-			});
-
-			// Added check to exit gracefully if, for some reason, all handles are disabled
-			if (typeof closestHandle === 'undefined')
-				return false;
-
-			allowed = this._start(event, index);
-			if (allowed === false) {
-				return false;
-			}
-			this._mouseSliding = true;
-
-			this._handleIndex = index;
-
-			this._addClass(closestHandle, null, "ui-state-active");
-			closestHandle.trigger('focus');
-
-			offset = closestHandle.offset();
-			// Added extra condition to check if the handle currently under the mouse cursor is disabled.
-			// This ensures that if a disabled handle is clicked, the nearest handle will remain under the mouse cursor while dragged.
-			mouseOverHandle = !$(event.target).parents().addBack().is(".ui-slider-handle") || $(event.target).parents().addBack().is(".ui-slider-handle-disabled");
-			this._clickOffset = mouseOverHandle ? {
-				left: 0,
-				top: 0
-			} : {
-				left: event.pageX - offset.left - (closestHandle.width() / 2),
-				top: event.pageY - offset.top - (closestHandle.height() / 2) -
-					(parseInt(closestHandle.css("borderTopWidth"), 10) || 0) -
-					(parseInt(closestHandle.css("borderBottomWidth"), 10) || 0) +
-					(parseInt(closestHandle.css("marginTop"), 10) || 0)
-			};
-
-			if (!this.handles.hasClass("ui-state-hover")) {
-				this._slide(event, index, normValue);
-			}
-			this._animateOff = true;
-			return true;
+		if (o.disabled) {
+			return false;
 		}
-	});
+
+		this.elementSize = {
+			width: this.element.outerWidth(),
+			height: this.element.outerHeight()
+		};
+		this.elementOffset = this.element.offset();
+
+		position = {
+			x: event.pageX,
+			y: event.pageY
+		};
+		normValue = this._normValueFromMouse(position);
+		distance = this._valueMax() - this._valueMin() + 1;
+		this.handles.each(function(i) {
+			// Added condition to skip closestHandle test if this handle is disabled.
+			// This prevents disabled handles from being moved or selected.
+			if (!$(this).hasClass("ui-slider-handle-disabled")) {
+				var thisDistance = Math.abs(normValue - that.values(i));
+				if ((distance > thisDistance) || (distance === thisDistance && (i === that._lastChangedValue || that.values(i) === o.min))) {
+					distance = thisDistance;
+					closestHandle = $(this);
+					index = i;
+				}
+			}
+		});
+
+		// Added check to exit gracefully if, for some reason, all handles are disabled
+		if (typeof closestHandle === 'undefined')
+			return false;
+
+		allowed = this._start(event, index);
+		if (allowed === false) {
+			return false;
+		}
+		this._mouseSliding = true;
+
+		this._handleIndex = index;
+
+		this._addClass(closestHandle, null, "ui-state-active");
+		closestHandle.trigger('focus');
+
+		offset = closestHandle.offset();
+		// Added extra condition to check if the handle currently under the mouse cursor is disabled.
+		// This ensures that if a disabled handle is clicked, the nearest handle will remain under the mouse cursor while dragged.
+		mouseOverHandle = !$(event.target).parents().addBack().is(".ui-slider-handle") || $(event.target).parents().addBack().is(".ui-slider-handle-disabled");
+		this._clickOffset = mouseOverHandle ? {
+			left: 0,
+			top: 0
+		} : {
+			left: event.pageX - offset.left - (closestHandle.width() / 2),
+			top: event.pageY - offset.top - (closestHandle.height() / 2) -
+				(parseInt(closestHandle.css("borderTopWidth"), 10) || 0) -
+				(parseInt(closestHandle.css("borderBottomWidth"), 10) || 0) +
+				(parseInt(closestHandle.css("marginTop"), 10) || 0)
+		};
+
+		if (!this.handles.hasClass("ui-state-hover")) {
+			this._slide(event, index, normValue);
+		}
+		this._animateOff = true;
+		return true;
+	}
 		//</editor-fold> SLIDERS ****************************************************
 
 		//<editor-fold> CANVAS ******************************************************
-	function windowResize() {
+	function windowResizeLadder() {
 		ctx.transform(-1, 0, 0, 1, -marginSide, -(c.height - marginTop));
-		c.height = $('#tabs').height() - $('#tabNames').height() - 48;
-		c.width = $('#tabs').width();
+		c.height = $tabs.height() - $tabNames.height() - 48;
+		c.width = $tabs.width();
 		sizeRatio = c.height / preset.throwInfo.endTime;
 
 		// ctx.resetTransform(); //not compatible with edge
@@ -662,19 +706,13 @@ $(document).ready(function() {
 
 		updateCanvasLines(preset, c, marginSide, sizeRatio);
 
-		//update preset dialog sizes
-		examplePresets.dialog('option', 'height', $('#tabs').height() - $('#tabNames').height() - 14);
-		examplePresets.dialog('option', 'width', $('#tabs').width() - 20);
-		customPresets.dialog('option', 'height', $('#tabs').height() - $('#tabNames').height() - 14);
-		customPresets.dialog('option', 'width', $('#tabs').width() - 20);
-
-
+		//INFO stuff, just in case i need it
 		// document.getElementById('introVid').style.height = String($('#accordion').width() - 2) + 'px';
 		// $('#introVid').width($('#accordion').width() - 2);
 		// $('#introVid').height($('#accordion').width() * 9 / 16);
 
-		// document.getElementById('info').style.height = String($('#tabs').height() - 20) + 'px';
-		// console.log($('#tabs').height() - 20);
+		// document.getElementById('info').style.height = String($tabs.height() - 20) + 'px';
+		// console.log($tabs.height() - 20);
 	}
 
 	//fills canvasLines array with start and end points on the canvas
@@ -828,9 +866,10 @@ $(document).ready(function() {
 	}
 		//</editor-fold> CANVAS *****************************************************
 
+	//configure ladder diagram
 	function resetLadder() {
-		$('#tabs').tabs('enable', '#ladderDiagram');
-		windowResize(); //make canvas actually have stuff
+		$tabs.tabs('enable', '#ladderDiagram');
+		windowResizeLadder(); //make canvas actually have stuff
 
 		preset.beats.custom = false;
 
@@ -843,7 +882,7 @@ $(document).ready(function() {
 		$('.slider').slider('destroy');
 
 		//left slider creation
-		$('#leftSlider').slider({
+		$leftSlider.slider({
 			orientation: 'vertical',
 			step: 0.05,
 			min: 0,
@@ -854,8 +893,8 @@ $(document).ready(function() {
 
 			create: function(ev, ui) {
 				//disable t=0 and t=max handle, these handles restrict the time it takes the repeat
-				$('#leftSlider').find('.ui-slider-handle:first').addClass('ui-slider-handle-disabled');
-				$('#leftSlider').find('.ui-slider-handle:last').addClass('ui-slider-handle-disabled');
+				$leftSlider.find('.ui-slider-handle:first').addClass('ui-slider-handle-disabled');
+				$leftSlider.find('.ui-slider-handle:last').addClass('ui-slider-handle-disabled');
 				//disable 0 catches
             for (let i = 0; i < preset.throwInfo.throws.length; i++) {
 					var curThrow = preset.throwInfo.throws[i];
@@ -879,8 +918,8 @@ $(document).ready(function() {
 			slide: function(ev, ui) {
 
 				// //show slider value when sliding
-				// $('#leftSlider').find('.ui-state-active')
-				// 	.text($('#leftSlider').slider('values', ui.handleIndex));
+				// $leftSlider.find('.ui-state-active')
+				// 	.text($leftSlider.slider('values', ui.handleIndex));
 
 				//store current in beats (if it is out of range, it will be set appropriately with stop function. this just moves lines with handles)
 				preset.beats.left[ui.handleIndex] = ui.value;
@@ -889,7 +928,7 @@ $(document).ready(function() {
 			},
 
 			stop: function(ev, ui) { //when you stop moving the handle, it jumps to valid bounds
-				restrictHandleMovement(preset, ui, $('#leftSlider'), true);
+				restrictHandleMovement(preset, ui, $leftSlider, true);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
 				if (ui.value == 0) {
@@ -907,7 +946,7 @@ $(document).ready(function() {
 		});
 
 		//right slider creation
-		$('#rightSlider').slider({
+		$rightSlider.slider({
 			orientation: 'vertical',
 			step: 0.05,
 			min: 0,
@@ -937,8 +976,8 @@ $(document).ready(function() {
 
 			slide: function(ev, ui) {
 				// //show slider value when sliding
-				// $('#rightSlider').find('.ui-state-active')
-				// 	.text($('#rightSlider').slider('values', ui.handleIndex));
+				// $rightSlider.find('.ui-state-active')
+				// 	.text($rightSlider.slider('values', ui.handleIndex));
 
 				//store current in beats (if it is out of range, it will be set appropriately with stop function. this is just for lines)
 				preset.beats.right[ui.handleIndex] = ui.value;
@@ -947,7 +986,7 @@ $(document).ready(function() {
 			},
 
 			stop: function(ev, ui) { //when you stop moving the handle, it jumps to valid bounds
-				restrictHandleMovement(preset, ui, $('#rightSlider'), false);
+				restrictHandleMovement(preset, ui, $rightSlider, false);
 				updateCanvasLines(preset, c, marginSide, sizeRatio);
 
 				//set title of handle to its resulting value
@@ -972,6 +1011,9 @@ $(document).ready(function() {
 //</editor-fold> FUNCTIONS **************************************************
 
 	//<editor-fold> OTHER *******************************************************
+	//process siteswap when entered into siteswap form
+	siteswapForm.onsubmit = siteswapEntryOnSubmit;
+
 	//adding input options automatically
 	var optInputs = [
 		//starting value for time between any throw and catch (in slider length units)
@@ -1024,9 +1066,11 @@ $(document).ready(function() {
 		minWidth: 310
 	});
 	//intialize tabs
-	$('#tabs').tabs();
+	$tabs.tabs();
 	//disable ladder tab until preset is entered
-	$('#tabs').tabs('disable', '#ladderDiagram');
+	$tabs.tabs('disable', '#ladderDiagram');
+	//do things when new tab is selected
+	$tabs.tabs({activate: onTabChange});
 	//</editor-fold> OTHER ******************************************************
 
 	//<editor-fold> INFO ********************************************************
@@ -1062,69 +1106,52 @@ $(document).ready(function() {
 		console.log('no local storage support!');
 	}
 
+	//PRESET DIALOGS
+	var dialogConfig = {
+		autoOpen: false,
+		show: {
+			effect: 'fade',
+			duration: 100
+		},
+		hide: {
+			effect: 'fade',
+			duration: 100
+		},
+		resizable: false,
+		draggable: false,
+		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
+		height: $tabs.height() - $tabNames.height() - 14,
+		width: $tabs.width() - 20
+	};
 	//initialize preset dialogs
-	var examplePresets = $('#examplePresets');
-	var customPresets = $('#customPresets');
-	examplePresets.dialog({
-		autoOpen: false,
-		show: {
-			effect: 'fade',
-			duration: 100
-		},
-		hide: {
-			effect: 'fade',
-			duration: 100
-		},
-		resizable: false,
-		draggable: false,
-		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
-		height: $('#tabs').height() - $('#tabNames').height() - 14,
-		width: $('#tabs').width() - 20
-	});
-	customPresets.dialog({
-		autoOpen: false,
-		show: {
-			effect: 'fade',
-			duration: 100
-		},
-		hide: {
-			effect: 'fade',
-			duration: 100
-		},
-		resizable: false,
-		draggable: false,
-		position: {my: 'left+6px top+6px', at: 'left top', of: '#presetOptions'},
-		height: $('#tabs').height() - $('#tabNames').height() - 14,
-		width: $('#tabs').width() - 20
-	});
+	$examplePresets.dialog(dialogConfig);
+	$customPresets.dialog(dialogConfig);
+	//open dialog events
+	document.getElementById('examplePresetButton').onclick = openDialog;
+	document.getElementById('customPresetButton').onclick = openDialog;
+	document.getElementById('currentPresetWrapper').onclick = openDialogPresetOnClick;
 
-	//close dialog when another tab is selected
-	$('#tabs').tabs({
-		activate: function(event, ui) {
-			examplePresets.dialog('close');
-			customPresets.dialog('close');
-			//use Array.prototype.indexOf.call to find the index of the active tab among all of the tabs
-			//this strange usage of indexOf is because what we're searching is a NodeList, not an array
-			//subtract 1 and divide by 2 because of random text elements between its siblings
-			let index = (Array.prototype.indexOf.call(ui.newTab[0].parentNode.childNodes, ui.newTab[0]) - 1) / 2;
-			if (index === 1) {
-				setShareLinkCopyText();
-			}
-
-			//stop video from playing when changing tabs
-			if (index != 0) {
-				document.getElementById('introVid').src = '/default.asp';
-				document.getElementById('introVid').src = 'https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0';
-			}
-		}
-	});
+	window.addEventListener('resize', windowResizeDialog);
 
 	//turn the presets in the arrays into cards on the DOM
 	makeCards(examplePresetArr, 'examplePresets');
 	makeCards(customPresetArr, 'customPresets');
+
+	//save/update preset events
+	document.getElementById('presetInfoForm').onsubmit = savePresetOnSubmit;
+	document.getElementById('updatePreset').onclick = updatePresetOnClick;
+
+	//share link
+	document.getElementById('presetShareCopyButton').onclick = copyShareLink;
+	document.getElementById('presetShareLoadWrapper').onsubmit = loadShareLink;
+
 	//</editor-fold> PRESET *****************************************************
 
 	//<editor-fold> SITESWAP ****************************************************
+	siteswapOptions.onsubmit = siteswapOptionsOnSubmit;
+
+	document.getElementById('restoreDefaults').onclick = restoreDefaultsOnClick;
+
 	var REPEATS = 1;
 
 	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
@@ -1172,9 +1199,11 @@ $(document).ready(function() {
 	//</editor-fold> SITESWAP ***************************************************
 
 	//<editor-fold> LADDER ******************************************************
+	window.addEventListener('resize', windowResizeLadder);
+
 	//initialize repeat count selector
-	$('#repeatCount').spinner();
-	$('#repeatCount').blur(function() {fillWhenEmpty(REPEATS, 'repeatCount')});
+	$repeatCount.spinner();
+	$repeatCount.blur(function() {fillWhenEmpty(REPEATS, 'repeatCount')});
 
 	//initialize reset button
 	$('#resetLadder').click(function() {
@@ -1192,18 +1221,17 @@ $(document).ready(function() {
 
 	//sliders
 	$('.slider').slider({orientation: 'vertical'}); //initialize sliders
+	$.widget("ui.slider", $.ui.slider, {_mouseCapture: disableSliderHandles}); //disable slider handles with disabled class
 
 	//canvas
 	var c = document.getElementById('ladderLines'); //initialize canvas
 	var ctx = c.getContext('2d');
-	c.height = $('#sliders').height() - 2; //same size as sliders, but accounting for border
-	c.width = $('#sliders').width() - 2;
-	var marginTop = parseInt($('#leftSlider').css('marginTop')) + 1; //+1 for border
-	var marginSide = parseInt($('#leftSlider').css('marginLeft')) + 4; //+4 for border and inside width
+	c.height = $sliders.height() - 2; //same size as sliders, but accounting for border
+	c.width = $sliders.width() - 2;
+	var marginTop = parseInt($leftSlider.css('marginTop')) + 1; //+1 for border
+	var marginSide = parseInt($leftSlider.css('marginLeft')) + 4; //+4 for border and inside width
 	var sizeRatio;
 	//</editor-fold> LADDER *****************************************************
-
-	window.onresize = windowResize; //change element sizes when height changes
 
 	if (animationInstance !== undefined) animationInstance.generateMovements(preset, false);
 
@@ -1214,7 +1242,7 @@ $(document).ready(function() {
 		updateCurrentPreset(document.getElementsByClassName('presetCard')[1], false);
 	}
 	else {
-		loadPreset(decodePreset(decode(p)));
+		loadPreset(decodePreset(p));
 		preset.index = customPresetArr.length;
 		preset.name = "imported " + (preset.index + 1);
 		preset.description = "imported " + (new Date).toLocaleString();
