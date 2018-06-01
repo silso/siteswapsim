@@ -488,7 +488,12 @@ $(document).ready(function() {
 	function loadShareLink(e) {
 		e.preventDefault();
 		//get p url parameter value and ignore others
-		let loadText = getParameterByName('p', document.getElementById('presetShareLoadText').value);
+		let loadURL = document.getElementById('presetShareLoadText').value;
+		let loadText = getParameterByName('p', loadURL);
+		if (loadText === null || loadText === '') {
+			console.log('invalid load URL');
+			return false;
+		}
 		let newPreset = decodePreset(loadText);
 		loadPreset(newPreset);
 		preset.index = customPresetArr.length;

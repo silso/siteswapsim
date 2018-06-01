@@ -285,7 +285,7 @@ body {
 	margin-bottom: 0px;
 	height: 28.79px;
 	width: calc(100% - 56px);
-	direction: rtl;
+	direction: ltr;
 }
 #presetShareCopyUpdate {
 	margin-right: 4px;
