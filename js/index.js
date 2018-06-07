@@ -503,7 +503,6 @@ $(document).ready(function() {
 	}
 
 	function windowResizeDialog() {
-		console.log('asdf');
 		//update preset dialog sizes
 		$examplePresets.dialog('option', 'height', $tabs.height() - $tabNames.height() - 14);
 		$examplePresets.dialog('option', 'width', $tabs.width() - 20);
