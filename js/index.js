@@ -11,7 +11,7 @@
 	//63051
 
 //temporary global to figure out animation stuff
-var preset;
+var preset = {};
 var animationInstance;
 var examplePresetArr = [];
 var customPresetArr = [];
@@ -394,7 +394,9 @@ $(document).ready(function() {
 
 	//load a preset into forms, set ladder, do other stuff to make preset show
 	function loadPreset(pr) {
-		preset = Object.assign({}, pr);
+		// preset = Object.assign({}, pr);
+		copyObject(pr, preset);
+		console.log("loadPreset", preset.options.speedMultiplier);
 		preset.index = pr.index;
 		setForms(preset);
 		resetLadder();
@@ -415,8 +417,9 @@ $(document).ready(function() {
 		setShareLinkCopyText();
 
 		//unsure if this is needed
-      // animationInstance = undefined;
-      // animationInstance = new AnimationScript();
+		console.log("index", preset.options.speedMultiplier);
+      animationInstance = undefined;
+      animationInstance = new AnimationScript();
 		if (animationInstance === undefined) animationInstance = new AnimationScript();
       animationInstance.init(preset, false);
 	}

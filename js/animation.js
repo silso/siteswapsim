@@ -1,4 +1,4 @@
-//script2.js
+//animation.js
 //Chris Roelofs
 //takes in a juggling pattern and ladder timing information and creates a mostly physically accurate juggling animation.
 //handles interactions with the canvas such as panning and zooming
@@ -20,7 +20,7 @@ let hands = {};
 let balls = [];
 
 let AnimationScript = function() {
-	"use strict";
+	// "use strict";
 	let wrapper,
 		HEIGHT,
 		WIDTH,
@@ -48,10 +48,16 @@ let AnimationScript = function() {
 
 	let modCalls = 0;
 	let mod = function(a, b) {
-		if (modCalls++ > 1000){
-			return "help";
+		let recursionCount = 0;
+		let inner = function(a, b) {
+			if (recursionCount++ > 10000) {
+				console.log(a, b);
+				console.log(mod.caller);
+				throw new Error("infinite recursion");
+			}
+			return (a >= 0) ? a % b : inner(a + b, b);
 		}
-		return (a >= 0) ? a % b : mod(a + b, b);
+		return inner(a, b);
 	}
 
 	////////
@@ -98,9 +104,7 @@ let AnimationScript = function() {
 		//called each frame, moves the hand depending on the time relative to the loop of hand movements
 		this.move = function(time) {
 			//time relative to the start of the hand movements loop
-			modCalls = 0;
 			this.t = mod(time - this.ti - this.offset, hM[hM.length - 1].end);
-			if (this.t === "help") throw new Error("modulus failed in Hand.move");
 
 			//time relative to the start of the hand movement
 			let t = K*(this.t - curMove.start);
@@ -652,11 +656,12 @@ let AnimationScript = function() {
 
 		this.generateMovements(inputPreset);
 
-		let count = 0;
+		console.log("animation", inputPreset.options.speedMultiplier);
 		function draw() {
 
-			now = SPEED*Date.now()/1000 + SHIFT;
-			// if (!(count++ % 50)) console.log(now);
+			now = inputPreset.options.speedMultiplier*Date.now()/1000 + SHIFT;
+			// console.log(inputPreset.options.speedMultiplier, Date.now(), inputPreset.options.speedMultiplier*Date.now()/1000 + SHIFT);
+			// console.log(inputPreset.options.speedMultiplier, inputPreset.options);
 
 			//for some reason, the canvas likes to be a little bit larger than the wrapper, so I multiply by .995
 			HEIGHT = 0.995*wrapper.clientHeight;

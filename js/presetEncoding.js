@@ -74,6 +74,8 @@ function encodePreset(pre) {
 
    obj[7] = pre.beats.custom ? 1 : 0;
 
+   obj[8] = [BEATFACTOR, OPTIONFACTOR];
+
    //turn new object into bitstring
    let bitString = "";
    //iterate through properties
@@ -176,6 +178,8 @@ function decodePreset(b64Str) {
    //convert simplified object into full-fledged preset
    let result = {};
 
+   let [beatFactor, optionFactor] = obj[8];
+
    result.colors = [];
    for (let i = 0, oColorsLength = obj[2].length; i < oColorsLength; i += 3) {
       result.colors.push("rgb(" + obj[2][i] + "," + obj[2][i+1] + "," + obj[2][i+2] + ")");
@@ -184,12 +188,12 @@ function decodePreset(b64Str) {
    result.custom = obj[3] ? true : false;
 
    result.options = {
-      throwTime: obj[4][0]/OPTIONFACTOR,
-      dwellLimit: obj[4][1]/OPTIONFACTOR,
-      throwLimit: obj[4][2]/OPTIONFACTOR,
-      speedLimit: obj[4][3]/OPTIONFACTOR,
-      speedMultiplier: obj[4][4]/OPTIONFACTOR,
-      paceMultiplier: obj[4][5]/OPTIONFACTOR
+      throwTime: obj[4][0]/optionFactor,
+      dwellLimit: obj[4][1]/optionFactor,
+      throwLimit: obj[4][2]/optionFactor,
+      speedLimit: obj[4][3]/optionFactor,
+      speedMultiplier: obj[4][4]/optionFactor,
+      paceMultiplier: obj[4][5]/optionFactor
    }
 
    result.repeats = obj[5];
@@ -210,10 +214,10 @@ function decodePreset(b64Str) {
    result.beats = {left:[], right:[], custom:obj[7]};
    if (obj[7]) {
       for (i in obj[0]) {
-         result.beats.left[i] = obj[0][i]/BEATFACTOR;
+         result.beats.left[i] = obj[0][i]/beatFactor;
       }
       for (i in obj[1]) {
-         result.beats.right[i] = obj[1][i]/BEATFACTOR;
+         result.beats.right[i] = obj[1][i]/beatFactor;
       }
    }
    else {
