@@ -549,6 +549,34 @@ var repeatRemover = function(site) {
 	return newSite;
 }
 
+var multiplexZeroRemover = function(site) {
+	//takes in siteswap array, returns siteswap array without zeroes in multiplexes
+
+	var newSite = site;
+	for (let i = 0; i < site.length; i++) {
+		if (site[i] instanceof Array) {
+			for (let j = 0; j < site[i].length; j++) {
+				if (site[i][j] == 0) {
+					site[i].splice(j, 1); //remove zero from multiplex
+					j -= 1; //compensate for site[i] getting shorter
+				}
+			}
+		}
+	}
+
+	return newSite;
+}
+
+var tidySiteswapArr = function(site) {
+	//takes in siteswap array, returns siteswap array with unwanted properties removed
+
+	var newSite = site;
+	newSite = repeatRemover(newSite); //reduce repeated siteswaps (eg 423423 -> 423)
+	newSite = multiplexZeroRemover(newSite); //remove zeroes from siteswaps (eg [30] -> [3])
+
+	return newSite;
+}
+
 var siteswapTest = function(site) {
 	//takes in siteswap array, returns the throw-based validity of the pattern
 

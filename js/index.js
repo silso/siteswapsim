@@ -802,7 +802,7 @@ $(document).ready(function() {
 
 		//push catch lines, excluding zero throws
 		for (let i = 2; i <= endTime; i += 2) {
-			if (!zeroThrows[i - 1]) { //right hand dwells
+			if (!zeroThrows[i - 2]) { //right hand dwells
 				canvasLines.push({
 					coords: coordinateFinder(preset.beats.right[i - 2], false, marginSide, sizeRatio),
 					nextCoords: coordinateFinder(preset.beats.right[i - 1], false, marginSide, sizeRatio),
@@ -811,7 +811,7 @@ $(document).ready(function() {
 					throw: false
 				});
 			}
-			if (!zeroThrows[i]) { //left hand dwells
+			if (!zeroThrows[i - 1]) { //left hand dwells
 				canvasLines.push({
 					coords: coordinateFinder(preset.beats.left[i - 1], true, marginSide, sizeRatio),
 					nextCoords: coordinateFinder(preset.beats.left[i], true, marginSide, sizeRatio),
