@@ -325,6 +325,7 @@ $(document).ready(function() {
 		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
 		var current = document.getElementById('currentPreset');
 		var newNode = presetCard.cloneNode(true);
+		newNode.preset = presetCard.preset;
 		newNode.id = 'currentPreset';
 
 		//remove delete button if it is a custom preset card
@@ -433,8 +434,8 @@ $(document).ready(function() {
 		}
 	}
 
-	function openDialogPresetOnClick() {
-		if (preset.custom) {
+	function openDialogPresetOnClick(e) {
+		if (e.currentTarget.childNodes[2].preset.custom) {
 			$customPresets.dialog('open');
 		}
 		else {
