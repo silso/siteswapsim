@@ -1071,7 +1071,8 @@ $(document).ready(function() {
 	//allow resizing of user entry
 	$('#userEntryWrapper').resizable({
 		handles: 'e',
-		minWidth: 310
+		minWidth: 310,
+		resize: windowResizeDialog
 	});
 	//intialize tabs
 	$tabs.tabs();
