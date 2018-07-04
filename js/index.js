@@ -457,7 +457,7 @@ $(document).ready(function() {
 		let newCard = makeCardElement(Object.assign({}, preset), false);
 
 		var customPresets = document.getElementById('customPresets');
-		if (preset.index > customPresetArr.length) {
+		if (preset.index < customPresetArr.length) {
 			//replace card in custom cards
 			var oldCard = customPresets.childNodes[preset.index];
 			customPresets.removeChild(oldCard);
