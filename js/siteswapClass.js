@@ -17,7 +17,7 @@ var Siteswap = function(siteswapString){
 	this.valid = results.valid;
 
 	if (this.valid) {
-		this.site = repeatRemover(this.site);
+		this.site = tidySiteswapArr(this.site);
 		this.valid = siteswapTest(this.site);
 		var tested = true;
 	}

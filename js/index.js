@@ -326,6 +326,7 @@ $(document).ready(function() {
 		var currentPresetWrapper = document.getElementById('currentPresetWrapper');
 		var current = document.getElementById('currentPreset');
 		var newNode = presetCard.cloneNode(true);
+		newNode.preset = presetCard.preset;
 		newNode.id = 'currentPreset';
 
 		//remove delete button if it is a custom preset card
@@ -433,8 +434,8 @@ $(document).ready(function() {
 		}
 	}
 
-	function openDialogPresetOnClick() {
-		if (preset.custom) {
+	function openDialogPresetOnClick(e) {
+		if (e.currentTarget.childNodes[2].preset.custom) {
 			$customPresets.dialog('open');
 		}
 		else {
@@ -818,7 +819,7 @@ $(document).ready(function() {
 
 		//push catch lines, excluding zero throws
 		for (let i = 2; i <= endTime; i += 2) {
-			if (!zeroThrows[i - 1]) { //right hand dwells
+			if (!zeroThrows[i - 2]) { //right hand dwells
 				canvasLines.push({
 					coords: coordinateFinder(preset.beats.right[i - 2], false, marginSide, sizeRatio),
 					nextCoords: coordinateFinder(preset.beats.right[i - 1], false, marginSide, sizeRatio),
@@ -827,7 +828,7 @@ $(document).ready(function() {
 					throw: false
 				});
 			}
-			if (!zeroThrows[i]) { //left hand dwells
+			if (!zeroThrows[i - 1]) { //left hand dwells
 				canvasLines.push({
 					coords: coordinateFinder(preset.beats.left[i - 1], true, marginSide, sizeRatio),
 					nextCoords: coordinateFinder(preset.beats.left[i], true, marginSide, sizeRatio),
@@ -1087,7 +1088,8 @@ $(document).ready(function() {
 	//allow resizing of user entry
 	$('#userEntryWrapper').resizable({
 		handles: 'e',
-		minWidth: 310
+		minWidth: 310,
+		resize: windowResizeDialog
 	});
 	//intialize tabs
 	$tabs.tabs();
