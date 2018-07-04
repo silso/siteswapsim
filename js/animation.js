@@ -18,17 +18,20 @@
 
 let hands = {};
 let balls = [];
+let asdf;
 
 let AnimationScript = function() {
 	// "use strict";
-	let wrapper,
+	this.shift = 0;
+	this.newSpeedMultiplier = false;
+	this.speedMultiplier = 1;
+	this.paceMultiplier = 4;
+
+	let stop = false,
+		wrapper,
 		HEIGHT,
 		WIDTH,
 		SCALE = 4,
-
-		SPEED = 1,
-		PACE = 4,
-		SHIFT = 100000,
 
 		//gravitational acceleration
 		G = -500,
@@ -37,8 +40,8 @@ let AnimationScript = function() {
 		//scales the start and end velocities of the hand movements
 		K = 1,
 
-		now = SPEED*Date.now()/1000,
-		start = now,
+		now,
+		start,
 
 		canvas,
 		ctx;
@@ -103,6 +106,7 @@ let AnimationScript = function() {
 
 		//called each frame, moves the hand depending on the time relative to the loop of hand movements
 		this.move = function(time) {
+			//Hand.move
 			//time relative to the start of the hand movements loop
 			this.t = mod(time - this.ti - this.offset, hM[hM.length - 1].end);
 
@@ -191,7 +195,7 @@ let AnimationScript = function() {
 		//called every frame, positions the ball according to a parabolic trajectory when in the middle of a throw, and according a hand's position when in a catch
 		this.move = function(time) {
 			//setting t to now relative to the length of time of the loop
-			this.t = (time - this.ti + this.offset) % bM[bM.length - 1].catch.end;
+			this.t = mod(time - this.ti + this.offset, bM[bM.length - 1].catch.end);
 
 			//if this.t is outside of range of ballMovement
 			if (this.t > catchEnd || this.t < throwStart) {
@@ -283,7 +287,7 @@ let AnimationScript = function() {
 					}
 				];
 			}
-		})();
+		}).bind(this)();
 
 		//generate handmovements
 		(function() {
@@ -297,15 +301,15 @@ let AnimationScript = function() {
 			b.left.shift();
 
 			for (let i = 0; i < b.left.length; i++) {
-				b.left[i] /= PACE;
+				b.left[i] /= this.paceMultiplier;
 			}
 			for (let i = 0; i < b.right.length; i++) {
-				b.right[i] /= PACE;
+				b.right[i] /= this.paceMultiplier;
 			}
 
 			let lHOffset = b.left[0];
 			let rHOffset = b.right[0];
-			let endTime = inputPreset.throwInfo.endTime/PACE;
+			let endTime = inputPreset.throwInfo.endTime/this.paceMultiplier;
 			let bLength = b.right.length;
 
 			for (let i = 0; i < bLength - 1; i += 2) {
@@ -422,7 +426,7 @@ let AnimationScript = function() {
 			for (let hand in hands) {
 				hands[hand].init(start);
 			}
-		})();
+		}).bind(this)();
 
 		//generate ballmovements
 		(function() {
@@ -430,10 +434,10 @@ let AnimationScript = function() {
 			let b = JSON.parse(JSON.stringify(inputPreset.beats));
 
 			for (let i = 0; i < b.left.length; i++) {
-				b.left[i] /= PACE;
+				b.left[i] /= this.paceMultiplier;
 			}
 			for (let i = 0; i < b.right.length; i++) {
-				b.right[i] /= PACE;
+				b.right[i] /= this.paceMultiplier;
 			}
 
 			for (let i = 0; i < loops.length; i++) {
@@ -446,7 +450,7 @@ let AnimationScript = function() {
 				}
 
 				let endIndex = inputPreset.throwInfo.endTime;
-				let endTime = endIndex/PACE;
+				let endTime = endIndex/this.paceMultiplier;
 
 				//number of balls to be created
 				let loopPropCount = loopSum / site.length;
@@ -543,7 +547,7 @@ let AnimationScript = function() {
 					balls.push(newBall);
 				}
 			}
-		})();
+		}).bind(this)();
 
 		if (print) {
 			console.log(balls);
@@ -552,10 +556,28 @@ let AnimationScript = function() {
 	}
 
 
+	//used to avoid treating "now" as a property of AnimationScript (slow) while still being able to access it globally
+	this.getNow = function(a) {
+		return now;
+	}
+
+
+	this.stop = function() {
+		stop = true;
+	}
+
+
 	//
 
 
 	this.init = function(inputPreset) {
+		//time stuff
+		start = 0;
+		this.speedMultiplier = inputPreset.options.speedMultiplier;
+		this.paceMultiplier = inputPreset.options.paceMultiplier;
+		this.shift = -this.speedMultiplier*Date.now()/1000;
+		now = this.speedMultiplier*Date.now()/1000 + this.shift;
+
 		let TRANSX = 0,
 			TRANSY = 300;
 
@@ -584,7 +606,7 @@ let AnimationScript = function() {
 				//middle mouse resets camera
 				else if (e.button === 1) {
 					TRANSX = 0;
-					TRANSY = 0;
+					TRANSY = 300;
 					SCALE = 4;
 				}
 				//right click logs debug info (currently coordinates of cursor)
@@ -656,16 +678,15 @@ let AnimationScript = function() {
 
 		this.generateMovements(inputPreset);
 
-		console.log("animation", inputPreset.options.speedMultiplier);
-		function draw() {
+		this.draw = function() {
+			now = this.speedMultiplier*Date.now()/1000 + this.shift;
 
-			now = inputPreset.options.speedMultiplier*Date.now()/1000 + SHIFT;
-			// console.log(inputPreset.options.speedMultiplier, Date.now(), inputPreset.options.speedMultiplier*Date.now()/1000 + SHIFT);
-			// console.log(inputPreset.options.speedMultiplier, inputPreset.options);
-
-			//for some reason, the canvas likes to be a little bit larger than the wrapper, so I multiply by .995
-			HEIGHT = 0.995*wrapper.clientHeight;
-			WIDTH = 0.995*wrapper.clientWidth;
+			//subtract by 5 to line up with the left tabs
+			//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			//TRY MOVING THIS OUT OF DRAW PLEASE idk window.onresize or something
+			//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			HEIGHT = wrapper.clientHeight - 5;
+			WIDTH = wrapper.clientWidth - 5;
 			if (Math.floor(HEIGHT) !== canvas.height) {
 				canvas.height = HEIGHT;
 			}
@@ -673,16 +694,20 @@ let AnimationScript = function() {
 				canvas.width = WIDTH;
 			}
 
+			// let tx = TRANSX - balls[0].p.x*SCALE;
+			// let ty = TRANSY + balls[0].p.y*SCALE-300;
 
 			// ctx.globalCompositeOperation = "source-over";
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
-			// ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-			// ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+			// ctx.fillStyle = "rgba(255, 255, 255, " + this.speedMultiplier*0.15 + ")";
+			// ctx.fillStyle = "rgba(0, 0, 0, " + this.speedMultiplier*0.15 + ")";
 			// ctx.fillRect(0, 0, WIDTH, HEIGHT);
 			ctx.clearRect(0, 0, WIDTH, HEIGHT);
 			ctx.translate(TRANSX, TRANSY);
+			// ctx.translate(tx, ty);
 
 			// ctx.globalCompositeOperation = "multiply";
+			// ctx.globalCompositeOperation = "color-burn";
 
 			hands.left.draw(ctx);
 			hands.right.draw(ctx);
@@ -691,10 +716,11 @@ let AnimationScript = function() {
 			hands.right.move(now);
 			for (let i = 0; i < balls.length; i++) balls[i].move(now);
 
-			window.requestAnimationFrame(draw);
+			if (!stop) window.requestAnimationFrame(this.draw.bind(this));
 		}
 
-		window.requestAnimationFrame(draw);
+		// window.requestAnimationFrame(this.draw);
+		this.draw();
 
 	};
 };

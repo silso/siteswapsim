@@ -92,6 +92,7 @@ $(document).ready(function() {
 		e.preventDefault();
 		parseInput(siteswapInput.value);
 
+		if (animationInstance) animationInstance.stop();
       animationInstance = undefined;
       animationInstance = new AnimationScript();
       animationInstance.init(preset, false);
@@ -396,7 +397,6 @@ $(document).ready(function() {
 	function loadPreset(pr) {
 		// preset = Object.assign({}, pr);
 		copyObject(pr, preset);
-		console.log("loadPreset", preset.options.speedMultiplier);
 		preset.index = pr.index;
 		setForms(preset);
 		resetLadder();
@@ -417,7 +417,7 @@ $(document).ready(function() {
 		setShareLinkCopyText();
 
 		//unsure if this is needed
-		console.log("index", preset.options.speedMultiplier);
+		if (animationInstance) animationInstance.stop();
       animationInstance = undefined;
       animationInstance = new AnimationScript();
 		if (animationInstance === undefined) animationInstance = new AnimationScript();
@@ -518,12 +518,28 @@ $(document).ready(function() {
 	//<editor-fold> SITESWAP ****************************************************
 	function siteswapOptionsOnSubmit(e) {
 		e.preventDefault();
-		getAttributes(preset);
-		makeThrowInfo(preset, repeatCount.value);
-		makeBeats(preset);
-		resetLadder();
+		let updateLadder = false;
+		for (let i = 0; i < optInputs.length; i++) {
+			let newPresetOption = parseFloat(optInputs[i].element.value)
+			if (optInputs[i].updateLadder && preset.options[optInputs[i].id] !== newPresetOption) updateLadder = true;
 
-		animationInstance.generateMovements(preset, false);
+			preset.options[optInputs[i].id] = newPresetOption;
+			if (optInputs[i].id === "speedMultiplier") {
+				if (animationInstance.speedMultiplier !== newPresetOption) {
+					animationInstance.shift = animationInstance.shift - (newPresetOption - animationInstance.speedMultiplier) * (animationInstance.getNow(0) - animationInstance.shift) / animationInstance.speedMultiplier;
+					animationInstance.speedMultiplier = newPresetOption;
+				}
+			}
+			if (optInputs[i].id === "paceMultiplier") {
+				animationInstance.paceMultiplier = newPresetOption;
+			}
+		}
+		if (updateLadder) {
+			makeThrowInfo(preset, repeatCount.value);
+			makeBeats(preset);
+			resetLadder();
+			animationInstance.generateMovements(preset, false);
+		}
 	};
 
 	function restoreDefaultsOnClick() {
@@ -1030,18 +1046,19 @@ $(document).ready(function() {
 			description: 'Default time spent without a ball in hand',
 			defaultValue: 0.5,
 			logSpin: false,
-			step: 0.05
+			step: 0.05,
+			updateLadder: true
 		},
 		//smallest allowed value for dwell time (default dwell time is 1 - throwTime)
-		{id:'dwellLimit',entryName:'dwell limit:',description:'Limits how soon you can throw a ball after catching it',defaultValue:0.4,logSpin:false,step:0.05},
+		{id:'dwellLimit',entryName:'dwell limit:',description:'Limits how soon you can throw a ball after catching it',defaultValue:0.4,logSpin:false,step:0.05,updateLadder:true},
 		//smallest allowed value to throw one ball then catch a different ball in the same hand
-		{id:'throwLimit',entryName:'throw limit:',description:'Limits how soon you can catch a ball after throwing one',defaultValue:0.25,logSpin:false,step:0.05},
+		{id:'throwLimit',entryName:'throw limit:',description:'Limits how soon you can catch a ball after throwing one',defaultValue:0.25,logSpin:false,step:0.05,updateLadder:true},
 		//smallest allowed value to throw a ball to the other hand (maybe shouldn't have this or throwLimit, doesn't make a ton of sense physically)
-		{id:'speedLimit',entryName:'speed limit:',description:'Limits how fast a ball can be thrown then caught',defaultValue:0.4,logSpin:false,step:0.05},
+		{id:'speedLimit',entryName:'speed limit:',description:'Limits how fast a ball can be thrown then caught',defaultValue:0.4,logSpin:false,step:0.05,updateLadder:true},
 		//multiplier for how fast time goes
-		{id:'speedMultiplier',entryName:'speed multiplier:',description:'Changes how fast time moves',defaultValue:1,logSpin:true,step:0.0000000000001},
+		{id:'speedMultiplier',entryName:'speed multiplier:',description:'Changes how fast time moves',defaultValue:1,logSpin:true,step:0.0000000000001,updateLadder:false},
 		//adjusts rhythm to juggle faster without affecting apparent gravity
-		{id:'paceMultiplier',entryName:'pace multiplier:',description:'Changes how fast the juggler tries to juggle',defaultValue:1,logSpin:true,step:0.0000000000001}
+		{id:'paceMultiplier',entryName:'pace multiplier:',description:'Changes how fast the juggler tries to juggle',defaultValue:4,logSpin:false,step:1,updateLadder:true}
 	];
 	//append each option to the siteswap tab along with their spinners
 	for (let i = 0; i < optInputs.length; i++) {
@@ -1060,10 +1077,10 @@ $(document).ready(function() {
 
 	//fill example preset array
 	var pr;
-	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
+	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 4]);
 	initPreset(pr, false);
 	examplePresetArr.push(pr);
-	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 1]);
+	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 4]);
 	initPreset(pr, false);
 	examplePresetArr.push(pr);
 
@@ -1161,7 +1178,6 @@ $(document).ready(function() {
 
 	var REPEATS = 1;
 
-	var spinnerConfig = {step: 0.05, numberFormat: 'n'};
 	var fillWhenEmpty = function(val, id) {
 		if (document.getElementById(id).value == '') {
 			document.getElementById(id).value = val;
@@ -1172,7 +1188,7 @@ $(document).ready(function() {
 		spin: function(event, ui) {
 			event.preventDefault();
 			//multiplier - how much it will multiply or divide when you click up or down respectively
-			let m = 1.2;
+			let m = 1.5;
 			let spinner = $(this);
 			let curVal = spinner.spinner('value');
 			//set the upper limit (when clicking) to 12 clicks up
@@ -1200,7 +1216,7 @@ $(document).ready(function() {
 
 	//initialize spinners, and make them default to specified values
 	for (let i = 0; i < optInputs.length; i++) {
-		$('#' + optInputs[i].id).spinner(optInputs[i].logSpin ? logSpinnerConfig : spinnerConfig);
+		$('#' + optInputs[i].id).spinner(optInputs[i].logSpin ? logSpinnerConfig : {step: optInputs[i].step, numberFormat: 'n'});
 		$('#' + optInputs[i].id).blur(function() {fillWhenEmpty(optInputs[i].defaultValue, optInputs[i].id)});
 	}
 	//</editor-fold> SITESWAP ***************************************************
