@@ -402,6 +402,8 @@ $(document).ready(function() {
 		setForms(preset);
 		resetLadder();
 
+		document.getElementById('presetName').value = preset.name;
+		document.getElementById('presetDescription').value = preset.description
 
 		var updatePreset = document.getElementById('updatePreset');
 		if (preset.custom) {

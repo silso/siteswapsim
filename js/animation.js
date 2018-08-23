@@ -18,7 +18,7 @@
 
 let hands = {};
 let balls = [];
-let asdf;
+
 
 let AnimationScript = function() {
 	// "use strict";
@@ -62,6 +62,67 @@ let AnimationScript = function() {
 		}
 		return inner(a, b);
 	}
+
+	//used for effects
+	let compOpList = ["source-over", "source-atop", "source-in", "source-out", "destination-over", "destination-atop", 'destination-in', "destination-out", "lighter", "copy", "xor", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
+
+	//also used for effects
+	//https://www.michaelbromley.co.uk/blog/simple-1d-noise-in-javascript/
+	var Simple1DNoise = function() {
+	    var MAX_VERTICES = 256;
+	    var MAX_VERTICES_MASK = MAX_VERTICES -1;
+	    var amplitude = 1;
+	    var scale = 1;
+
+	    var r = [];
+
+	    for ( var i = 0; i < MAX_VERTICES; ++i ) {
+	        r.push(Math.random());
+	    }
+
+	    var getVal = function( x ){
+	        var scaledX = x * scale;
+	        var xFloor = Math.floor(scaledX);
+	        var t = scaledX - xFloor;
+	        var tRemapSmoothstep = t * t * ( 3 - 2 * t );
+
+	        /// Modulo using &
+	        var xMin = xFloor & MAX_VERTICES_MASK;
+	        var xMax = ( xMin + 1 ) & MAX_VERTICES_MASK;
+
+	        var y = lerp( r[ xMin ], r[ xMax ], tRemapSmoothstep );
+
+	        return y * amplitude;
+	    };
+
+	    /**
+	    * Linear interpolation function.
+	    * @param a The lower integer value
+	    * @param b The upper integer value
+	    * @param t The value between the two
+	    * @returns {number}
+	    */
+	    var lerp = function(a, b, t ) {
+	        return a * ( 1 - t ) + b * t;
+	    };
+
+	    // return the API
+	    return {
+	        getVal: getVal,
+	        setAmplitude: function(newAmplitude) {
+	            amplitude = newAmplitude;
+	        },
+	        setScale: function(newScale) {
+	            scale = newScale;
+	        }
+	    };
+	};
+	let gen1 = new Simple1DNoise();
+	let gen2 = new Simple1DNoise();
+	let gen3 = new Simple1DNoise();
+	let gen4 = new Simple1DNoise();
+
+
 
 	////////
 	//Hand class: moves and draws a hand according to the array/loop of hand movements hM.
@@ -633,11 +694,11 @@ let AnimationScript = function() {
 			},
 
 			//zoom in and out when scroll wheel is used
-			mouseWheel: function(e) {
+			wheel: function(e) {
 				e.preventDefault();
 
 				let scaleFactor = 1.4;
-				let scrollDir = e.wheelDelta;
+				let scrollDir = -e.deltaY;
 				let r = canvas.getBoundingClientRect();
 
 				//in-animation coordinates of mouse relative to image origin (center of juggling patter typically)
@@ -669,15 +730,49 @@ let AnimationScript = function() {
 			canvas.addEventListener('mousedown', events.mouseDown, false);
 			canvas.addEventListener('mousemove', events.mouseMove, false);
 			canvas.addEventListener('mouseup', events.mouseUp, false);
-			canvas.addEventListener('mousewheel', events.mouseWheel, false);
-			canvas.addEventListener('DOMMouseScroll', events.mouseWheel, false);
+			canvas.addEventListener('wheel', events.wheel, false);
 
 			EVENTSADDED = true;
 		}
 
 
-		this.generateMovements(inputPreset);
+		//effects
+		/////
+		let list = [25, 22, 23, 22, 25, 23, 14];
 
+		this.effects = [];
+		this.effects[0] = {a: function(){ctx.clearRect(0, 0, WIDTH, HEIGHT); ctx.globalCompositeOperation = "source-over";}, b: function(){}}
+		this.effects[1] = {
+			a: (function() {
+				let counter = Math.floor(this.counter++/100) % list.length;
+				ctx.globalCompositeOperation = compOpList[list[counter]];
+				let gradient = ctx.createLinearGradient(WIDTH*gen1.getVal(.2*now), HEIGHT*gen2.getVal(.2*now), WIDTH*gen3.getVal(.2*now), HEIGHT*gen4.getVal(.2*now));
+				gradient.addColorStop(0.1*Math.sin(0.5*now)+0.1, `rgba(${Math.floor(64*Math.sin(9*now/5)+64)}, ${Math.floor(64*Math.sin(11*now/5)+64)}, ${Math.floor(64*Math.sin(13*now/5)+64)}, .1)`);
+				gradient.addColorStop(0.1*Math.sin(0.4*now) + 0.9, `rgba(${Math.floor(64*Math.sin(9*now/5+Math.PI)+64)}, ${Math.floor(64*Math.sin(11*now/5+Math.PI)+64)}, ${Math.floor(64*Math.sin(13*now/5+Math.PI)+64)}, .1)`);
+				ctx.fillStyle = gradient;
+				ctx.fillRect(0, 0, WIDTH, HEIGHT);
+			}).bind(this),
+			b: function() {
+				ctx.globalCompositeOperation = "xor";
+			}
+		};
+
+		this.counter = 0;
+
+		this.effectNum = 0;
+
+		this.followBall = function(n) {
+			this.following = true;
+			this.ballToFollow = n;
+		}
+
+		this.flush = function() {
+			ctx.clearRect(-TRANSX, -TRANSY, WIDTH, HEIGHT);
+		}
+		/////
+
+
+		this.generateMovements(inputPreset);
 		this.draw = function() {
 			now = this.speedMultiplier*Date.now()/1000 + this.shift;
 
@@ -693,24 +788,25 @@ let AnimationScript = function() {
 			if (Math.floor(WIDTH) !== canvas.width) {
 				canvas.width = WIDTH;
 			}
+			
+			let tx, ty;
+			if (this.following) {
+				tx = TRANSX - balls[0].p.x*SCALE;
+				ty = TRANSY + balls[0].p.y*SCALE-300;
+			}
+			else {
+				tx = TRANSX;
+				ty = TRANSY;
+			}
 
-			// let tx = TRANSX - balls[0].p.x*SCALE;
-			// let ty = TRANSY + balls[0].p.y*SCALE-300;
 
-			// ctx.globalCompositeOperation = "source-over";
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
-			// ctx.fillStyle = "rgba(255, 255, 255, " + this.speedMultiplier*0.15 + ")";
-			// ctx.fillStyle = "rgba(0, 0, 0, " + this.speedMultiplier*0.15 + ")";
-			// ctx.fillRect(0, 0, WIDTH, HEIGHT);
-			ctx.clearRect(0, 0, WIDTH, HEIGHT);
-			ctx.translate(TRANSX, TRANSY);
-			// ctx.translate(tx, ty);
-
-			// ctx.globalCompositeOperation = "multiply";
-			// ctx.globalCompositeOperation = "color-burn";
+			this.effects[this.effectNum].a();
+			ctx.translate(tx, ty);
 
 			hands.left.draw(ctx);
 			hands.right.draw(ctx);
+			this.effects[this.effectNum].b();
 			for (let i = 0; i < balls.length; i++) balls[i].draw(ctx);
 			hands.left.move(now);
 			hands.right.move(now);
