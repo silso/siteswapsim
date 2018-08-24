@@ -254,9 +254,9 @@ var siteswapTranslator = function(site) {
 	function parseSimple(char) {
 		var returnVal = 0;
 		if (!isNaN(char)) { //if char is number
-			returnVal = parseInt(char);
-		} else if (String.fromCharCode(char) >= 97 >= 122) { //if char is lowercase letter
-			returnVal = String.fromCharCode(char);
+			returnVal =  parseInt(char);
+		} else {
+			returnVal = char.toLowerCase().charCodeAt(0) - 87;
 		}
 
 		return returnVal;

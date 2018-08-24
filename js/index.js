@@ -1168,6 +1168,8 @@ $(document).ready(function() {
 	//save/update preset events
 	document.getElementById('presetInfoForm').onsubmit = savePresetOnSubmit;
 	document.getElementById('updatePreset').onclick = updatePresetOnClick;
+	document.getElementById('presetName').onclick = function() {this.select();};
+	document.getElementById('presetDescription').onclick = function() {this.select();};
 
 	//share link
 	document.getElementById('presetShareCopyButton').onclick = copyShareLink;
