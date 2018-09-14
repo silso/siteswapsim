@@ -738,14 +738,14 @@ let AnimationScript = function() {
 
 		//effects
 		/////
-		let compOpList = [25, 22, 23, 22, 25, 23, 14];
+		let compOpIndexList = [25, 22, 23, 22, 25, 23, 14];
 
 		this.effects = [];
 		this.effects[0] = {a: function(){ctx.clearRect(0, 0, WIDTH, HEIGHT); ctx.globalCompositeOperation = "source-over";}, b: function(){}}
 		this.effects[1] = {
 			a: (function() {
-				let counter = Math.floor(this.counter++/100) % compOpList.length;
-				ctx.globalCompositeOperation = compOpList[compOpList[counter]];
+				let counter = Math.floor(this.counter++/100) % compOpIndexList.length;
+				ctx.globalCompositeOperation = compOpList[compOpIndexList[counter]];
 				let gradient = ctx.createLinearGradient(WIDTH*gen1.getVal(.2*now), HEIGHT*gen2.getVal(.2*now), WIDTH*gen3.getVal(.2*now), HEIGHT*gen4.getVal(.2*now));
 				gradient.addColorStop(0.1*Math.sin(0.5*now)+0.1, `rgba(${Math.floor(64*Math.sin(9*now/5)+64)}, ${Math.floor(64*Math.sin(11*now/5)+64)}, ${Math.floor(64*Math.sin(13*now/5)+64)}, .1)`);
 				gradient.addColorStop(0.1*Math.sin(0.4*now) + 0.9, `rgba(${Math.floor(64*Math.sin(9*now/5+Math.PI)+64)}, ${Math.floor(64*Math.sin(11*now/5+Math.PI)+64)}, ${Math.floor(64*Math.sin(13*now/5+Math.PI)+64)}, .1)`);

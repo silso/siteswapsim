@@ -1,6 +1,6 @@
 'use strict';
 
-var Siteswap = function(siteswapString){
+var Siteswap = function(siteswapString, runTest = true /*otherwise assumed valid*/){
 	this.siteStr = siteswapString;
 	this.site = new Object();
 	this.valid = true;
@@ -18,7 +18,12 @@ var Siteswap = function(siteswapString){
 
 	if (this.valid) {
 		this.site = tidySiteswapArr(this.site);
-		this.valid = siteswapTest(this.site);
+		if (runTest) {
+			this.valid = siteswapTest(this.site);
+		}
+		else {
+			this.valid = true;
+		}
 		var tested = true;
 	}
 	else {
