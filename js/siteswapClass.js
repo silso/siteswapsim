@@ -5,6 +5,7 @@ var Siteswap = function(siteswapString, runTest = true /*otherwise assumed valid
 	this.site = new Object();
 	this.valid = true;
 	this.loops = null;
+	this.throwsToLoops = null;
 	this.numOfLoops = null;
 	this.loopTime = null;
 	this.multiplex = false;
@@ -33,7 +34,9 @@ var Siteswap = function(siteswapString, runTest = true /*otherwise assumed valid
 
 	if (this.valid) {
 		this.propCount = propCount(this.site);
-		this.loops = loopFinder(this.site);
+		var arr = loopFinder(this.site);
+		this.loops = arr[0];
+		this.throwsToLoops = arr[1];
 		this.numOfLoops = this.loops.length;
 		this.loopTime = loopTimeFinder(this.loops);
 	}

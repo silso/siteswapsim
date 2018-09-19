@@ -618,6 +618,7 @@ var loopFinder = function(site) {
 
 	var siteLen = site.length;
 	var loops = [[]]; //array of loops
+	var throwsToLoops = [];
 	var loopNum = 0; //index where next loop goes in loops
 
 	var tested = [];
@@ -642,7 +643,6 @@ var loopFinder = function(site) {
 			//console.log('site[',i,'] is an array');
 			var isTestedi = true; //wish there were for elses
 			var start = 0; //index which we started on and must end on
-			//var j = 0; //j moves to first untested index in array
 			for (let j = 0; j < site[i].length; j++) { //check throws in array
 
 				if (!tested[i][j]) { //if throw in array is untested, do stuff
@@ -683,18 +683,23 @@ var loopFinder = function(site) {
 							//console.log('this was tested');
 						}
 					}
-					// if (isTestedk) { //if none untested, assume loop is done since site is valid
-					// 	//console.log('all of site[',k,'] is tested, loop is done')
-					// 	i = 0;
-					// 	loopNum++;
-					// 	loops.push([]);
-					// 	break;
-					// }
+					if (isTestedk) { //if none untested, assume loop is done since site is valid
+						console.log('all of site[',k,'] is tested, loop is done') //not even sure if this ever runs
+						i = 0;
+						loopNum++;
+						loops.push([]);
+						break;
+					}
 					//console.log('adding throw',site[k][l]);
 					//at this point we should be at an untested throw, so we add to loops
 					loops[loopNum].push({
 						n: site[k][l],
 						i: k
+					});
+					throwsToLoops.push({
+						n: site[k][l],
+						i: k,
+						l: loopNum
 					});
 					tested[k][l] = 1;
 					k = (k + site[k][l]) % siteLen;
@@ -706,6 +711,11 @@ var loopFinder = function(site) {
 						loops[loopNum].push({
 							n: site[k],
 							i: k
+						});
+						throwsToLoops.push({
+							n: site[k],
+							i: k,
+							l: loopNum
 						});
 						tested[k] = 1;
 						k = (k + site[k]) % siteLen;
@@ -737,6 +747,7 @@ var loopFinder = function(site) {
 						}
 						//console.log(j);
 						if (isTestedk) { //if none untested, assume loop is done since site is valid
+							console.log('isTestedk');
 							i = 0;
 							loopNum++;
 							loops.push([]);
@@ -748,6 +759,11 @@ var loopFinder = function(site) {
 							n: site[k][j],
 							i: k
 						});
+						throwsToLoops.push({
+							n: site[k][j],
+							i: k,
+							l: loopNum
+						});
 						tested[k][j] = 1;
 						k = (k + site[k][j]) % siteLen;
 					}
@@ -757,6 +773,11 @@ var loopFinder = function(site) {
 							loops[loopNum].push({
 								n: site[k],
 								i: k
+							});
+							throwsToLoops.push({
+								n: site[k],
+								i: k,
+								l: loopNum
 							});
 							tested[k] = 1;
 							k = (k + site[k]) % siteLen;
@@ -778,8 +799,21 @@ var loopFinder = function(site) {
 
 		i++;
 	}
-
-	return loops.slice(0, loops.length - 1);
+	var throwsToLoopsFinal = new Array(site.length);
+	var diff = 0; //used for multiplexes
+	for (let i = 0; i < throwsToLoops.length; i++) {
+		if (throwsToLoopsFinal[throwsToLoops[i].i + diff] != undefined) {
+			if (!(throwsToLoopsFinal[throwsToLoops[i].i + diff] instanceof Array)) {
+				throwsToLoopsFinal[throwsToLoops[i].i + diff] = [throwsToLoopsFinal[throwsToLoops[i].i + diff]];
+			}
+			throwsToLoopsFinal[throwsToLoops[i].i + diff].push({n: throwsToLoops[i].n, l: throwsToLoops[i].l});
+			// diff += 1;
+		}
+		else {
+			throwsToLoopsFinal[throwsToLoops[i].i + diff] = {n: throwsToLoops[i].n, l: throwsToLoops[i].l};
+		}
+	}
+	return [loops.slice(0, loops.length - 1), throwsToLoopsFinal];
 }
 
 var loopTimeFinder = function(loops) {

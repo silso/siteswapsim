@@ -766,6 +766,7 @@ $(document).ready(function() {
 	//fills canvasLines array with start and end points on the canvas
 	function updateCanvasLines(preset, canvas, marginSide, sizeRatio) {
 		var endTime = preset.throwInfo.endTime;
+		var throwLoops = preset.site.throwsToLoops;
 		var canvasLines = [];
 		var zeroThrows = new Array(endTime / 2).fill(0);
 		//coordinate conversion, needs to know where y slider is (marginSide) and conversion between canvas pixels and slider values (sizeRatio)
@@ -783,6 +784,9 @@ $(document).ready(function() {
 		}
 
 		//fill canvasLines array with pixel start and pixel end coords, as well as info about the throw
+		var oldIndex = preset.throwInfo.throws[0].start;
+		var newIndex;
+		var instanceOfSameIndex = -1;
 		for (let i = 0; i < preset.throwInfo.throws.length; i++) {
 			var curThrow = preset.throwInfo.throws[i]; //curThrow has start and end
 			//when start is odd, it is right hand, so select from right array
@@ -809,13 +813,31 @@ $(document).ready(function() {
 				}
 			}
 
+
+			newIndex = curThrow.start;
+			if (newIndex === oldIndex) {
+				instanceOfSameIndex += 1;
+			}
+			else {
+				instanceOfSameIndex = 0;
+			}
+			oldIndex = newIndex;
+
+			if (throwLoops[curThrow.start % throwLoops.length] instanceof Array) {
+				var color = preset.colors[throwLoops[curThrow.start % throwLoops.length][instanceOfSameIndex].l];
+			}
+			else {
+				var color = preset.colors[throwLoops[curThrow.start % throwLoops.length].l];
+			}
+
 			if (curThrow.start < curThrow.end % (preset.throwInfo.endTime + 1)) { //if line doesnt go off chart (+1 so we can still draw to node at the end of diagram)
 				canvasLines.push({
 					coords: coords,
 					nextCoords: nextCoords,
 					odd: odd,
 					left: left,
-					throw: true //this is not a dwell line but a throw line
+					throw: true, //this is not a dwell line but a throw line
+					color: color
 				});
 			} else {
 				canvasLines.push({ //draw two lines, one going off bottom of canvas
@@ -826,7 +848,8 @@ $(document).ready(function() {
 					nextCoords: nextCoords,
 					odd: odd,
 					left: left,
-					throw: true
+					throw: true,
+					color: color
 				});
 				canvasLines.push({ //and other going off the top of canvas
 					coords: coords,
@@ -836,7 +859,8 @@ $(document).ready(function() {
 					},
 					odd: odd,
 					left: left,
-					throw: true
+					throw: true,
+					color: color
 				});
 			}
 		}
@@ -844,21 +868,35 @@ $(document).ready(function() {
 		//push catch lines, excluding zero throws
 		for (let i = 2; i <= endTime; i += 2) {
 			if (!zeroThrows[i - 2]) { //right hand dwells
+				if (throwLoops[(i - 1) % throwLoops.length] instanceof Array) {
+					var color = preset.colors[throwLoops[(i - 1) % throwLoops.length][0].l];
+				}
+				else {
+					var color = preset.colors[throwLoops[(i - 1) % throwLoops.length].l];
+				}
 				canvasLines.push({
 					coords: coordinateFinder(preset.beats.right[i - 2], false, marginSide, sizeRatio),
 					nextCoords: coordinateFinder(preset.beats.right[i - 1], false, marginSide, sizeRatio),
 					odd: true, //odd so it draws straight lines
 					left: true,
-					throw: false
+					throw: false,
+					color: color
 				});
 			}
 			if (!zeroThrows[i - 1]) { //left hand dwells
+				if (throwLoops[i % throwLoops.length] instanceof Array) {
+					var color = preset.colors[throwLoops[i % throwLoops.length][0].l];
+				}
+				else {
+					var color = preset.colors[throwLoops[i % throwLoops.length].l];
+				}
 				canvasLines.push({
 					coords: coordinateFinder(preset.beats.left[i - 1], true, marginSide, sizeRatio),
 					nextCoords: coordinateFinder(preset.beats.left[i], true, marginSide, sizeRatio),
 					odd: true, //odd so it draws straight lines
 					left: true,
-					throw: false
+					throw: false,
+					color: color
 				});
 			}
 		}
@@ -906,7 +944,7 @@ $(document).ready(function() {
 					ctx.lineWidth = 8;
 					ctx.lineTo(nextCoords.x, nextCoords.y);
 				}
-
+				ctx.strokeStyle = canvasLines[i].color;
 				ctx.stroke();
 			}
 		})();
