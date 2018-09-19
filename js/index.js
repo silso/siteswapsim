@@ -234,7 +234,8 @@ $(document).ready(function() {
 			'valid': preset.site.isValid(),
 			'siteswap': preset.site.printSite(),
 			'loops': preset.site.printLoops(),
-			'looptime': preset.site.printLoopTime()
+			'looptime': preset.site.printLoopTime(),
+			'prop count': preset.site.propCount
 		});
 		console.log('throwInfo: ', preset.throwInfo);
 		console.log('beats: ', preset.beats);
@@ -1285,8 +1286,18 @@ $(document).ready(function() {
 	//load starting preset
 	let p = getParameterByName('p');
 	if (p === null) { //if it is not a share url
-		loadPreset(examplePresetArr[0]); //load first example preset
-		updateCurrentPreset(document.getElementsByClassName('presetCard')[1], false);
+		let s = getParameterByName('s');
+		if (s === null) {
+			loadPreset(examplePresetArr[0]); //load first example preset
+			updateCurrentPreset(document.getElementsByClassName('presetCard')[1], false);
+		}
+		else {
+			loadPreset(examplePresetArr[0]); //load first example preset
+			updateCurrentPreset(document.getElementsByClassName('presetCard')[1], false);
+			siteswapInput.value = s;
+			$(siteswapForm).trigger('submit');
+			console.log(s);
+		}
 	}
 	else {
 		loadPreset(decodePreset(p));
