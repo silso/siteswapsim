@@ -38,7 +38,7 @@
 				<ul id='tabNames'>
 					<li id='infoTab'><a href='#info'>Info</a></li>
 					<li id='presetTab'><a href='#presetOptions'>Preset</a></li>
-					<li id='siteswapTab'><a href='#siteswapOptions'>Siteswap</a></li>
+					<li id='optionsTab'><a href='#siteswapOptions'>Options</a></li>
 					<li id='ladderTab'><a href='#ladderDiagram'>Ladder</a></li>
 				</ul>
 				<div id='ladderDiagram'>
@@ -114,7 +114,7 @@
 								<div class="videoWrapper">
 									<iframe id="introVid" width="346" height="195" src="https://www.youtube-nocookie.com/embed/7dwgusHjA0Y?rel=0" allowfullscreen=""></iframe>
 								</div>
-								<p>SiteswapSim allows you to enter in your own siteswaps in the <strong>siteswap input</strong> at the top left of the page, or choose from example siteswaps in the <strong>preset tab</strong> (directly below <strong>siteswap input</strong>). Next, you can edit the timings of this pattern by changing the values on the <strong>siteswap tab</strong>, or by dragging the <em>handles</em> on the <strong>ladder tab</strong>.</p>
+								<p>SiteswapSim allows you to enter in your own siteswaps in the <strong>siteswap input</strong> at the top left of the page, or choose from example siteswaps in the <strong>preset tab</strong> (directly below <strong>siteswap input</strong>). Next, you can edit the timings of this pattern by changing the values on the <strong>options tab</strong>, or by dragging the <em>handles</em> on the <strong>ladder tab</strong>.</p>
 							</div>
 							<h3>Preset</h3>
 							<div>
@@ -123,12 +123,12 @@
 								<h2>Functionality</h2>
 								<p>Each preset is represented by a card. The card displays the name of the preset, the siteswap, and a brief description. The cards are separated into two categories: <em>example presets</em>, which are presets given by us to help you understand the capabilities of the website, and <em>custom presets</em>, which are where your presets are stored.</p>
 								<p>A preset can be saved by giving it a name, and a description if you want, then pressing <em>save preset</em>. This preset will now appear in the <em>custom presets</em> menu. You can modify the currently selected preset (as long as it isn’t an example preset) by pressing <em>update preset</em>.</p>
-								<p>As of 5/13/18, presets will go away if you refresh the page. This is set to change (likely by storing presets in your cookies).</p>
+								<p>Your custom presets will be saved in your browser's "local storage". This can be cleared by deleting all the presets, or clearing the cookies for this website.</p>
 							</div>
-							<h3>Siteswap</h3>
+							<h3>Options</h3>
 							<div>
 								<h2>Overview</h2>
-								<p>The <strong>siteswap tab</strong> allows you to change the rhythm with which throws and catches happen. This tab includes the following options:</p>
+								<p>The <strong>options tab</strong> allows you to change the rhythm with which throws and catches happen. This tab includes the following options:</p>
 								<ul>
 								<li><em>Throw time</em> sets the default time between a throw and the next catch in that hand (this is unintuitive, and will be changed in the future).</li>
 								<li><em>Dwell limit</em>, <em>throw limit</em>, and <em>speed limit</em> control the minimum spacing between any two events (throw or catch).</li>
@@ -145,13 +145,13 @@
 								<p>Balls follow the lines upward through time, travelling between the hands/<em>sliders</em>. A <em>handle</em> at the bottom of a solid vertical line is a catch, while a handle at the top of a solid vertical line is a throw.</p>
 								<h2>Beats</h2>
 								<p>There are two disabled <em>handles</em> on the left <em>slider</em> (one at the top and one at the bottom). These represent beat 0 of the pattern. By default, a throw will happen on every beat. You can hover over the <em>handles</em> to see what beat value each handle has.</p>
-								<p>The timing values entered on the <strong>siteswap tab</strong> are apparent on this tab. The <em>throw time</em> value will set how far apart each <em>throw handle</em> is from the <em>catch handle</em> directly above. The limit values will set the movement restrictions for any given <em>handle</em>. When a <em>handle</em> is dragged out of the acceptable range, it will snap back into place when released.</p>
+								<p>The timing values entered on the <strong>options tab</strong> are apparent on this tab. The <em>throw time</em> value will set how far apart each <em>throw handle</em> is from the <em>catch handle</em> directly above. The limit values will set the movement restrictions for any given <em>handle</em>. When a <em>handle</em> is dragged out of the acceptable range, it will snap back into place when released.</p>
 							</div>
 							<h3>Animation</h3>
 							<div>
 								<h2>Overview</h2>
 								<p>The animation pane is a 2D representation of the juggling pattern. The hands are represented by black circles. You can pan around in the animation by clicking and dragging, and you can zoom in and out with the scroll wheel. You can middle press scroll to return to the default zoom and pan setting.</p>
-								<p>The <em>speed multiplier</em> option on the <strong>siteswap tab</strong> sets how fast time goes by (higher <em>speed multiplier</em> means fast-forward). The <em>pace multiplier</em> changes how fast the juggler tries to juggle without changing how fast time goes by.</p>
+								<p>The <em>speed multiplier</em> option on the <strong>options tab</strong> sets how fast time goes by (higher <em>speed multiplier</em> means fast-forward). The <em>pace multiplier</em> changes how fast the juggler tries to juggle without changing how fast time goes by.</p>
 							</div>
 							<h3>Errors</h3>
 							<div>
@@ -171,7 +171,7 @@
 								<li><a href="https://pages.github.com/">Github Pages</a> to host this website</li>
 								<li><a href="http://vanilla-js.com/">Vanilla-JS</a> for everything</li>
 								</ul>
-								<p><a href="https://github.com/silso/siteswapsim/tree/ladder">Here is a link to the Github repository</a></p>
+								<p><a href="https://github.com/silso/siteswapsim">Here is a link to the Github repository</a></p>
 								<h2>Contact</h2>
 								<p>Email: <a href="mailto:SiteswapSim@gmail.com">SiteswapSim@gmail.com</a></p>
 
