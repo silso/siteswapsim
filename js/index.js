@@ -117,7 +117,9 @@ $(document).ready(function() {
 			error.style.visibility = 'visible';
 			error.title = 'You may be using some incorrect characters. See the preset tab for a guide';
 		}
-		else if (siteString == '🤹') {
+		else if (siteString == '🤹' || siteString == '🤹‍♂️' || siteString == '🤹‍♀️') {
+			error.style.visibility = 'hidden';
+			error.title = '';
 			var index = preset.index;
 			preset = new Preset(new Siteswap('3'));
 			preset.index = index;
@@ -427,8 +429,26 @@ $(document).ready(function() {
       animationInstance.init(preset, false);
 	}
 
-	function openDialog(e) {
-		if (e.currentTarget.id === 'examplePresetButton') {
+	let examplePresetsOpened = 0;
+	function openDialog(e, examplePr = false) {
+		if (e.currentTarget.id === 'examplePresetButton' || examplePr) {
+			if (!examplePresetsOpened++) {
+				//load example presets asynchronously
+				$.getJSON('js/examplePresets.json', function(json) {
+					for (i in json) {
+						let pre = json[i];
+						pre.site = new Siteswap(pre.site.siteStr, false);
+						pre.index = i + examplePresetArr.length;
+						makeThrowInfo(pre, pre.repeats);
+						if (!pre.beats.custom) makeBeats(pre);
+						if (pre.colors === undefined) makeColors(pre);
+						examplePresetArr.push(pre);
+					}
+					document.getElementById('examplePresets').innerHTML = '';
+					makeCards(examplePresetArr, 'examplePresets');
+				});
+			}
+
 			$examplePresets.dialog('open');
 		}
 		else {
@@ -441,7 +461,8 @@ $(document).ready(function() {
 			$customPresets.dialog('open');
 		}
 		else {
-			$examplePresets.dialog('open');
+			//used so example presets will load if needed
+			openDialog(e, true);
 		}
 	}
 
@@ -1124,10 +1145,7 @@ $(document).ready(function() {
 
 	//fill example preset array
 	var pr;
-	pr = new Preset(new Siteswap('3'), ['3 ball cascade', 'the simplest and easiest juggling pattern', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 4]);
-	initPreset(pr, false);
-	examplePresetArr.push(pr);
-	pr = new Preset(new Siteswap('534'), ['mmmmmmasdf', 'description, huh?', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 4]);
+	pr = new Preset(new Siteswap('3', false), ['3 ball cascade', 'the easiest trick everyone learns first', 1, false], [0.5, 0.4, 0.25, 0.4, 1, 4]);
 	initPreset(pr, false);
 	examplePresetArr.push(pr);
 
@@ -1212,6 +1230,8 @@ $(document).ready(function() {
 	//save/update preset events
 	document.getElementById('presetInfoForm').onsubmit = savePresetOnSubmit;
 	document.getElementById('updatePreset').onclick = updatePresetOnClick;
+	document.getElementById('presetName').onclick = function() {this.select();};
+	document.getElementById('presetDescription').onclick = function() {this.select();};
 
 	//share link
 	document.getElementById('presetShareCopyButton').onclick = copyShareLink;

@@ -24,8 +24,9 @@
 // 11    unimplemented
 
 let BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
-let SITESWAPCODE = "0123456789abcdefghijklmnopqrstuvw[]()x*{}";
+let SITESWAPCODE = "0123456789abcdefghijklmnopqrstuvw[]()x*{},";
 
+//what beats and options values are multiplied by before being encoded. Higher values mean less loss of info
 let BEATFACTOR = 20;
 let OPTIONFACTOR = 1000;
 
@@ -221,17 +222,56 @@ function decodePreset(b64Str) {
       }
    }
    else {
-      //copied from parseInput.js
-		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
-		result.beats.left.push(0);
-		var syncDiff = !result.site.sync; //make right hand throws 1 beat out of sync with left hand when pattern isn't sync
-		for (let i = 2; i <= result.throwInfo.endTime; i += 2) {
-			result.beats.left.push(i - 1 + result.options.throwTime); //left hand catch time
-			result.beats.left.push(i); //left hand throw time
-			result.beats.right.push(i - syncDiff - 1 + result.options.throwTime); //right hand catch time
-			result.beats.right.push(i - syncDiff); //right hand throw time
-		}
+      //copied from index.js
+  		//makes an object with two arrays: the beat times of catches and throws for each hand. Catches are even, throws are odd
+  		result.beats.left.push(0);
+  		var syncDiff = !result.site.sync; //make right hand throws 1 beat out of sync with left hand when pattern isn't sync
+  		for (let i = 2; i <= result.throwInfo.endTime; i += 2) {
+         result.beats.left.push(i - 1 + result.options.throwTime); //left hand catch time
+         result.beats.left.push(i); //left hand throw time
+         result.beats.right.push(i - syncDiff - 1 + result.options.throwTime); //right hand catch time
+         result.beats.right.push(i - syncDiff); //right hand throw time
+      }
    }
 
    return result;
+}
+
+function exportExamplePreset(pre) {
+   let tempObj = {};
+   tempObj.beats = {};
+   if (pre.beats.custom) {
+      tempObj.beats = JSON.parse(JSON.stringify(pre.beats));
+   }
+   else {
+      tempObj.beats.custom = false;
+   }
+
+   tempObj.colors = JSON.parse(JSON.stringify(pre.colors));
+   tempObj.custom = false;
+   tempObj.name = pre.name;
+   tempObj.description = pre.description;
+   tempObj.options = JSON.parse(JSON.stringify(pre.options));
+   tempObj.repeats = pre.repeats;
+   tempObj.site = {};
+   tempObj.site.siteStr = pre.site.siteStr;
+
+   return JSON.stringify(tempObj);
+}
+
+function siteswapsToPresets() {
+   let preArr = [];
+   $.getJSON('js/exampleSiteswaps.json', function(json) {
+      for (i in json) {
+         preArr[i] =
+            {"beats":{"custom":false},
+            "custom":false,
+            "name":json[i].n,
+            "description":json[i].d,
+            "options":{"throwTime":0.5,"dwellLimit":0.4,"throwLimit":0.25,"speedLimit":0.4,"speedMultiplier":1,"paceMultiplier":4},
+            "repeats":1,
+            "site":{"siteStr":json[i].s}};
+      }
+      window.open(`data:application/json,${encodeURI(JSON.stringify(preArr))}`);
+   });
 }
