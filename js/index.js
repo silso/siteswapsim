@@ -812,10 +812,6 @@ $(document).ready(function() {
 				}
 			}
 
-			console.log(preset.site.loops);
-			console.log(throwLoops);
-			console.log(i);
-			console.log(preset.throwInfo.throws);
 
 			newIndex = curThrow.start;
 			if (newIndex === oldIndex) {
@@ -827,12 +823,10 @@ $(document).ready(function() {
 			oldIndex = newIndex;
 
 			if (throwLoops[curThrow.start % throwLoops.length] instanceof Array) {
-			console.log('array', 'i=', i, throwLoops[curThrow.start % throwLoops.length], instanceOfSameIndex);
 				var color = preset.colors[throwLoops[curThrow.start % throwLoops.length][instanceOfSameIndex].l];
 			}
 			else {
 				var color = preset.colors[throwLoops[curThrow.start % throwLoops.length].l];
-				console.log('curThrow.start=', curThrow.start, throwLoops.length, 	'color', throwLoops[curThrow.start % throwLoops.length].l);
 			}
 
 			if (curThrow.start < curThrow.end % (preset.throwInfo.endTime + 1)) { //if line doesnt go off chart (+1 so we can still draw to node at the end of diagram)

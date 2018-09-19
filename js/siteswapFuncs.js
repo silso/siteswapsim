@@ -701,7 +701,6 @@ var loopFinder = function(site) {
 						i: k,
 						l: loopNum
 					});
-					console.log('n=',site[k][l]);
 					tested[k][l] = 1;
 					k = (k + site[k][l]) % siteLen;
 
@@ -800,13 +799,13 @@ var loopFinder = function(site) {
 
 		i++;
 	}
-	console.log(throwsToLoops);
 	var throwsToLoopsFinal = new Array(site.length);
 	var diff = 0; //used for multiplexes
 	for (let i = 0; i < throwsToLoops.length; i++) {
 		if (throwsToLoopsFinal[throwsToLoops[i].i + diff] != undefined) {
-			console.log('innere');
-			throwsToLoopsFinal[throwsToLoops[i].i + diff] = [throwsToLoopsFinal[throwsToLoops[i].i + diff]];
+			if (!(throwsToLoopsFinal[throwsToLoops[i].i + diff] instanceof Array)) {
+				throwsToLoopsFinal[throwsToLoops[i].i + diff] = [throwsToLoopsFinal[throwsToLoops[i].i + diff]];
+			}
 			throwsToLoopsFinal[throwsToLoops[i].i + diff].push({n: throwsToLoops[i].n, l: throwsToLoops[i].l});
 			// diff += 1;
 		}
@@ -814,7 +813,6 @@ var loopFinder = function(site) {
 			throwsToLoopsFinal[throwsToLoops[i].i + diff] = {n: throwsToLoops[i].n, l: throwsToLoops[i].l};
 		}
 	}
-	console.log(throwsToLoopsFinal);
 	return [loops.slice(0, loops.length - 1), throwsToLoopsFinal];
 }
 
